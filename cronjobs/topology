@@ -1,1 +1,1 @@
-4 ${UTC_DIFF} * * * root /usr/libexec/ar-sync/topology-sync
+${UTC_MINS} ${UTC_HOURS} * * * root /usr/libexec/ar-sync/topology-sync

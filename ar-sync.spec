@@ -15,10 +15,13 @@ Installs the service for syncing A/R Comp Engine
 with SAM topology and POEM definitions per day.
 
 %prep
-# Get the time zone difference and delete leading 0s
-UTC_DIFF=$(t=$(date +%z); echo ${t:1:2} | sed 's/^0*//')
+# Get the time zone difference for the hours by converting time zone 12 hours offset to 24 hours offset
+HOURS=$(date +%:::z | awk -F: 'BEGIN{OFS=":"}{$1=(24+$1)%24;print $1}')
+# Get the time zone difference in minutes, because there are some times zones with half hour differance
+MINS=$(echo "2 + $(date +%:z|cut -d':' -f'2')" | bc)
 # Replace crons inplace
-sed -i "s/\${UTC_DIFF}/$UTC_DIFF/g" cronjobs/*
+sed -i "s/\${UTC_HOURS}/$HOURS/g" cronjobs/*
+sed -i "s/\${UTC_MINS}/$MINS/g" cronjobs/*
 
 %setup 
 
