@@ -1,1 +1,1 @@
-4 0 * * * root /usr/libexec/ar-sync/topology-sync
+4 ${UTC_DIFF} * * * root /usr/libexec/ar-sync/topology-sync

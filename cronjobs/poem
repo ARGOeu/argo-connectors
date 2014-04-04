@@ -1,1 +1,1 @@
-3 0 * * * root /usr/libexec/ar-sync/poem-sync
+3 ${UTC_DIFF} * * * root /usr/libexec/ar-sync/poem-sync

@@ -1,1 +1,1 @@
-2 0 * * * root /usr/libexec/ar-sync/hepspec_sync
+2 ${UTC_DIFF} * * * root /usr/libexec/ar-sync/hepspec_sync

@@ -1,6 +1,6 @@
 Name: ar-sync
 Summary: A/R Comp Engine sync scripts
-Version: 1.2.1
+Version: 1.3.0
 Release: 1%{?dist}
 License: ASL 2.0
 Buildroot: %{_tmppath}/%{name}-buildroot
@@ -15,6 +15,11 @@ Installs the service for syncing A/R Comp Engine
 with SAM topology and POEM definitions per day.
 
 %prep
+# Get the time zone difference and delete leading 0s
+UTC_DIFF=$(t=$(date +%z); echo ${t:1:2} | sed 's/^0*//')
+# Replace crons inplace
+sed -i "s/\${UTC_DIFF}/$UTC_DIFF/g" cronjobs/*
+
 %setup 
 
 %install 
@@ -70,6 +75,8 @@ install --mode 644 cronjobs/hepspec %{buildroot}/etc/cron.d/hepspec
 %attr(0644,root,root) /etc/cron.d/hepspec
 
 %changelog
+* Fri Apr 4 2014 Anastasios Andronidis <andronat@grid.auth.gr> - 1.3.0-1%{?dist}
+- Dynamic set of crons, based on UTC zone difference
 * Tue Mar 18 2014 Paschalis Korosoglou <pkoro@grid.auth.gr> - 1.2.1-1%{?dist}
 - Updated daily cronjobs to run within first five minutes of each day
 * Thu Jan 30 2014 Paschalis Korosoglou <pkoro@grid.auth.gr> - 1.1.19-1%{?dist}
