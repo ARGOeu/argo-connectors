@@ -1,1 +1,1 @@
-3 0 * * * root /usr/libexec/ar-sync/poem-sync
+${UTC_MINS} ${UTC_HOURS} * * * root /usr/libexec/ar-sync/poem-sync
