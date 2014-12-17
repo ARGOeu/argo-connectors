@@ -30,21 +30,23 @@ import datetime
 import xml.dom.minidom
 import httplib
 import sys
+import pprint
+
+import avro.schema
+from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
 
 defaultConfig = '/etc/ar-sync/downtime-sync.conf'
+defaultArgDateFormat = '%Y-%m-%d'
 
-gocdbHost = 'goc.egi.eu'
-gocdbUrl = 'https://'+gocdbHost+'/gocdbpi/'
-hostKey = '/etc/grid-security/hostkey.pem'
-hostCert = '/etc/grid-security/hostcert.pem'
-outputDir = '/var/lib/ar-sync'
+readers = ['gocdb']
+writers = ['file', 'avro']
 
-defaultOutputFileDowntimes = outputDir + '/downtimes_%s.out'
-# Hostname, Service Type, Start, End
-defaultOutputFileDowntimesFieldFormat = '%s\001%s\001%s\001%s\r\n'
-defaultArgDateFormat = "%Y-%m-%d"
-defaultWSDateFormat = "%Y-%m-%d %H:%M"
-
+###################################################
+#
+# configuration loader
+#
+###################################################
 def loadConfiguration():
      #load config
      configFile = None
@@ -77,65 +79,157 @@ def loadConfiguration():
 
          configFile.close()
 
-         if 'gocdbHost' in configFields:
-             gocdbHost = configFields['gocdbHost']
+     return configFields
 
-         if 'gocdbUrl' in configFields:
-             gocdbUrl = configFields['gocdbUrl']
+###################################################
+#
+# create output file name
+#
+###################################################
+def createOutputFilename(directory, fileTemplate, timestamp):
+    return directory + '/' + (fileTemplate % timestamp)
 
-         if 'hostKey' in configFields:
-             hostKey = configFields['hostKey']
+###################################################
+#
+# Readers
+#
+###################################################
+class DowntimeReader(object):
 
-         if 'hostCert' in configFields:
-             hostCert = configFields['hostCert']
+    def loadConfiguration(configFields):
+        """Loading config"""
+    
+    def getDowntimes(start, end):
+        """Getting downtimes"""
 
-         if 'outputDir' in configFields:
-             outputDir = configFields['outputDir']
+class GOCDBReader(DowntimeReader):
+     
+    def __init__(self):
+        self.gocdbHost = 'goc.egi.eu'
+        self.gocdbUrl = 'https://'+self.gocdbHost+'/gocdbpi/'
+        self.hostKey = '/etc/grid-security/hostkey.pem'
+        self.hostCert = '/etc/grid-security/hostcert.pem'
+        self.outputDir = '/var/lib/ar-sync'
+        self.argDateFormat = "%Y-%m-%d"
+        self.WSDateFormat = "%Y-%m-%d %H:%M"
 
-         defaultOutputFileDowntimes = outputDir + '/downtimes_%s.out'
+    def loadConfiguration(self, configFields):
+        if 'gocdbHost' in configFields:
+             self.gocdbHost = configFields['gocdbHost']
+        if 'gocdbUrl' in configFields:
+             self.gocdbUrl = configFields['gocdbUrl']
+        if 'hostKey' in configFields:
+             self.hostKey = configFields['hostKey']
+        if 'hostCert' in configFields:
+             self.hostCert = configFields['hostCert']
+        if 'argDateFormat' in configFields:
+             self.argDateFormat = configFields['argDateFormat']
+        if 'WSDateFormat' in configFields:
+             self.WSDateFormat = configFields['WSDateFormat']
 
-def createOutputFilename(filename, timestamp):
-    return filename % timestamp
+    def getDowntimes(self, start, end):
+        filteredDowntimes = list()
 
-def getDowntimes(start, end):
+        conn = httplib.HTTPSConnection(self.gocdbHost, 443, self.hostKey, self.hostCert)
+        conn.request('GET', '/gocdbpi/private/' + '?method=get_downtime&windowstart=%s&windowend=%s' % (start.strftime(self.argDateFormat), end.strftime(self.argDateFormat)))
+        res = conn.getresponse()
+        if res.status == 200:
+            doc = xml.dom.minidom.parseString(res.read())
+            downtimes = doc.getElementsByTagName('DOWNTIME')
 
-    filteredDowntimes = list()
+            for downtime in downtimes:
+                classification = downtime.getAttributeNode('CLASSIFICATION').nodeValue
+                hostname = downtime.getElementsByTagName('HOSTNAME')[0].childNodes[0].data
+                serviceType = downtime.getElementsByTagName('SERVICE_TYPE')[0].childNodes[0].data
+                startStr = downtime.getElementsByTagName('FORMATED_START_DATE')[0].childNodes[0].data
+                endStr = downtime.getElementsByTagName('FORMATED_END_DATE')[0].childNodes[0].data       
+                severity = downtime.getElementsByTagName('SEVERITY')[0].childNodes[0].data
 
-    conn = httplib.HTTPSConnection(gocdbHost, 443, hostKey, hostCert)
-    conn.request('GET', '/gocdbpi/private/' + '?method=get_downtime&windowstart=%s&windowend=%s' % (start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')))
-    res = conn.getresponse()
-    if res.status == 200:
-        doc = xml.dom.minidom.parseString(res.read())
-        downtimes = doc.getElementsByTagName('DOWNTIME')
+                startTime = datetime.datetime.strptime(startStr, self.WSDateFormat)
+                endTime = datetime.datetime.strptime(endStr, self.WSDateFormat)
 
-        for downtime in downtimes:
-            classification = downtime.getAttributeNode('CLASSIFICATION').nodeValue
-            hostname = downtime.getElementsByTagName('HOSTNAME')[0].childNodes[0].data
-            serviceType = downtime.getElementsByTagName('SERVICE_TYPE')[0].childNodes[0].data
-            startStr = downtime.getElementsByTagName('FORMATED_START_DATE')[0].childNodes[0].data
-            endStr = downtime.getElementsByTagName('FORMATED_END_DATE')[0].childNodes[0].data       
-            severity = downtime.getElementsByTagName('SEVERITY')[0].childNodes[0].data
+                if (startTime < start):
+                    startTime = start
+                if (endTime > end):
+                    endTime = end
 
-            startTime = datetime.datetime.strptime(startStr, defaultWSDateFormat)
-            endTime = datetime.datetime.strptime(endStr, defaultWSDateFormat)
+                if classification == 'SCHEDULED' and severity == 'OUTAGE':
+                    dt = dict()
+                    dt['hostname'] = hostname
+                    dt['service'] = serviceType
+                    dt['start_time'] = startTime.strftime('%Y-%m-%d %H:%M').replace(' ', 'T', 1).replace(' ', ':') + ':00Z'
+                    dt['end_time'] = endTime.strftime('%Y-%m-%d %H:%M').replace(' ', 'T', 1).replace(' ', ':') + ':00Z'
+                    filteredDowntimes.append(dt)
+        else:
+            print('ERROR: Connection to GOCDB failed: ' + res.reason)
 
-            if (startTime < start):
-                startTime = start
-            if (endTime > end):
-                endTime = end
+        return filteredDowntimes
 
-            dt = dict()
-            dt['classification'] = classification
-            dt['severity'] = severity
-            dt['hostname'] = hostname
-            dt['serviceType'] = serviceType
-            dt['startTime'] = startTime.strftime('%Y-%m-%d %H:%M')
-            dt['endTime'] = endTime.strftime('%Y-%m-%d %H:%M')
-            filteredDowntimes.append(dt)
-    else:
-        print('ERROR: Connection to GOCDB failed: ' + res.reason)
+###################################################
+#
+# Writers
+#
+###################################################
+class DowntimeWriter(object):
 
-    return filteredDowntimes
+    def loadConfiguration(configFields):
+        """Loading config"""
+    
+    def writeDowntimes(downtimes, date):
+        """Getting downtimes"""
+
+class FileWritter(DowntimeWriter):
+
+    def __init__(self):
+        self.outputDir = '/var/lib/ar-sync'
+        self.outputFileTemplate = 'downtimes_%s.out'
+        self.outputFileFormat = '%s\001%s\001%s\001%s\r\n'
+
+    def loadConfiguration(self, configFields):
+        if 'outputDir' in configFields:
+             self.outputDir = configFields['outputDir']
+        if 'outputFileTemplate' in configFields:
+             self.outputFileTemplate = configFields['outputFileTemplate']
+        if 'outputFileFormat' in configFields:
+             self.outputFileFormat = configFields['outputFileFormat']
+
+    def writeDowntimes(self, downtimes, date):
+        filename = createOutputFilename(self.outputDir, self.outputFileTemplate, date)
+        outFile = open(filename, 'w')
+        for dt in downtimes:
+            outFile.write(self.outputFileFormat % ( dt['hostname'],
+                       dt['service'],
+                       dt['start_time'],
+                       dt['end_time'], ))
+        outFile.close();
+
+class AvroWritter(DowntimeWriter):
+
+    def __init__(self):
+        self.avroOutputDir = '/var/lib/ar-sync'
+        self.avroOutputFileTemplate = 'downtimes_%s.avro'
+        self.avroOutputSchema = '/etc/ar-sync/downtimes.avsc'
+
+    def loadConfiguration(self, configFields):
+        if 'avroOutputDir' in configFields:
+             self.avroOutputDir = configFields['avroOutputDir']
+        if 'avroOutputFileTemplate' in configFields:
+             self.avroOutputFileTemplate = configFields['avroOutputFileTemplate']
+        if 'avroOutputSchema' in configFields:
+             self.avroOutputSchema = configFields['avroOutputSchema']
+
+    def writeDowntimes(self, downtimes, date):
+        filename = createOutputFilename(self.avroOutputDir, self.avroOutputFileTemplate, date)
+
+        schema = avro.schema.parse(open(self.avroOutputSchema).read())
+        avroFile = open(filename, 'w+')
+        writer = DataFileWriter(avroFile, DatumWriter(), schema)
+
+        for dt in downtimes:
+            writer.append(dt)
+
+        writer.close()
+        avroFile.close()
 
 ##############################
 # main
@@ -143,30 +237,40 @@ def getDowntimes(start, end):
 
 argsOk = False
 for i in range(0,len(sys.argv)-1):
-        if sys.argv[i] == '-d':
-                if len(sys.argv[i+1].split('-')) == 3:
-			date = sys.argv[i+1]
-                        argsOk = True
+    if sys.argv[i] == '-d':
+        if len(sys.argv[i+1].split('-')) == 3:
+            date = sys.argv[i+1]
+            argsOk = True
 
 if not argsOk:
-        print "\n\nUsage:\n\tpython downtime.py -d <date>"
-        sys.exit()
+    print "\n\nUsage:\n\tpython downtime.py -d <date>"
+    sys.exit()
 
+# calculate start and end times
 start = datetime.datetime.strptime(date, defaultArgDateFormat)
 end = datetime.datetime.strptime(date, defaultArgDateFormat)
 start = start.replace(hour=0, minute=0, second=0)
 end = end.replace(hour=23, minute=59, second=59)
 
-downtimes = getDowntimes(start, end)
+# load configuration
+config = loadConfiguration()
 
-filename = createOutputFilename(defaultOutputFileDowntimes, date)
-outFile = open(filename, 'w')
-for dt in downtimes:
-    
-    if dt['classification'] == 'SCHEDULED' and dt['severity'] == 'OUTAGE':
-        
-        outFile.write(defaultOutputFileDowntimesFieldFormat % ( dt['hostname'],
-                   dt['serviceType'],
-                   dt['startTime'].replace(' ', 'T', 1).replace(' ', ':') + ':00Z',
-                   dt['endTime'].replace(' ', 'T', 1).replace(' ', ':') + ':00Z' ))
-outFile.close();
+# read downtimes
+downtimes = list()
+for reader in readers:
+    if reader == 'gocdb':
+        readerInstance = GOCDBReader()
+        readerInstance.loadConfiguration(config)
+        dts = readerInstance.getDowntimes(start, end)
+        downtimes.extend(dts)
+
+# write downtimes
+for writer in writers:
+    if writer == 'file':
+        writerInstance = FileWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstance.writeDowntimes(downtimes, date)
+    elif writer == 'avro':
+        writerInstance = AvroWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstance.writeDowntimes(downtimes, date)

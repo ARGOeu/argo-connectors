@@ -31,194 +31,372 @@ import xml.dom.minidom
 import httplib
 from operator import itemgetter
 
+import avro.schema
+from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
+
 defaultConfig = '/etc/ar-sync/topology-sync.conf'
 
-gocdbHost = 'goc.egi.eu'
-gocdbUrl = 'https://'+gocdbHost+'/gocdbpi/'
-hostKey = '/etc/grid-security/hostkey.pem'
-hostCert = '/etc/grid-security/hostcert.pem'
-outputDir = '/var/lib/ar-sync'
+readers = ['gocdb']
+writers = ['file', 'avro']
 
-defaultOutputFileSites = outputDir + '/sites_%s.out'
-defaultOutputFileGroups = outputDir + '/groups_%s.out'
-# Hostname, Service Type, Production, Monitored, Scope, Site, NGI, Infrastructure, Certification Status, Site Scope
-defaultOutputFileSitesFieldFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
-# Hostname, Service Type, Production, Monitored, Service group, Group Monitored, Group Scope
-defaultOutputFileGroupsFieldFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
+##############################
+# create output filename
+##############################
+def createOutputFilename(directory, fileTemplate, timestamp):
+    return directory + '/' + (fileTemplate % timestamp)
 
+##############################
+# load config
+##############################
 def loadConfiguration():
-    #load config
-    configFile = None
-    configFields = dict()
-    if os.path.isfile(defaultConfig):
-        configFile = open(defaultConfig, 'r')
-        lines = configFile.readlines()
+     #load config
+     configFile = None
+     configFields = dict()
+     if os.path.isfile(defaultConfig):
+         configFile = open(defaultConfig, 'r')
+         lines = configFile.readlines()
 
-        for line in lines:
-            if line[0] == '#':
-                continue
-            splitLine = line.split('=')
-            if len(splitLine) > 1:
-                key = splitLine[0].strip()
-                value = splitLine[1].strip()
-                value = value.decode('string_escape')
-                if value[0] == "'":
-                    if value [-1] == "'":
-                        value = value[1:-1]
-                    else:
-                        continue
-                elif value[0] == '"':
-                    if value [-1] == '"':
-                        value = value[1:-1]
-                    else:
-                        continue
-                else:
-                    value = int(value)
-                configFields[key] = value
+         for line in lines:
+             if line[0] == '#':
+                 continue
+             splitLine = line.split('=')
+             if len(splitLine) > 1:
+                 key = splitLine[0].strip()
+                 value = splitLine[1].strip()
+                 value = value.decode('string_escape')
+                 if value[0] == "'":
+                     if value [-1] == "'":
+                         value = value[1:-1]
+                     else:
+                         continue
+                 elif value[0] == '"':
+                     if value [-1] == '"':
+                         value = value[1:-1]
+                     else:
+                         continue
+                 else:
+                     value = int(value)
+                 configFields[key] = value
 
-        configFile.close()
+         configFile.close()
 
+     return configFields
+
+##############################
+# Readers
+##############################
+
+class TopologyReader(object):
+
+    def loadConfiguration(self, configFields):
+        """Loading config"""
+    
+    def getGroups(self):
+        """Getting groups"""
+
+    def getSites(self):
+        """Getting groups"""        
+
+class GOCDBReader(TopologyReader):
+
+    def __init__(self):
+        self.gocdbHost = 'goc.egi.eu'
+        self.gocdbUrl = 'https://' + self.gocdbHost + '/gocdbpi/'
+        self.hostKey = '/etc/grid-security/hostkey.pem'
+        self.hostCert = '/etc/grid-security/hostcert.pem'
+
+        self.siteList = dict()
+        self.serviceList = dict()
+        self.groupList = dict()
+
+    def loadConfiguration(self, configFields):
         if 'gocdbHost' in configFields:
-            gocdbHost = configFields['gocdbHost']
-        
+             self.gocdbHost = configFields['gocdbHost']
         if 'gocdbUrl' in configFields:
-            gocdbUrl = configFields['gocdbUrl']
-
+             self.gocdbUrl = configFields['gocdbUrl']
         if 'hostKey' in configFields:
-            hostKey = configFields['hostKey']
-
+             self.hostKey = configFields['hostKey']
         if 'hostCert' in configFields:
-            hostCert = configFields['hostCert']
+             self.hostCert = configFields['hostCert']
 
+    def getGroups(self):
+        self.loadDataIfNeeded()
+
+        groups = list()
+        for key, group in self.groupList.iteritems():
+            for service in group['services']:
+
+                g = dict()
+                g['type'] = 'SERVICE GROUPS'
+                g['hostname'] = service['hostname']
+                g['service'] = service['type']
+                g['production'] = service['production']
+                g['monitored'] = service['monitored']
+                g['group'] = group['name']
+                g['group_monitored'] = group['monitored']
+                g['scope'] = group['scope']
+
+                groups.append(g)
+
+        return groups
+
+    def getSites(self): 
+        self.loadDataIfNeeded()
+        
+        sortedSrvices = sorted(self.serviceList.iteritems(), key=lambda (x, y): y['sortId'])
+
+        sites = list()
+        lastId = ''
+        for key, service in sortedSrvices:
+            if service['site'] in self.siteList:
+                site = self.siteList[service['site']]
+                
+                if lastId != service['sortId']: 
+
+                    s = dict()
+                    s['hostname'] = service['hostname']
+                    s['service'] = service['type']
+                    s['production'] = service['production']
+                    s['monitored'] = service['monitored']
+                    s['scope'] = service['scope']
+                    s['site'] = service['site']
+                    s['roc'] = service['roc']
+                    s['infrastructure'] = site['infrastructure']
+                    s['certification'] = site['certification']
+                    s['site_scope'] = site['scope']
+
+                    sites.append(s)
+
+                lastId = service['sortId']                   
+            else:
+                print('ERROR: found service endpoint (%s, %s) associated to non-existing site %s' % (service['hostname'], service['type'], service['site']))
+
+        return sites
+
+    def loadDataIfNeeded(self):
+        if len(self.siteList) == 0:
+            self.getSitesInternal(self.siteList, 'EGI')
+            self.getSitesInternal(self.siteList, 'Local')
+
+        if len(self.serviceList) == 0:
+            self.getServiceEndpoints(self.serviceList, 'EGI')
+            self.getServiceEndpoints(self.serviceList, 'Local')
+
+        if len(self.groupList) == 0:
+            self.getServiceGroups(self.groupList, 'EGI')
+            self.getServiceGroups(self.groupList, 'Local')
+
+    def getServiceEndpoints(self, serviceList, scope):
+        urlFile = urllib.urlopen(self.gocdbUrl + '/public/?method=get_service_endpoint&scope=' + scope)
+        doc = xml.dom.minidom.parse(urlFile)
+        services = doc.getElementsByTagName('SERVICE_ENDPOINT')
+        for service in services:
+            serviceId = ''
+            if service.getAttributeNode('PRIMARY_KEY'):
+                serviceId = str(service.attributes['PRIMARY_KEY'].value)
+            if serviceId not in serviceList:
+                serviceList[serviceId] = {}
+            serviceList[serviceId]['hostname'] = service.getElementsByTagName('HOSTNAME')[0].childNodes[0].data
+            serviceList[serviceId]['type'] = service.getElementsByTagName('SERVICE_TYPE')[0].childNodes[0].data
+            serviceList[serviceId]['monitored'] = service.getElementsByTagName('NODE_MONITORED')[0].childNodes[0].data
+            serviceList[serviceId]['production'] = service.getElementsByTagName('IN_PRODUCTION')[0].childNodes[0].data
+            serviceList[serviceId]['site'] = service.getElementsByTagName('SITENAME')[0].childNodes[0].data
+            serviceList[serviceId]['roc'] = service.getElementsByTagName('ROC_NAME')[0].childNodes[0].data
+            serviceList[serviceId]['scope'] = scope
+            serviceList[serviceId]['sortId'] = serviceList[serviceId]['hostname'] + '-' + serviceList[serviceId]['type'] + '-' + serviceList[serviceId]['site']
+        urlFile.close();
+
+    def getSitesInternal(self, siteList, scope):
+        conn = httplib.HTTPSConnection(self.gocdbHost, 443, self.hostKey, self.hostCert)
+        conn.request('GET', '/gocdbpi/private/?method=get_site&scope=' + scope)
+        res = conn.getresponse()
+        if res.status == 200:
+            dom = xml.dom.minidom.parseString(res.read())
+            sites = dom.getElementsByTagName('SITE')
+            for site in sites:
+                siteName = site.getAttribute('NAME')
+                if siteName not in siteList:
+                    siteList[siteName] = {'site': siteName}
+                siteList[siteName]['infrastructure'] = site.getElementsByTagName('PRODUCTION_INFRASTRUCTURE')[0].childNodes[0].data
+                siteList[siteName]['certification'] = site.getElementsByTagName('CERTIFICATION_STATUS')[0].childNodes[0].data
+                siteList[siteName]['scope'] = scope
+        else:
+            print('ERROR: Connection to GOCDB failed: ' + res.reason)
+
+    def getServiceGroups(self, groupList, scope):
+        conn = httplib.HTTPSConnection(self.gocdbHost, 443, self.hostKey, self.hostCert)
+        conn.request('GET', '/gocdbpi/private/?method=get_service_group&scope=' + scope)
+        res = conn.getresponse()
+        if res.status == 200:
+            doc = xml.dom.minidom.parseString(res.read())
+            groups = doc.getElementsByTagName('SERVICE_GROUP')
+            for group in groups:
+                groupId = group.getAttribute('PRIMARY_KEY')
+                if groupId not in groupList:
+                    groupList[groupId] = {}
+                groupList[groupId]['name'] = group.getElementsByTagName('NAME')[0].childNodes[0].data
+                groupList[groupId]['monitored'] = group.getElementsByTagName('MONITORED')[0].childNodes[0].data
+                groupList[groupId]['scope'] = scope
+                groupList[groupId]['services'] = []
+                services = group.getElementsByTagName('SERVICE_ENDPOINT')
+                for service in services:
+                    serviceDict = {}
+                    serviceDict['hostname'] = service.getElementsByTagName('HOSTNAME')[0].childNodes[0].data
+                    serviceDict['type'] = service.getElementsByTagName('SERVICE_TYPE')[0].childNodes[0].data
+                    serviceDict['monitored'] = service.getElementsByTagName('NODE_MONITORED')[0].childNodes[0].data
+                    serviceDict['production'] = service.getElementsByTagName('IN_PRODUCTION')[0].childNodes[0].data
+                    groupList[groupId]['services'].append(serviceDict)
+        else:
+            print('ERROR: Connection to GOCDB failed: ' + res.reason)
+
+##############################
+# Writers
+##############################
+class TopologyWriter(object):
+
+    def loadConfiguration(self, configFields):
+        """Loading config"""
+    
+    def writeGroups(self, groups, date):
+        """Writting groups"""
+
+    def writeSites(self, sites, date):
+        """Writting sites"""
+
+class FileWritter(TopologyWriter):
+
+    def __init__(self):
+        self.outputDir = '/var/lib/ar-sync'
+    
+        self.outputGroupFileTemplate = '/groups_%s.out'
+        # Hostname, Service Type, Production, Monitored, Service group, Group Monitored, Group Scope        
+        self.outputGroupFileFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
+    
+        self.outputSiteFileTemplate = '/sites_%s.out'
+        # Hostname, Service Type, Production, Monitored, Scope, Site, NGI, Infrastructure, Certification Status, Site Scope
+        self.outputSiteFileFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
+
+    def loadConfiguration(self, configFields):
         if 'outputDir' in configFields:
-            outputDir = configFields['outputDir']
+             self.outputDir = configFields['outputDir']
+        if 'outputGroupFileTemplate' in configFields:
+             self.outputGroupFileTemplate = configFields['outputGroupFileTemplate']
+        if 'outputGroupFileFormat' in configFields:
+             self.outputGroupFileFormat = configFields['outputGroupFileFormat']
+        if 'outputSiteFileTemplate' in configFields:
+             self.outputSiteFileTemplate = configFields['outputSiteFileTemplate']
+        if 'outputGroupFileFormat' in configFields:
+             self.outputSiteFileFormat = configFields['outputSiteFileFormat']
 
-	defaultOutputFileSites = outputDir + '/sites_%s.out'
-        defaultOutputFileGroups = outputDir + '/groups_%s.out'
+    def writeGroups(self, groups, date):
+        filename = createOutputFilename(self.outputDir, self.outputGroupFileTemplate, date)
+        outFile = open(filename, 'w')
+        for g in groups:
+            outFile.write(self.outputGroupFileFormat % ( g['hostname'],
+                       g['service'],
+                       g['production'],
+                       g['monitored'],
+                       g['group'],
+                       g['group_monitored'],
+                       g['scope']))
+        outFile.close();
 
-def createOutputFilename(filename, timestamp):
-    return filename % timestamp
+    def writeSites(self, sites, date):
+        filename = createOutputFilename(self.outputDir, self.outputSiteFileTemplate, date)
+        outFile = open(filename, 'w')
+        for s in sites:
+            outFile.write(self.outputSiteFileFormat % ( s['hostname'],
+                       s['service'],
+                       s['production'],
+                       s['monitored'],
+                       s['scope'],
+                       s['site'],
+                       s['roc'],
+                       s['infrastructure'],
+                       s['certification'],
+                       s['site_scope']))
+        outFile.close();
 
-def getServiceEndpoints(serviceList, scope):
-    urlFile = urllib.urlopen(gocdbUrl + '/public/?method=get_service_endpoint&scope=' + scope)
-    doc = xml.dom.minidom.parse(urlFile)
-    services = doc.getElementsByTagName('SERVICE_ENDPOINT')
-    for service in services:
-        serviceId = ''
-        if service.getAttributeNode('PRIMARY_KEY'):
-            serviceId = str(service.attributes['PRIMARY_KEY'].value)
-        if serviceId not in serviceList:
-            serviceList[serviceId] = {}
-        serviceList[serviceId]['hostname'] = service.getElementsByTagName('HOSTNAME')[0].childNodes[0].data
-        serviceList[serviceId]['type'] = service.getElementsByTagName('SERVICE_TYPE')[0].childNodes[0].data
-        serviceList[serviceId]['monitored'] = service.getElementsByTagName('NODE_MONITORED')[0].childNodes[0].data
-        serviceList[serviceId]['production'] = service.getElementsByTagName('IN_PRODUCTION')[0].childNodes[0].data
-        serviceList[serviceId]['site'] = service.getElementsByTagName('SITENAME')[0].childNodes[0].data
-        serviceList[serviceId]['roc'] = service.getElementsByTagName('ROC_NAME')[0].childNodes[0].data
-        serviceList[serviceId]['scope'] = scope
-        serviceList[serviceId]['sortId'] = serviceList[serviceId]['hostname'] + '-' + serviceList[serviceId]['type'] + '-' + serviceList[serviceId]['site']
-    urlFile.close();
+class AvroWritter(TopologyWriter):
 
-def getSites(siteList, scope):
-    conn = httplib.HTTPSConnection(gocdbHost, 443, hostKey, hostCert)
-    conn.request('GET', '/gocdbpi/private/?method=get_site&scope=' + scope)
-    res = conn.getresponse()
-    if res.status == 200:
-        dom = xml.dom.minidom.parseString(res.read())
-        sites = dom.getElementsByTagName('SITE')
-        for site in sites:
-            siteName = site.getAttribute('NAME')
-            if siteName not in siteList:
-                siteList[siteName] = {'site': siteName}
-            siteList[siteName]['infrastructure'] = site.getElementsByTagName('PRODUCTION_INFRASTRUCTURE')[0].childNodes[0].data
-            siteList[siteName]['certification'] = site.getElementsByTagName('CERTIFICATION_STATUS')[0].childNodes[0].data
-            siteList[siteName]['scope'] = scope
-    else:
-        print('ERROR: Connection to GOCDB failed: ' + res.reason)
+    def __init__(self):
+        self.avroOutputDir = '/var/lib/ar-sync'
+        self.avroOutputGroupFileTemplate = 'groups_%s.avro'
+        self.avroOutputGroupSchema = '/etc/ar-sync/group_endpoints.avsc'
+        self.avroOutputSiteFileTemplate = 'sites_%s.avro'
+        self.avroOutputSiteSchema = '/etc/ar-sync/sites.avsc'
 
-def getServiceGroups(groupList, scope):
-    conn = httplib.HTTPSConnection(gocdbHost, 443, hostKey, hostCert)
-    conn.request('GET', '/gocdbpi/private/?method=get_service_group&scope=' + scope)
-    res = conn.getresponse()
-    if res.status == 200:
-        doc = xml.dom.minidom.parseString(res.read())
-        groups = doc.getElementsByTagName('SERVICE_GROUP')
-        for group in groups:
-            groupId = group.getAttribute('PRIMARY_KEY')
-            if groupId not in groupList:
-                groupList[groupId] = {}
-            groupList[groupId]['name'] = group.getElementsByTagName('NAME')[0].childNodes[0].data
-            groupList[groupId]['monitored'] = group.getElementsByTagName('MONITORED')[0].childNodes[0].data
-            groupList[groupId]['scope'] = scope
-            groupList[groupId]['services'] = []
-            services = group.getElementsByTagName('SERVICE_ENDPOINT')
-            for service in services:
-                serviceDict = {}
-                serviceDict['hostname'] = service.getElementsByTagName('HOSTNAME')[0].childNodes[0].data
-                serviceDict['type'] = service.getElementsByTagName('SERVICE_TYPE')[0].childNodes[0].data
-                serviceDict['monitored'] = service.getElementsByTagName('NODE_MONITORED')[0].childNodes[0].data
-                serviceDict['production'] = service.getElementsByTagName('IN_PRODUCTION')[0].childNodes[0].data
-                groupList[groupId]['services'].append(serviceDict)
-    else:
-        print('ERROR: Connection to GOCDB failed: ' + res.reason)
+    def loadConfiguration(self, configFields):
+        if 'avroOutputDir' in configFields:
+             self.avroOutputDir = configFields['avroOutputDir']
+        if 'avroOutputGroupFileTemplate' in configFields:
+             self.avroOutputGroupFileTemplate = configFields['avroOutputGroupFileTemplate']
+        if 'avroOutputGroupSchema' in configFields:
+             self.avroOutputGroupSchema = configFields['avroOutputGroupSchema']
+        if 'avroOutputSiteFileTemplate' in configFields:
+             self.avroOutputSiteFileTemplate = configFields['avroOutputSiteFileTemplate']
+        if 'avroOutputSiteSchema' in configFields:
+             self.avroOutputSiteSchema = configFields['avroOutputSiteSchema']
+
+    def writeGroups(self, groups, date):
+        filename = createOutputFilename(self.avroOutputDir, self.avroOutputGroupFileTemplate, date)
+
+        schema = avro.schema.parse(open(self.avroOutputGroupSchema).read())
+        avroFile = open(filename, 'w+')
+        writer = DataFileWriter(avroFile, DatumWriter(), schema)
+
+        for g in groups:
+            writer.append(g)
+
+        writer.close()
+        avroFile.close()
+
+    def writeSites(self, sites, date):
+        filename = createOutputFilename(self.avroOutputDir, self.avroOutputSiteFileTemplate, date)
+
+        schema = avro.schema.parse(open(self.avroOutputSiteSchema).read())
+        avroFile = open(filename, 'w+')
+        writer = DataFileWriter(avroFile, DatumWriter(), schema)
+
+        for s in sites:
+            writer.append(s)
+
+        writer.close()
+        avroFile.close()
+
 
 ##############################
 # main
 ##############################
 
-loadConfiguration()
+# date
+date = datetime.datetime.utcnow().strftime('%Y_%m_%d')
 
-siteList = {}
-serviceList = {}
-groupList = {}
+# load configuration
+config = loadConfiguration()
 
-getSites(siteList, 'EGI')
-getSites(siteList, 'Local')
+# read downtimes
+groups = list()
+sites = list()
+for reader in readers:
+    if reader == 'gocdb':
+        readerInstance = GOCDBReader()
+        readerInstance.loadConfiguration(config)
+        ss = readerInstance.getSites()
+        gs = readerInstance.getGroups()
+        sites.extend(ss)
+        groups.extend(gs)
 
-getServiceEndpoints(serviceList, 'EGI')
-getServiceEndpoints(serviceList, 'Local')
-
-getServiceGroups(groupList, 'EGI')
-getServiceGroups(groupList, 'Local')
-
-timestamp = datetime.datetime.utcnow().strftime('%Y_%m_%d')
-
-sortedSrvices = sorted(serviceList.iteritems(), key=lambda (x, y): y['sortId'])
-
-filename = createOutputFilename(defaultOutputFileSites, timestamp)
-outFile = open(filename, 'w')
-lastId = ''
-for key, service in sortedSrvices:
-    if service['site'] in siteList:
-        site = siteList[service['site']]
-        
-        if lastId != service['sortId']: 
-            outFile.write(defaultOutputFileSitesFieldFormat % ( service['hostname'],
-                   service['type'],
-                   service['production'],
-                   service['monitored'],
-                   service['scope'],
-                   service['site'],
-                   service['roc'],
-                   site['infrastructure'],
-                   site['certification'],
-                   site['scope']))
-
-        lastId = service['sortId']                   
-    else:
-        print('ERROR: found service endpoint (%s, %s) associated to non-existing site %s' % (service['hostname'], service['type'], service['site']))
-outFile.close();
-
-filename = createOutputFilename(defaultOutputFileGroups, timestamp)
-outFile = open(filename, 'w')
-for key, group in groupList.iteritems():
-    for service in group['services']:
-        outFile.write(defaultOutputFileGroupsFieldFormat % ( service['hostname'],
-                   service['type'],
-                   service['production'],
-                   service['monitored'],
-                   group['name'],
-                   group['monitored'],
-                   group['scope']))
-outFile.close();
-
+# write downtimes
+for writer in writers:
+    if writer == 'file':
+        writerInstance = FileWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstance.writeSites(sites, date)
+        writerInstance.writeGroups(groups, date)
+    elif writer == 'avro':
+        writerInstance = AvroWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstance.writeSites(sites, date)
+        writerInstance.writeGroups(groups, date)

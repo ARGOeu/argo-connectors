@@ -32,320 +32,408 @@ import datetime
 import httplib
 import sys
 import urlparse
+import pprint
+
+import avro.schema
+from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
 
 defaultConfig = '/etc/ar-sync/poem-sync.conf'
 
-defaultPoemFile = '/etc/ar-sync/poem.conf'
-defaultPoemProfileFile = '/etc/ar-sync/poem-profile.conf'
-defaultPoemServerFile = '/etc/ar-sync/poem-server.conf'
-defaultOutputDir = '/var/lib/ar-sync'
-hostKey = '/etc/grid-security/hostkey.pem'
-hostCert = '/etc/grid-security/hostcert.pem'
+readers = ['poem']
+writers = ['file', 'avro']
 
-defaultOutputFile = defaultOutputDir + '/poem_sync_%s.out'
-defaultOutputFileFieldFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
-defaultPoemRequest = '%s/myegi/sam-pi/metrics_in_profiles?vo_name=%s&output=json'
+##############################
+# create output filename
+##############################
+def createOutputFilename(directory, fileTemplate, timestamp):
+    return directory + '/' + (fileTemplate % timestamp)
 
 ##############################
 # load config
 ##############################
 def loadConfiguration():
-    #load config
-    configFile = None
-    configFields = dict()
-    if os.path.isfile(defaultConfig):
-        configFile = open(defaultConfig, 'r')
-        lines = configFile.readlines()
+     #load config
+     configFile = None
+     configFields = dict()
+     if os.path.isfile(defaultConfig):
+         configFile = open(defaultConfig, 'r')
+         lines = configFile.readlines()
 
-        for line in lines:
-            if line[0] == '#':
-                continue
-            splitLine = line.split('=')
-            if len(splitLine) > 1:
-                key = splitLine[0].strip()
-                value = splitLine[1].strip()
-                value = value.decode('string_escape')
-                if value[0] == "'":
-                    if value [-1] == "'":
-                        value = value[1:-1]
-                    else:
-                        continue
-                elif value[0] == '"':
-                    if value [-1] == '"':
-                        value = value[1:-1]
-                    else:
-                        continue
-                else:
-                    value = int(value)
-                configFields[key] = value
+         for line in lines:
+             if line[0] == '#':
+                 continue
+             splitLine = line.split('=')
+             if len(splitLine) > 1:
+                 key = splitLine[0].strip()
+                 value = splitLine[1].strip()
+                 value = value.decode('string_escape')
+                 if value[0] == "'":
+                     if value [-1] == "'":
+                         value = value[1:-1]
+                     else:
+                         continue
+                 elif value[0] == '"':
+                     if value [-1] == '"':
+                         value = value[1:-1]
+                     else:
+                         continue
+                 else:
+                     value = int(value)
+                 configFields[key] = value
 
-        configFile.close()
+         configFile.close()
+     return configFields
 
+##############################
+# redirect resolve
+##############################
+def resolve_http_redirect(url, hostKey, hostCert,  depth=0):
+    if depth > 10:
+        raise Exception("Redirected "+depth+" times, giving up.")
+
+    o = urlparse.urlparse(url,allow_fragments=True)
+    conn = httplib.HTTPSConnection(o.netloc, 443, hostKey, hostCert)
+    path = o.path
+    if o.query:
+        path +='?'+o.query
+
+    try:
+        conn.request("HEAD", path)
+        res = conn.getresponse()
+        headers = dict(res.getheaders())
+        if headers.has_key('location') and headers['location'] != url:
+            return resolve_http_redirect(headers['location'], hostKey, hostCert, depth+1)
+        else:
+            return url
+    except:
+        return url;
+
+##############################
+# readers
+##############################
+class ProfileReader(object):
+
+    def loadConfiguration(self, configFields):
+        """Loading config"""
+    
+    def getProfiles(self):
+        """Getting profiles"""
+
+class PoemReader(ProfileReader):
+
+    def __init__(self):
+        self.poemFile = '/etc/ar-sync/poem.conf'
+        self.poemProfileFile = '/etc/ar-sync/poem-profile.conf'
+        self.poemServerFile = '/etc/ar-sync/poem-server.conf'
+        self.poemRequest = '%s/myegi/sam-pi/metrics_in_profiles?vo_name=%s&output=json'
+        self.hostKey = '/etc/grid-security/hostkey.pem'
+        self.hostCert = '/etc/grid-security/hostcert.pem'
+
+    def loadConfiguration(self, configFields):
         if 'poemFile' in configFields:
-            defaultPoemFile = configFields['poemFile']
-
-        if 'poemProflieFile' in configFields:
-            defaultPoemProfileFile = configFields['poemProflieFile']
-
+            self.poemFile = configFields['poemFile']
+        if 'poemProfileFile' in configFields:
+            self.poemProfileFile = configFields['poemProfileFile']
         if 'poemServerFile' in configFields:
-            defaultPoemServerFile = configFields['poemServerFile']
-
-        if 'outputDir' in configFields:
-            defaultOutputDir = configFields['outputDir']
-
+            self.poemServerFile = configFields['poemServerFile']
+        if 'poemRequest' in configFields:
+            self.poemRequest = configFields['poemRequest']
         if 'hostKey' in configFields:
-            hostKey = configFields['hostKey']
-
+             self.hostKey = configFields['hostKey']
         if 'hostCert' in configFields:
-            hostCert = configFields['hostCert']
+             self.hostCert = configFields['hostCert']
 
-        defaultOutputFile = defaultOutputDir + '/poem_sync_%s.out'
+    def getProfiles(self):
 
+        filteredProfiles = self.loadFilteredProfiles()
+        availableVOs = self.loadAvailableVOs()
+        poems = self.loadPoems()
+        validProfiles = self.loadValidProfiles(poems, filteredProfiles)
 
-##############################
-# create output filename
-##############################
-def createOutputFilename(timestamp):
-	return defaultOutputFile % timestamp
+        poemServerFile = open(self.poemServerFile, 'r')
+        poemServers = poemServerFile.read().splitlines()
+        poemServerFile.close();
 
-##############################
-# load filtered profiles
-##############################
-def loadFilteredProfiles():
+        #pp = pprint.PrettyPrinter(indent=4)
+        #sys.stdout.write("fp:  " + pp.pformat(filteredProfiles) + '\n\n')
+        #sys.stdout.write("av:  " + pp.pformat(availableVOs) + '\n\n')
+        #sys.stdout.write("po:  " + pp.pformat(poems) + '\n\n')
+        #sys.stdout.write("vp:  " + pp.pformat(validProfiles) + '\n\n')
+        #sys.stdout.flush()
 
-	poemProfileFile = open(defaultPoemProfileFile, 'r')
-	poemProfiles = poemProfileFile.read().splitlines()
-	poemProfileFile.close();
-	
-	filterProfiles = []
-	for line in poemProfiles:
-        	if len(line) == 0 or line[0] == '#':
+        profileList = list() 
+        for line in poemServers:
+            if len(line) == 0 or line[0] == '#':
+                continue
+
+            if line.split('=')[0] == 'URL':
+
+                url = ''
+                defaultProfiles = []
+                if len(line.split('=')[1].split(';')) > 1:
+                    url = line.split('=')[1].split(';')[0]          
+                    defaultProfiles = line.split('=')[1].split(';')[1].split(',')
+                else:
+                    url = line.split('=')[1]
+
+                profiles = line.split('=')[1].split(';')[1] 
+
+                urlFile = urllib.urlopen(url)
+                urlLines = urlFile.read().splitlines()
+
+                for urlLine in urlLines:
+                    if len(urlLine) == 0 or urlLine[0] == '#':
                         continue
-        	filterProfiles.append(line.upper());
+                    
+                    ngis = urlLine.split(':')[0].split(',')
+                    servers = urlLine.split(':')[2].split(',')
 
-	return filterProfiles
+                    for vo in availableVOs:
+                        serverProfiles = []
+                        if len(defaultProfiles) > 0:
+                            serverProfiles = defaultProfiles
+                        else:
+                            serverProfiles = loadProfilesFromServer(servers[0], vo, filterProfiles).keys()
+                            for profile in serverProfiles:
+                                if profile.upper() in validProfiles.keys():
+                                    for ngi in ngis:
+                                        for server in servers:
+                                            profile.append({})
+                                            profileList.extend(self.createProfileEntries(server, ngi, validProfiles[profile.upper()]))
+
+                urlFile.close();
+
+            else:
+                ngis = line.split(':')[0].split(',')
+                servers = []
+                        
+                defaultProfiles = []
+                if len(line.split(':')[1].split(';')) > 1:
+                    servers = line.split(':')[1].split(';')[0].split(',')
+                    defaultProfiles = line.split(':')[1].split(';')[1].split(',')
+                else:
+                    servers = line.split(':')[1].split(';')[0].split(',')
+                
+                for vo in availableVOs:
+                    serverProfiles = []
+                    if len(defaultProfiles) > 0:
+                        serverProfiles = defaultProfiles
+                    else:
+                        serverProfiles = loadProfilesFromServer(servers[0], vo, filterProfiles).keys()
+                    for profile in serverProfiles:
+                        if profile.upper() in validProfiles.keys():
+                            for ngi in ngis:
+                                for server in servers:
+                                    profileList.extend(self.createProfileEntries(server, ngi, validProfiles[profile.upper()]))
+                
+        return profileList
+
+    def loadFilteredProfiles(self):
+
+        poemProfileFile = open(self.poemProfileFile, 'r')
+        poemProfiles = poemProfileFile.read().splitlines()
+        poemProfileFile.close();
+        
+        filterProfiles = []
+        for line in poemProfiles:
+            if len(line) == 0 or line[0] == '#':
+                continue
+            filterProfiles.append(line.upper());
+
+        return filterProfiles
+
+    def loadAvailableVOs(self):
+
+        poemFile = open(self.poemFile, 'r')
+        poems = poemFile.read().splitlines()
+        poemFile.close();
+
+        avaliableVOs = []
+        for line in poems:
+            if len(line) == 0 or line[0] == '#':
+                continue
+
+            url = line.split(';')[0]
+            vos = line.split(';')[1].split(',')
+            
+            for vo in vos:
+                if not vo in avaliableVOs:
+                    avaliableVOs.append(vo)
+
+        return avaliableVOs
+
+    def loadPoems(self):
+        poemFile = open(self.poemFile, 'r')
+        poems = poemFile.read().splitlines()
+        poemFile.close();
+        return poems;
+
+    def loadValidProfiles(self, poems, filteredProfiles):
+        validProfiles = dict()
+
+        for line in poems:
+            if len(line) == 0 or line[0] == '#':
+                continue
+
+            url = line.split(';')[0]
+            vos = line.split(';')[1].split(',')
+
+            for vo in vos:
+                serverProfiles = self.loadProfilesFromServer(url, vo, filteredProfiles)
+                for profile in serverProfiles.keys():
+                    if not profile in validProfiles.keys():
+                        validProfiles[profile] = serverProfiles[profile]
+                        validProfiles[profile]['vo'] = vo
+
+        return validProfiles
+
+    def loadProfilesFromServer(self, server, vo, filterProfiles):
+
+        validProfiles = dict()
+
+        doFilterProfiles = False
+        if len(filterProfiles) > 0:
+            doFilterProfiles = True
+
+        print server
+        print self.poemRequest % ('',vo)  
+
+        url = resolve_http_redirect('https://' + self.poemRequest % (server,vo), self.hostKey, self.hostCert)
+        print url
+
+        o = urlparse.urlparse(url,allow_fragments=True)
+        try:
+            conn = httplib.HTTPSConnection(o.netloc, 443, self.hostKey, self.hostCert)
+            conn.request('GET', o.path + '?' + o.query)     
+
+            #conn = httplib.HTTPSConnection(server, 443, hostKey, hostCert)
+            #conn.request('GET', defaultPoemRequest % ('',vo))
+            res = conn.getresponse()  
+            if res.status == 200:
+                json_data = json.loads(res.read())
+                for profile in json_data[0]['profiles']:
+                    if not doFilterProfiles or (profile['namespace']+'.'+profile['name']).upper() in filterProfiles:
+                        validProfiles[(profile['namespace']+'.'+profile['name']).upper()] = profile
+            elif res.status in (301,302):
+                print('Redirect: ' + urlparse.urljoin(url, res.getheader('location', '')))
+
+                        # url = urlparse.urljoin(url, responseOb.getheader('location', ''))
+                        # conn = self.getconnection(url,True)
+            else:
+                print('ERROR: Connection failed: ' + res.reason)
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
+
+        return validProfiles
+
+    def createProfileEntries(self, server, ngi, profile):
+        entries = list()
+        for metric in profile['metrics']:
+            entry = dict()
+            entry["profile"] = profile['namespace']+'.'+profile['name']
+            entry["service"] = metric['service_flavour']
+            entry["metric"] = metric['name']
+            entry["server"] = server
+            entry["ngi"] = ngi
+            entry["vo"] = profile['vo']
+            entry["fqan"] = metric['fqan']  
+            entries.append(entry)
+        return entries
 
 ##############################
-# load available vos
+# Writers
 ##############################
-def loadAvailableVOs():
+class ProfileWriter(object):
 
-	poemFile = open(defaultPoemFile, 'r')
-	poems = poemFile.read().splitlines()
-	poemFile.close();
+    def loadConfiguration(self, configFields):
+        """Loading config"""
+    
+    def writeProfiles(self, profiles, date):
+        """Writting downtimes"""
 
-	avaliableVOs = []
-	for line in poems:
-        	if len(line) == 0 or line[0] == '#':
-                        continue
+class FileWritter(ProfileWriter):
 
-        	url = line.split(';')[0]
-        	vos = line.split(';')[1].split(',')
-		
-		for vo in vos:
-			if not vo in avaliableVOs:
-				avaliableVOs.append(vo)
+    def __init__(self):
+        self.outputDir = '/var/lib/ar-sync'
+        self.outputFileTemplate = 'poem_sync_%s.out'
+        self.outputFileFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
 
-	return avaliableVOs
+    def loadConfiguration(self, configFields):
+        if 'outputDir' in configFields:
+             self.outputDir = configFields['outputDir']
+        if 'outputFileTemplate' in configFields:
+             self.outputFileTemplate = configFields['outputFileTemplate']
+        if 'outputFileFormat' in configFields:
+             self.outputFileFormat = configFields['outputFileFormat']
 
-##############################
-# load profiles from server
-##############################
-def loadProfilesFromServer(server, vo, filterProfiles):
+    def writeProfiles(self, profiles, date):
+        filename = createOutputFilename(self.outputDir, self.outputFileTemplate, date)
+        outFile = open(filename, 'w')
+        for p in profiles:
+            outFile.write(self.outputFileFormat % ( p['server'],
+                       p['ngi'],
+                       p['profile'],
+                       p['service'],
+                       p['metric'],
+                       p['vo'],
+                       p['fqan']))
+        outFile.close();
 
-	validProfiles = dict()
+class AvroWritter(ProfileWriter):
 
-	doFilterProfiles = False
-	if len(filterProfiles) > 0:
-		doFilterProfiles = True
+    def __init__(self):
+        self.avroOutputDir = '/var/lib/ar-sync'
+        self.avroOutputFileTemplate = 'poem_sync_%s.avro'
+        self.avroOutputSchema = '/etc/ar-sync/metric_profiles.avsc'
 
-	print server
-	print defaultPoemRequest % ('',vo)	
+    def loadConfiguration(self, configFields):
+        if 'avroOutputDir' in configFields:
+             self.avroOutputDir = configFields['avroOutputDir']
+        if 'avroOutputFileTemplate' in configFields:
+             self.avroOutputFileTemplate = configFields['avroOutputFileTemplate']
+        if 'avroOutputSchema' in configFields:
+             self.avroOutputSchema = configFields['avroOutputSchema']
 
-	url = resolve_http_redirect('https://' + defaultPoemRequest % (server,vo))
-	print url
+    def writeProfiles(self, profiles, date):
+        filename = createOutputFilename(self.avroOutputDir, self.avroOutputFileTemplate, date)
 
-	o = urlparse.urlparse(url,allow_fragments=True)
-	try:
-		conn = httplib.HTTPSConnection(o.netloc, 443, hostKey, hostCert)
-                conn.request('GET', o.path + '?' + o.query)		
+        schema = avro.schema.parse(open(self.avroOutputSchema).read())
+        avroFile = open(filename, 'w+')
+        writer = DataFileWriter(avroFile, DatumWriter(), schema)
 
-		#conn = httplib.HTTPSConnection(server, 443, hostKey, hostCert)
-		#conn.request('GET', defaultPoemRequest % ('',vo))
-		res = conn.getresponse()
-		if res.status == 200:
-			json_data = json.loads(res.read())
-                	for profile in json_data[0]['profiles']:
-                        	if not doFilterProfiles or (profile['namespace']+'.'+profile['name']).upper() in filterProfiles:
-                                	validProfiles[(profile['namespace']+'.'+profile['name']).upper()] = profile
-		elif res.status in (301,302):
-			print('Redirect: ' + urlparse.urljoin(url, res.getheader('location', '')))
+        for p in profiles:
+            writer.append(p)
 
-                	# url = urlparse.urljoin(url, responseOb.getheader('location', ''))
-                	# conn = self.getconnection(url,True)
-		else:
-			print('ERROR: Connection failed: ' + res.reason)
-	except:
-		print "Unexpected error:", sys.exc_info()[0]
-
-#	try:
-#		urlFile = urllib2.urlopen(defaultPoemRequest % (server,vo), None, 5)
-#
-#		json_data = json.load(urlFile)
-#		for profile in json_data[0]['profiles']:
-#			if not doFilterProfiles or profile['name'] in filterProfiles:
-#				validProfiles[(profile['namespace']+'.'+profile['name']).lower()] = profile
-#		urlFile.close();
-#	except:
-#		print 'Error!'
-
-	return validProfiles
-
-def resolve_http_redirect(url, depth=0):
-	if depth > 10:
-		raise Exception("Redirected "+depth+" times, giving up.")
-
-	o = urlparse.urlparse(url,allow_fragments=True)
-	conn = httplib.HTTPSConnection(o.netloc, 443, hostKey, hostCert)
-	path = o.path
-	if o.query:
-		path +='?'+o.query
-
-	try:
-		conn.request("HEAD", path)
-		res = conn.getresponse()
-		headers = dict(res.getheaders())
-		if headers.has_key('location') and headers['location'] != url:
-			return resolve_http_redirect(headers['location'], depth+1)
-		else:
-			return url
-	except:
-		return url;
-
-
-##############################
-# write profiles for server
-##############################
-def writeProfilesForServer(server, ngi, profile, outputFile):
-	for metric in profile['metrics']:
-		outputFile.write(defaultOutputFileFieldFormat % (server, ngi, profile['namespace']+'.'+profile['name'], metric['service_flavour'], metric['name'], profile['vo'], metric['fqan']))
-		
+        writer.close()
+        avroFile.close()
 
 ##############################
 # main
 ##############################
 
+# date
+date = datetime.datetime.utcnow().strftime('%Y_%m_%d')
+
 # load config
+config = loadConfiguration()
 
-loadConfiguration()
+# read profiles
+profiles = list()
+for reader in readers:
+    if reader == 'poem':
+        readerInstance = PoemReader()
+        readerInstance.loadConfiguration(config)
+        ps = readerInstance.getProfiles()
+        profiles.extend(ps)
 
-# load filtered profiles
-
-doFilterProfiles = False
-filterProfiles = loadFilteredProfiles()
-if len(filterProfiles) > 0:
-	doFilterProfiles = True
-
-print filterProfiles
-print doFilterProfiles
-
-# load profiles
-
-availableVOs = loadAvailableVOs()
-
-poemFile = open(defaultPoemFile, 'r')
-poems = poemFile.read().splitlines()
-poemFile.close();
-
-validProfiles = dict()
-
-for line in poems:
-        if len(line) == 0 or line[0] == '#':
-                        continue
-
-	url = line.split(';')[0]
-	vos = line.split(';')[1].split(',')
-
-	for vo in vos:
-		serverProfiles = loadProfilesFromServer(url, vo, filterProfiles)
-		for profile in serverProfiles.keys():
-			if not profile in validProfiles.keys():
-				validProfiles[profile] = serverProfiles[profile]
-				validProfiles[profile]['vo'] = vo
-
-		
-# load server data
-
-timestamp = datetime.datetime.utcnow().strftime('%Y_%m_%d')
-filename = createOutputFilename(timestamp)
-outputFile = open(filename, 'w')
-
-poemServerFile = open(defaultPoemServerFile, 'r')
-poemServers = poemServerFile.read().splitlines()
-poemServerFile.close();
-
-for line in poemServers:
-        if len(line) == 0 or line[0] == '#':
-                        continue
-
-	if line.split('=')[0] == 'URL':
-
-		url = ''
-		defaultProfiles = []
-		if len(line.split('=')[1].split(';')) > 1:
-			url = line.split('=')[1].split(';')[0]			
-			defaultProfiles = line.split('=')[1].split(';')[1].split(',')
-		else:
-			url = line.split('=')[1]
-
-		profiles = line.split('=')[1].split(';')[1] 
-
-		urlFile = urllib.urlopen(url)
-		urlLines = urlFile.read().splitlines()
-
-		for urlLine in urlLines:
-			if len(urlLine) == 0 or urlLine[0] == '#':
-                        	continue
-			
-			ngis = urlLine.split(':')[0].split(',')
-			servers = urlLine.split(':')[2].split(',')
-
-			for vo in availableVOs:
-				serverProfiles = []
-				if len(defaultProfiles) > 0:
-					serverProfiles = defaultProfiles
-				else:
-					serverProfiles = loadProfilesFromServer(servers[0], vo, filterProfiles).keys()
-                		for profile in serverProfiles:
-                        		if profile.upper() in validProfiles.keys():
-						for ngi in ngis:
-							for server in servers:
-								writeProfilesForServer(server, ngi, validProfiles[profile.upper()], outputFile)
-
-		urlFile.close();
-
-	else:
-		ngis = line.split(':')[0].split(',')
-                servers = []
-                
-		defaultProfiles = []
-                if len(line.split(':')[1].split(';')) > 1:
-                        servers = line.split(':')[1].split(';')[0].split(',')
-                        defaultProfiles = line.split(':')[1].split(';')[1].split(',')
-                else:
-			servers = line.split(':')[1].split(';')[0].split(',')
-		
-		for vo in availableVOs:
-			serverProfiles = []
-			if len(defaultProfiles) > 0:
-				serverProfiles = defaultProfiles
-			else:
-				serverProfiles = loadProfilesFromServer(servers[0], vo, filterProfiles).keys()
-			for profile in serverProfiles:
-				if profile.upper() in validProfiles.keys():
-					for ngi in ngis:
-						for server in servers:
-							writeProfilesForServer(server, ngi, validProfiles[profile.upper()], outputFile)
-		
-outputFile.close()	
-
+# write profiles
+for writer in writers:
+    if writer == 'file':
+        writerInstance = FileWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstance.writeProfiles(profiles, date)
+    elif writer == 'avro':
+        writerInstance = AvroWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstance.writeProfiles(profiles, date)

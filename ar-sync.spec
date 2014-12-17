@@ -1,6 +1,6 @@
 Name: ar-sync
 Summary: A/R Comp Engine sync scripts
-Version: 1.2.3
+Version: 1.3.1
 Release: 2%{?dist}
 License: ASL 2.0
 Buildroot: %{_tmppath}/%{name}-buildroot
@@ -8,7 +8,7 @@ Group:     EGI/SA4
 BuildArch: noarch
 Source0:   %{name}-%{version}.tar.gz
 Requires:  crontabs, anacron
-Requires:  hive
+Requires:  hive, avro
 
 %description
 Installs the service for syncing A/R Comp Engine
@@ -33,6 +33,11 @@ install --mode 644 etc/ar-sync/downtime-sync.conf %{buildroot}/etc/ar-sync/
 install --mode 644 etc/ar-sync/prefilter.conf %{buildroot}/etc/ar-sync/
 install --mode 644 etc/ar-sync/vo-sync.conf %{buildroot}/etc/ar-sync/
 install --mode 644 etc/ar-sync/poem_name_mapping.cfg %{buildroot}/var/lib/ar-sync/
+install --mode 644 etc/ar-sync/downtimes.avsc %{buildroot}/etc/ar-sync/
+install --mode 644 etc/ar-sync/metric_profiles.avsc %{buildroot}/etc/ar-sync/
+install --mode 644 etc/ar-sync/group_endpoints.avsc %{buildroot}/etc/ar-sync/
+install --mode 644 etc/ar-sync/sites.avsc %{buildroot}/etc/ar-sync/
+install --mode 644 etc/ar-sync/weight_sites.avsc %{buildroot}/etc/ar-sync/
 install --mode 755 bin/poem-sync %{buildroot}/usr/libexec/ar-sync
 install --mode 755 bin/topology-sync %{buildroot}/usr/libexec/ar-sync
 install --mode 755 bin/downtime-sync %{buildroot}/usr/libexec/ar-sync
@@ -62,6 +67,11 @@ install --mode 644 cronjobs/hepspec %{buildroot}/etc/cron.d/hepspec
 %config(noreplace) /etc/ar-sync/downtime-sync.conf
 %config(noreplace) /etc/ar-sync/prefilter.conf
 %config(noreplace) /etc/ar-sync/vo-sync.conf
+%config(noreplace) /etc/ar-sync/downtimes.avsc
+%config(noreplace) /etc/ar-sync/metric_profiles.avsc
+%config(noreplace) /etc/ar-sync/group_endpoints.avsc
+%config(noreplace) /etc/ar-sync/sites.avsc
+%config(noreplace) /etc/ar-sync/weight_sites.avsc
 %attr(0750,root,root) /var/lib/ar-sync
 %config(noreplace) /var/lib/ar-sync/poem_name_mapping.cfg
 %attr(0750,root,root) /var/log/ar-sync
@@ -70,6 +80,11 @@ install --mode 644 cronjobs/hepspec %{buildroot}/etc/cron.d/hepspec
 %attr(0644,root,root) /etc/cron.d/hepspec
 
 %changelog
+* Wed Nov 17 2014 Daniel Vrcic <dvrcic@srce.hr> - 1.3.1-0%{?dist}
+- ar-sync is missing avro dependency
+- poem-sync is missing data for servers listed in URL
+* Thu Nov 27 2014 Luko Gjenero <lgjenero@srce.hr> - 1.3.0-0%{?dist}
+- Avro format for poem, downtimes, topology and hepspec
 * Tue May 13 2014 Paschalis Korosoglou <pkoro@grid.auth.gr> - 1.2.3-1%{?dist}
 - Added logging to sync components
 * Fri Apr 26 2014 Luko Gjenero <lgjenero@srce.hr> - 1.2.2-1%{?dist}

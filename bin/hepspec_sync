@@ -33,108 +33,284 @@ import httplib
 import sys
 import urlparse
 
-defaultOutputDir = '/var/lib/ar-sync'
+import avro.schema
+from avro.datafile import DataFileReader
+from avro.datafile import DataFileWriter
+from avro.io import DatumReader
+from avro.io import DatumWriter
 
-defaultOutputFile = defaultOutputDir + '/hepspec_sync_%s.out'
-defaultOutputFileFieldFormat = '%s\001%s\r\n'
-defaultGstatRequest = 'http://gstat2.grid.sinica.edu.tw/gstat/summary/json/'
+defaultConfig = '/etc/ar-sync/hepspec-sync.conf'
+
+readers = ['gstat']
+writers = ['file', 'avro']
 
 ##############################
 # create output filename
 ##############################
-def createOutputFilename(timestamp):
-	return defaultOutputFile % timestamp
+def createOutputFilename(directory, fileTemplate, timestamp):
+    return directory + '/' + (fileTemplate % timestamp)
 
 ##############################
-# load name mapping
+# load config
 ##############################
-def loadOldData(filename):
+def loadConfiguration():
+     #load config
+     configFile = None
+     configFields = dict()
+     if os.path.isfile(defaultConfig):
+         configFile = open(defaultConfig, 'r')
+         lines = configFile.readlines()
 
+         for line in lines:
+             if line[0] == '#':
+                 continue
+             splitLine = line.split('=')
+             if len(splitLine) > 1:
+                 key = splitLine[0].strip()
+                 value = splitLine[1].strip()
+                 value = value.decode('string_escape')
+                 if value[0] == "'":
+                     if value [-1] == "'":
+                         value = value[1:-1]
+                     else:
+                         continue
+                 elif value[0] == '"':
+                     if value [-1] == '"':
+                         value = value[1:-1]
+                     else:
+                         continue
+                 else:
+                     value = int(value)
+                 configFields[key] = value
+
+         configFile.close()
+
+     return configFields
+
+##############################
+# readers
+##############################
+class WeightReader(object):
+
+    def loadConfiguration(self, configFields):
+        """Loading config"""
+    
+    def getWeights(self):
+        """Getting weights"""
+
+class HEPSPECReader(WeightReader):
+     
+    def __init__(self):
+        self.GstatRequest = 'http://gstat2.grid.sinica.edu.tw/gstat/summary/json/'
+
+    def loadConfiguration(self, configFields):
+        if 'GstatRequest' in configFields:
+             self.GstatRequest = configFields['GstatRequest']
+
+    def getWeights(self):
+    	# load server data
+	urlFile = urllib2.urlopen(self.GstatRequest)
+	json_data = json.load(urlFile)
+	urlFile.close();
+	weights = dict()
+	for site in json_data:
+		key = site['Sitename']
+		val = site['HEPSPEC06']
+		weights[key] = val
+        return weights
+
+##############################
+# writers
+##############################
+class WeightWriter(object):
+
+    def loadConfiguration(self,configFields):
+        """Loading config"""
+    
+    def outputFilenameForDate(self, date):
+    	"""Output filename for given date"""
+
+    def loadOldData(self, date):
+    	"""Load pre-existing data"""
+
+    def writeWeights(self, weights, date):
+        """Getting downtimes"""
+
+class FileWritter(WeightWriter):
+
+    def __init__(self):
+        self.outputDir = '/var/lib/ar-sync'
+        self.outputFileTemplate = 'hepspec_sync_%s.out'
+        self.outputFileFormat = '%s\001%s\r\n'
+        self.outputFileDelimiter = '\001'
+
+    def loadConfiguration(self, configFields):
+        if 'outputDir' in configFields:
+             self.outputDir = configFields['outputDir']
+        if 'outputFileTemplate' in configFields:
+             self.outputFileTemplate = configFields['outputFileTemplate']
+        if 'outputFileFormat' in configFields:
+             self.outputFileFormat = configFields['outputFileFormat']
+        if 'outputFileDelimiter' in configFields:
+            self.outputFileDelimiter = configFields['outputFileDelimiter']
+
+    def outputFilenameForDate(self, date):
+    	return createOutputFilename(self.outputDir, self.outputFileTemplate, date)
+
+    def loadOldData(self, date):
+	filename = createOutputFilename(self.outputDir, self.outputFileTemplate, date)
         oldDataDict = dict()
+
+        if not os.path.isfile(filename):
+            return oldDataDict        
 
         oldDataFile = open(filename, 'r')
         oldData = oldDataFile.read().splitlines()
         oldDataFile.close();
 
         for line in oldData:
-                if len(line) == 0 or line[0] == '#':
-                        continue
+            if len(line) == 0 or line[0] == '#':
+                continue
 
-                oldDataFields = line.split('\001')
-                if len(oldDataFields) > 1:
-                        key = oldDataFields[0].strip()
-                        val = int(oldDataFields[1].strip())
-                        oldDataDict[key] = val
+            oldDataFields = line.split(self.outputFileDelimiter)
+            if len(oldDataFields) > 1:
+                key = oldDataFields[0].strip()
+                val = oldDataFields[1].strip()
+                oldDataDict[key] = val
 
         return oldDataDict
+
+    def writeWeights(self, weights, date):
+        filename = createOutputFilename(self.outputDir, self.outputFileTemplate, date)
+        outFile = open(filename, 'w')
+        for key in weights:
+            w = weights[key]
+            outFile.write(self.outputFileFormat % ( key, w))
+        outFile.close();
+
+class AvroWritter(WeightWriter):
+
+    def __init__(self):
+        self.avroOutputDir = '/var/lib/ar-sync'
+        self.avroOutputFileTemplate = 'weights_sync_%s.avro'
+        self.avroOutputSchema = '/etc/ar-sync/weight_sites.avsc'
+
+    def loadConfiguration(self, configFields):
+        if 'avroOutputDir' in configFields:
+             self.avroOutputDir = configFields['avroOutputDir']
+        if 'avroOutputFileTemplate' in configFields:
+             self.avroOutputFileTemplate = configFields['avroOutputFileTemplate']
+        if 'avroOutputSchema' in configFields:
+             self.avroOutputSchema = configFields['avroOutputSchema']
+
+    def outputFilenameForDate(self, date):
+        createOutputFilename(self.avroOutputDir, self.avroOutputFileTemplate, date)
+
+    def loadOldData(self, date):
+        filename = createOutputFilename(self.avroOutputDir, self.avroOutputFileTemplate, date)
+        oldDataDict = dict()
+
+        if not os.path.isfile(filename):
+            return oldDataDict        
+
+        reader = DataFileReader(open(filename, "r"), DatumReader())
+	for weight in reader:
+            oldDataDict[weight["site"]] = weight["weight"]
+	reader.close()
+
+        return oldDataDict
+
+    def writeWeights(self, weights, date):
+        filename = createOutputFilename(self.avroOutputDir, self.avroOutputFileTemplate, date)
+
+        schema = avro.schema.parse(open(self.avroOutputSchema).read())
+        avroFile = open(filename, 'w+')
+        writer = DataFileWriter(avroFile, DatumWriter(), schema)
+
+        for key in weights:
+            w = weights[key]
+            writer.append({"type": "hepspec", "site": key, "weight": w})
+
+        writer.close()
+        avroFile.close()
 
 ##############################
 # main
 ##############################
 
-timestamp = datetime.datetime.utcnow().strftime('%Y_%m_%d')
-newFilename = createOutputFilename(timestamp)
+# load configuration
+config = loadConfiguration()
 
-oldDate = datetime.datetime.utcnow()
-oldFilename = createOutputFilename(oldDate.strftime('%Y_%m_%d'))
+# init readers and writters
+readerInstances = list()
+writerInstances = list()
+
+for reader in readers:
+    if reader == 'gstat':
+        readerInstance = HEPSPECReader()
+        readerInstance.loadConfiguration(config)
+        readerInstances.append(readerInstance)
+
+for writer in writers:
+    if writer == 'file':
+        writerInstance = FileWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstances.append(writerInstance)
+    elif writer == 'avro':
+        writerInstance = AvroWritter()
+        writerInstance.loadConfiguration(config)
+        writerInstances.append(writerInstance)
 
 # find old data
-i = 0;
-oldDataExists = True
-while not os.path.isfile(oldFilename):
+if len(writerInstances) > 0:
+
+    timestamp = datetime.datetime.utcnow().strftime('%Y_%m_%d')
+    oldDate = datetime.datetime.utcnow()
+    oldFilename = writerInstances[0].outputFilenameForDate(oldDate.strftime('%Y_%m_%d'))
+
+    i = 0;
+    oldDataExists = True
+    while not os.path.isfile(oldFilename):
 	oldDate = oldDate - datetime.timedelta(days=1)
-	oldFilename = createOutputFilename(oldDate.strftime('%Y_%m_%d'))
+	oldFilename = writerInstances[0].outputFilenameForDate(oldDate.strftime('%Y_%m_%d'))
 	i = i+1
-	if i >= 30:
-		oldDataExists = False
-		break
+        if i >= 30:
+	    oldDataExists = False
+	    break
 
-#load old data
+# load old data
+oldData = dict()
 if oldDataExists:
-	oldData = loadOldData(oldFilename)
-else:
-	oldData = dict()
+    for writer in writerInstances:
+        oldData.update(writer.loadOldData(oldDate.strftime('%Y_%m_%d')))
 
-# load server data
-urlFile = urllib2.urlopen(defaultGstatRequest)
-json_data = json.load(urlFile)
-urlFile.close();
+# load new data
+newData = dict()
+for reader in readerInstances:
+    newData.update(reader.getWeights());
 
 # fill new list
-newData = dict()
-for site in json_data:
-	key = site['Sitename']
-	newVal = int(site['HEPSPEC06'])
-	if newVal <= 0:
-		if key in oldData:
-			newVal = oldData[key]
-	if key not in oldData:
-		oldData[key] = newVal
-	newData[key] = newVal
+for key in newData:
+    newVal = int(newData[key])
+    if newVal <= 0:
+	if key in oldData:
+	    newVal = int(oldData[key])
+    if key not in oldData:
+	oldData[key] = str(newVal)
+    newData[key] = str(newVal)
 
 # fill old list
 for key in oldData:
-	oldVal = oldData[key]
+	oldVal = int(oldData[key])
 	if oldVal <= 0:
-                if key in newData:
-                        oldData[key] = newData[key]
+            if key in newData:
+                oldData[key] = newData[key]
 	if key not in newData:
-		newData[key] = oldData[key]
+	    newData[key] = oldData[key]
 
-# write output
-newOutputFile = open(newFilename, 'w')
-if oldDataExists:
-	if oldFilename == newFilename:
-		oldDataExists = False
-	else:
-		oldOutputFile = open(oldFilename, 'w')
-
-for key in newData:
-	newOutputFile.write(defaultOutputFileFieldFormat % (key, newData[key]))
+# write old & new data
+for writer in writerInstances:
 	if oldDataExists:
-		oldOutputFile.write(defaultOutputFileFieldFormat % (key, oldData[key]))
-	
-newOutputFile.close()
-if oldDataExists:
-	oldOutputFile.close()	
+	    writer.writeWeights(oldData, oldDate.strftime('%Y_%m_%d'))
+	writer.writeWeights(newData, timestamp)
 
