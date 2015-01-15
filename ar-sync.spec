@@ -1,6 +1,6 @@
 Name: ar-sync
 Summary: A/R Comp Engine sync scripts
-Version: 1.3.0
+Version: 1.3.1
 Release: 2%{?dist}
 License: ASL 2.0
 Buildroot: %{_tmppath}/%{name}-buildroot
@@ -43,6 +43,7 @@ install --mode 755 bin/topology-sync %{buildroot}/usr/libexec/ar-sync
 install --mode 755 bin/downtime-sync %{buildroot}/usr/libexec/ar-sync
 install --mode 755 bin/hepspec_sync %{buildroot}/usr/libexec/ar-sync
 install --mode 755 bin/prefilter %{buildroot}/usr/libexec/ar-sync
+install --mode 755 bin/prefilter-avro %{buildroot}/usr/libexec/ar-sync
 install --mode 755 bin/vo-sync %{buildroot}/usr/libexec/ar-sync
 install --mode 644 cronjobs/poem %{buildroot}/etc/cron.d/poem
 install --mode 644 cronjobs/topology %{buildroot}/etc/cron.d/topology
@@ -58,6 +59,7 @@ install --mode 644 cronjobs/hepspec %{buildroot}/etc/cron.d/hepspec
 %attr(0755,root,root) /usr/libexec/ar-sync/downtime-sync
 %attr(0755,root,root) /usr/libexec/ar-sync/hepspec_sync
 %attr(0755,root,root) /usr/libexec/ar-sync/prefilter
+%attr(0755,root,root) /usr/libexec/ar-sync/prefilter-avro
 %attr(0755,root,root) /usr/libexec/ar-sync/vo-sync
 %config(noreplace) /etc/ar-sync/poem-sync.conf
 %config(noreplace) /etc/ar-sync/poem.conf
@@ -80,6 +82,8 @@ install --mode 644 cronjobs/hepspec %{buildroot}/etc/cron.d/hepspec
 %attr(0644,root,root) /etc/cron.d/hepspec
 
 %changelog
+* Thu Jan 15 2015 Luko Gjenero <lgjenero@srce.hr> - 1.3.1-0%{?dist}
+- Avro prefiltering 
 * Thu Nov 27 2014 Luko Gjenero <lgjenero@srce.hr> - 1.3.0-0%{?dist}
 - Avro format for poem, downtimes, topology and hepspec
 * Tue May 13 2014 Paschalis Korosoglou <pkoro@grid.auth.gr> - 1.2.3-1%{?dist}
