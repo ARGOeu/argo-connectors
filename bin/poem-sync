@@ -33,7 +33,7 @@ import httplib
 import sys
 import urlparse
 import pprint
-
+import ConfigParser
 import avro.schema
 from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
@@ -49,41 +49,86 @@ writers = ['file', 'avro']
 def createOutputFilename(directory, fileTemplate, timestamp):
     return directory + '/' + (fileTemplate % timestamp)
 
+def loadCustomerConfiguration():
+    customers, customerjobs, jobsinconf, profiles  = [], [], [], []
+    configFile, customerConfigFile = (None, None)
+    outputdir = ''
+    if os.path.isfile(defaultConfig):
+        configFile = open(defaultConfig, 'r')
+        for line in configFile:
+            if 'poemCustomerFile' in line:
+                customerConfigFile = line.split('=', 1)[1].strip()
+                customerConfigFile = customerConfigFile.strip("'")
+
+    try:
+        config = ConfigParser.ConfigParser()
+        config.read(customerConfigFile)
+
+        for section in config.sections():
+            if section.startswith('CUSTOMER'):
+                if config.has_option(section, 'Jobs'):
+                    customerjobs = config.get(section, 'Jobs').split(',')
+                    customerjobs = [job.strip() for job in customerjobs]
+                    customers.append({section : customerjobs})
+            elif section.startswith('JOB'):
+                if config.has_option(section, 'Profiles'):
+                    profiles = config.get(section, 'Profiles').split(',')
+                    profiles = [profile.strip() for profile in profiles]
+                    jobsinconf.append({section : {"PROFILE" : profiles}})
+            elif section == 'DIR':
+                if config.has_option(section, 'OutputDir'):
+                    outputdir = config.get(section, 'OutputDir')
+
+        for cus in customers:
+            for key, value in cus.items():
+                for v in value:
+                    for job in jobsinconf:
+                        if v in job:
+                            cus[key][value.index(v)] = jobsinconf[jobsinconf.index(job)]
+
+    except ConfigParser.MissingSectionHeaderError as e:
+        print e.filename + " is not a valid configuration file"
+        print e.message
+        sys.exit(1)
+
+    return (customers, outputdir)
+
 ##############################
 # load config
 ##############################
 def loadConfiguration():
-     #load config
-     configFile = None
-     configFields = dict()
-     if os.path.isfile(defaultConfig):
-         configFile = open(defaultConfig, 'r')
-         lines = configFile.readlines()
+    #load config
+    configFile = None
+    configFields = dict()
+    if os.path.isfile(defaultConfig):
+        configFile = open(defaultConfig, 'r')
+        lines = configFile.readlines()
 
-         for line in lines:
-             if line[0] == '#':
-                 continue
-             splitLine = line.split('=', 1)
-             if len(splitLine) > 1:
-                 key = splitLine[0].strip()
-                 value = splitLine[1].strip()
-                 value = value.decode('string_escape')
-                 if value[0] == "'":
-                     if value [-1] == "'":
-                         value = value[1:-1]
-                     else:
-                         continue
-                 elif value[0] == '"':
-                     if value [-1] == '"':
-                         value = value[1:-1]
-                     else:
-                         continue
-                 else:
-                     value = int(value)
-                 configFields[key] = value
+        for line in lines:
+            if line[0] == '#':
+                continue
+            splitLine = line.split('=', 1)
+            if len(splitLine) > 1:
+                key = splitLine[0].strip()
+                value = splitLine[1].strip()
+                value = value.decode('string_escape')
+                if value[0] == "'":
+                    if value [-1] == "'":
+                        value = value[1:-1]
+                    else:
+                        continue
+                elif value[0] == '"':
+                    if value [-1] == '"':
+                        value = value[1:-1]
+                    else:
+                        continue
+                else:
+                    value = int(value)
+                configFields[key] = value
 
-         configFile.close()
-     return configFields
+        configFile.close()
+
+    return configFields
 
 ##############################
 # redirect resolve
@@ -413,6 +458,37 @@ class AvroWritter(ProfileWriter):
         writer.close()
         avroFile.close()
 
+    def writeProfilesForCustomers(self, customers, customersdir, profiles, date):
+        schema = avro.schema.parse(open(self.avroOutputSchema).read())
+
+        for cust in customers:
+            for name, jobs in cust.items():
+                for job in jobs:
+                    try:
+                        outdir = "%s/%s/%s" % (customersdir,\
+                                                name.split('_')[1],\
+                                                job.keys()[0].split('_')[1])
+                        os.makedirs(outdir)
+                    except OSError:
+                        pass
+
+                    filename = createOutputFilename(outdir, self.avroOutputFileTemplate, date)
+                    avroFile = open(filename, 'w+')
+                    writer = DataFileWriter(avroFile, DatumWriter(), schema)
+                    custprofiles = [profile for (key, value) in job.items() for profile in value['PROFILE']]
+
+                    for p in profiles:
+                        if p['profile'].split('.')[-1] in custprofiles:
+                            pt = dict()
+                            pt['metric'] = p['metric']
+                            pt['profile'] = p['profile']
+                            pt['service'] = p['service']
+                            pt['tags'] = {'vo' : p['vo'], 'fqan' : p['fqan']}
+                            writer.append(pt)
+
+                    writer.close()
+                    avroFile.close()
+
 ##############################
 # main
 ##############################
@@ -422,6 +498,7 @@ date = datetime.datetime.utcnow().strftime('%Y_%m_%d')
 
 # load config
 config = loadConfiguration()
+customers, customersdir = loadCustomerConfiguration()
 
 # read profiles
 profiles = list()
@@ -442,3 +519,4 @@ for writer in writers:
         writerInstance = AvroWritter()
         writerInstance.loadConfiguration(config)
         writerInstance.writeProfiles(profiles, date)
+        writerInstance.writeProfilesForCustomers(customers, customersdir, profiles, date)

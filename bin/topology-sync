@@ -413,10 +413,6 @@ class AvroWritter(TopologyWriter):
              self.avroOutputGroupOfServicesSchema = configFields['avroOutputGroupOfServicesSchema']
         if 'avroOutputGroupOfEndpointsSchema' in configFields:
              self.avroOutputGroupOfEndpointsSchema = configFields['avroOutputGroupOfEndpointsSchema']
-        if 'avroOutputSiteFileTemplate' in configFields:
-             self.avroOutputSiteFileTemplate = configFields['avroOutputSiteFileTemplate']
-        if 'avroOutputSiteSchema' in configFields:
-             self.avroOutputSiteSchema = configFields['avroOutputSiteSchema']
 
     def FilterByTags(self, tags, listofelem):
         for attr in tags.keys():
