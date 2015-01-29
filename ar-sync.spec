@@ -1,7 +1,7 @@
 Name: ar-sync
 Summary: A/R Comp Engine sync scripts
 Version: 1.3.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 License: ASL 2.0
 Buildroot: %{_tmppath}/%{name}-buildroot
 Group:     EGI/SA4
@@ -92,7 +92,7 @@ install --mode 644 cronjobs/hepspec %{buildroot}/etc/cron.d/hepspec
 %attr(0644,root,root) /etc/cron.d/hepspec
 
 %changelog
-* Mon Jan 19 2015 Daniel Vrcic <dvrcic@srce.hr> - 1.3.1-8%(?dist)
+* Mon Jan 19 2015 Daniel Vrcic <dvrcic@srce.hr> - 1.3.1-9%(?dist)
 - topology-sync: avro schemas updated with tags and filtering by tags values
 - poem-sync: avro schema updated with tags
 - poem-sync: output profiles per customer and job

@@ -345,7 +345,7 @@ class FileWritter(TopologyWriter):
     def __init__(self):
         self.outputDir = '/var/lib/ar-sync'
 
-        self.outputGroupFileTemplate = '/group_%s.out'
+        self.outputGroupFileTemplate = '/groups_%s.out'
         # Hostname, Service Type, Production, Monitored, Service group, Group Monitored, Group Scope
         self.outputGroupFileFormat = '%s\001%s\001%s\001%s\001%s\001%s\001%s\r\n'
 

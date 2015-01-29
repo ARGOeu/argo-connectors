@@ -242,13 +242,12 @@ class PoemReader(ProfileReader):
                         if len(defaultProfiles) > 0:
                             serverProfiles = defaultProfiles
                         else:
-                            serverProfiles = loadProfilesFromServer(servers[0], vo, filterProfiles).keys()
-                            for profile in serverProfiles:
-                                if profile.upper() in validProfiles.keys():
-                                    for ngi in ngis:
-                                        for server in servers:
-                                            profile.append({})
-                                            profileList.extend(self.createProfileEntries(server, ngi, validProfiles[profile.upper()]))
+                            serverProfiles = self.loadProfilesFromServer(servers[0], vo, filteredProfiles).keys()
+                        for profile in serverProfiles:
+                            if profile.upper() in validProfiles.keys():
+                                for ngi in ngis:
+                                    for server in servers:
+                                        profileList.extend(self.createProfileEntries(server, ngi, validProfiles[profile.upper()]))
 
                 urlFile.close();
 
@@ -268,7 +267,7 @@ class PoemReader(ProfileReader):
                     if len(defaultProfiles) > 0:
                         serverProfiles = defaultProfiles
                     else:
-                        serverProfiles = loadProfilesFromServer(servers[0], vo, filterProfiles).keys()
+                        serverProfiles = self.loadProfilesFromServer(servers[0], vo, filteredProfiles).keys()
                     for profile in serverProfiles:
                         if profile.upper() in validProfiles.keys():
                             for ngi in ngis:

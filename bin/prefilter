@@ -194,22 +194,22 @@ def poemProfileFilenameCheck(year, month, day):
 ##############################
 def topologyFilenameCheck(year, month, day):
 
-        count = 0
-        dt = datetime.datetime(year=int(year), month=int(month), day=int(day))
-        while True:
-                year = dt.strftime("%Y")
-                month = dt.strftime("%m")
-                day = dt.strftime("%d")
-                fileName = topologyFileDirectory + '/' + topologyFilename % (year, month, day)
-                if os.path.isfile(fileName):
-                        break
-                if count >= checkInputFileForDays:
-                        fileName = None
-                        break
-                count = count+1
+    count = 0
+    dt = datetime.datetime(year=int(year), month=int(month), day=int(day))
+    while True:
+        year = dt.strftime("%Y")
+        month = dt.strftime("%m")
+        day = dt.strftime("%d")
+        fileName = topologyFileDirectory + '/' + topologyFilename % (year, month, day)
+        if os.path.isfile(fileName):
+                break
+        if count >= checkInputFileForDays:
+                fileName = None
+                break
+        count = count+1
         dt = dt - datetime.timedelta(days=1)
 
-        return fileName
+    return fileName
 
 
 ##############################
@@ -226,21 +226,20 @@ def loadNGIs(year, month, day):
     poemProfileFile.close();
 
     for line in poemProfiles:
-            if len(line) == 0 or line[0] == '#':
-                    continue
+        if len(line) == 0 or line[0] == '#':
+            continue
+        profileFields = line.split(poemFileFieldDelimiter)
+        profile = dict()
+        for i in range(0,len(profileFieldNames)):
+            profile[profileFieldNames[i]] = profileFields[i]
 
-            profileFields = line.split(poemFileFieldDelimiter)
-    profile = dict()
-    for i in range(0,len(profileFieldNames)):
-        profile[profileFieldNames[i]] = profileFields[i]
+        if profile['server'] not in ngiTree:
+            ngiTree[profile['server']] = list()
 
-    if profile['server'] not in ngiTree:
-        ngiTree[profile['server']] = list()
+        if profile['ngi'] not in  ngiTree[profile['server']]:
+            ngiTree[profile['server']].append(profile['ngi'])
 
-    if profile['ngi'] not in  ngiTree[profile['server']]:
-        ngiTree[profile['server']].append(profile['ngi'])
-
-    # ngiTree[profile['server']] = profile['ngi']
+        # ngiTree[profile['server']] = profile['ngi']
 
     return ngiTree
 
@@ -258,57 +257,57 @@ def loadFilteredProfiles(year, month, day):
     poemProfileFile.close();
 
     for line in poemProfiles:
-            if len(line) == 0 or line[0] == '#':
-                    continue
+        if len(line) == 0 or line[0] == '#':
+            continue
 
-    profileFields = line.split(poemFileFieldDelimiter)
+        profileFields = line.split(poemFileFieldDelimiter)
 
-    profile = dict()
-    for i in range(0,len(profileFieldNames)):
-        profile[profileFieldNames[i]] = profileFields[i]
+        profile = dict()
+        for i in range(0,len(profileFieldNames)):
+            profile[profileFieldNames[i]] = profileFields[i]
 
-    #find server tree
-    serverTree = dict()
-    if profile['server'] in profileTree.keys():
+        #find server tree
+        serverTree = dict()
+        if profile['server'] in profileTree.keys():
             serverTree = profileTree[profile['server']]
-    else:
+        else:
             profileTree[profile['server']] = serverTree
 
-    #find type tree
-    typeTree = dict()
-    if profile['service_flavour'] in serverTree.keys():
+        #find type tree
+        typeTree = dict()
+        if profile['service_flavour'] in serverTree.keys():
             typeTree = serverTree[profile['service_flavour']]
-    else:
+        else:
             serverTree[profile['service_flavour']] = typeTree
 
-    #find type metric
-    metricTree = dict()
-    if profile['metric'] in typeTree.keys():
-        metricTree = typeTree[profile['metric']]
-    else:
-        typeTree[profile['metric']] = metricTree
+        #find type metric
+        metricTree = dict()
+        if profile['metric'] in typeTree.keys():
+            metricTree = typeTree[profile['metric']]
+        else:
+            typeTree[profile['metric']] = metricTree
 
-    #find vo tree
-    vo = '-'
-    if len(profile['vo']) > 0:
-        vo = profile['vo']
-    voTree = dict()
-    if vo in metricTree.keys():
-        voTree = metricTree[vo]
-    else:
-        metricTree[vo] = voTree
+        #find vo tree
+        vo = '-'
+        if len(profile['vo']) > 0:
+            vo = profile['vo']
+        voTree = dict()
+        if vo in metricTree.keys():
+            voTree = metricTree[vo]
+        else:
+            metricTree[vo] = voTree
 
-            #find fqan tree
-    fqan = '-'
-    if len(profile['fqan']) > 0:
-        vfqan = profile['fqan']
-    fqanTree = dict()
-    if fqan in voTree.keys():
-        fqanTree = voTree[fqan]
-    else:
-        voTree[fqan] = fqanTree
+        #find fqan tree
+        fqan = '-'
+        if len(profile['fqan']) > 0:
+            vfqan = profile['fqan']
+        fqanTree = dict()
+        if fqan in voTree.keys():
+            fqanTree = voTree[fqan]
+        else:
+            voTree[fqan] = fqanTree
 
-    voTree[fqan][profile['profile']] = profile
+        voTree[fqan][profile['profile']] = profile
 
     return profileTree
 
@@ -321,20 +320,20 @@ def loadNameMapping(year, month, day):
 
     nameMappingFile = None
     try:
-            nameMappingFile = open(poemFileDirectory + '/' + poemNameMappingFilename, 'r')
+        nameMappingFile = open(poemFileDirectory + '/' + poemNameMappingFilename, 'r')
     except IOError:
         nameMappingFile = None
 
     if nameMappingFile <> None:
 
-            nameMappings = nameMappingFile.read().splitlines()
-            nameMappingFile.close();
+        nameMappings = nameMappingFile.read().splitlines()
+        nameMappingFile.close();
 
-            for line in nameMappings:
-                    if len(line) == 0 or line[0] == '#':
-                            continue
+        for line in nameMappings:
+            if len(line) == 0 or line[0] == '#':
+                    continue
 
-                    nameMappingFields = line.split(':')
+            nameMappingFields = line.split(':')
             if len(nameMappingFields) > 1:
                 oldName = nameMappingFields[0].strip()
                 newName = nameMappingFields[1].strip()
@@ -401,7 +400,7 @@ def getProfilesForConsumerMessage(profileTree, nameMapping, fields):
         else:
             return -1
 
-        #find vo tree
+    #find vo tree
     if len(fields[voIdx]) > 0:
         if fields[voIdx] in metricTree.keys():
             voTree =  metricTree[fields[voIdx]]
@@ -436,7 +435,6 @@ def getProfilesForConsumerMessage(profileTree, nameMapping, fields):
 ##############################
 
 #load config
-
 loadConfiguration()
 
 argsOk = False
@@ -509,4 +507,3 @@ consumerFile.close()
 outputFile.close()
 
 print 'Rejected: ' + str(rejected)
-

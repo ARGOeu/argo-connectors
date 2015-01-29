@@ -295,7 +295,7 @@ def getProfilesForConsumerMessage(profileTree, nameMapping, logItem):
 
     #find server tree
     if logItem['monitoring_host'] in profileTree.keys():
-        serverTree = profileTree[logItem[serverIdx]]
+        serverTree = profileTree[logItem['monitoring_host']]
     else:
         return -1
 
@@ -391,15 +391,15 @@ for logItem in reader:
             if writeToStd > 0:
                 print logItem
                 print '\n'
-    else:
-        writer.append(logItem)
-    continue
+        else:
+            writer.append(logItem)
+        continue
 
     #ngi check
     ngiOk = False
     if logItem['monitoring_host'] in ngis.keys():
         ngiList = ngis[logItem['monitoring_host']]
-        if 'ALL' in ngiList or logItem['tags']['roc'] in ngiList:
+        if 'ALL' in ngiList or (logItem['tags'] and logItem['tags']['roc'] in ngiList):
             ngiOk = True
 
     if ngiOk:
@@ -412,13 +412,13 @@ for logItem in reader:
             rejected += 1
             continue
 
-            if len(msgprofiles) > 0:
-                    writer.append(logItem)
-            else:
-                rejected += 1
-                if writeToStd > 0:
-                    print logItem
-                    print '\m'
+        if len(msgprofiles) > 0:
+                writer.append(logItem)
+        else:
+            rejected += 1
+            if writeToStd > 0:
+                print logItem
+                print '\m'
 
 reader.close()
 writer.close()
