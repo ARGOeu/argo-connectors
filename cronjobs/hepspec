@@ -1,3 +1,0 @@
-5 0 * * * root /usr/libexec/ar-sync/hepspec_sync >> /var/log/ar-sync/hepspec.log 2>&1
-8 0 * * * root /usr/libexec/ar-sync/hepspec_sync /etc/ar-sync/hepspec-sync.EGI.Cloudmon.conf >> /var/log/ar-sync/hepspec.log 2>&1
-11 0 * * * root /usr/libexec/ar-sync/hepspec_sync /etc/ar-sync/hepspec-sync.EGI.Critical.conf >> /var/log/ar-sync/hepspec.log 2>&1

@@ -1,0 +1,6 @@
+include bin/*.py
+include cronjobs/*
+include etc/*.conf
+include etc/schemas/*.avsc
+include modules/*.py
+include setup.py, Makefile, README.md, argo-egi-connectors.spec

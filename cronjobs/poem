@@ -1,1 +1,1 @@
-2 0 * * * root /usr/libexec/ar-sync/poem-sync >> /var/log/ar-sync/poem.log 2>&1
+2 0 * * * root /usr/libexec/argo-egi-connectors/poem-connector.py >> /var/log/argo-egi-connectors/poem-connector.log 2>&1

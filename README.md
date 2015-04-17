@@ -1,43 +1,9 @@
-# EGI Availability & Reliability Sync components
+**argo-egi-connectors** is a bundle of connectors/sync components for various data sources established in EGI infrastructure, most notably GOCDB (topology, downtimes), but there's also support for alternative topology grabbing via various VO feeds and weights information via GStat service.
 
-## Setup & Configuration
+Data is synced in a daily manner and all together with a prefiltered and expanded status messages from _argo-egi-consumer_ represents an input for _argo-compute-engine_.
 
-1. Copy configuration directories
-	
-	cp -r etc /
+Configuration of connectors is centered around two configuration files:
+- `global.conf` - URLs of sources besides GOCDB and VO, output filenames, avro schemas
+- `customer.conf` - enlisted jobs for EGI, enlisted all VO'es and their jobs, job attributes and an implicit directory structure where connectors put their data
 
-2. Configure components
-
-2.1 Downtimes sync component
-
-	Configuration file: **etc/ar-sync/downtime-sync.conf**
-
-	*gocdbHost* - GOCDB hostname, DEFAULT **goc.egi.eu**
-	*gocdbUrl*  - GOCDB url, DEFAULT **https://goc.egi.eu/gocdbpi/**
-	*hostKey* - Host SSL private key file path, DEFAULT **/etc/grid-security/hostkey.pem**
-	*hostCert* - Host SSL certificate file path, DEFAULT **/etc/grid-security/hostcert.pem**
-	*outputDir* - Output directory path, DEFAULT **/var/lib/ar-sync**
-
-2.2 POEM profile sync component
-
-	Configuration files: 
-		- **etc/ar-sync/poem-profile.conf**
-		- **etc/ar-sync/poem-server.conf**
-		- **etc/ar-sync/poem-sync.conf**
-		- **etc/ar-sync/poem.conf**
-		- **etc/ar-sync/poem_name_mapping.cfg**
-
-2.2.1 Main configuration: **etc/ar-sync/poem-sync.conf**
-
-	*poemFile* - Available VOs for POEM profiles file path, DEFAULT **/etc/ar-sync/poem.conf**
-	*poemProfileFile* - POEM profiles file path, DEFAULT **/etc/ar-sync/poem-profile.conf**
-	*poemServerFile* - POEM profiles file path, DEFAULT **/etc/ar-sync/poem-server.conf**
-	*outputDir* - Output directory path, DEFAULT **/var/lib/ar-sync**
-	*hostKey* - Host SSL private key file path, DEFAULT **/etc/grid-security/hostkey.pem**
-	*hostCert* - Host SSL certificate file path, DEFAULT **/etc/grid-security/hostcert.pem**
-	
-2.2.2 Available VOs file: **etc/ar-sync/poem.conf**
-	
-	List available VOs separated by *;*, DEFAULT **grid-monitoring.cern.ch;ops**
-
-2.2.3 
+More info: http://argoeu.github.io/guides/sync/

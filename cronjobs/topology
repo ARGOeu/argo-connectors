@@ -1,3 +1,0 @@
-14 0 * * * root /usr/libexec/ar-sync/topology-sync  >> /var/log/ar-sync/topology.log 2>&1
-17 0 * * * root /usr/libexec/ar-sync/topology-sync /etc/ar-sync/topology-sync.EGI.Critical.conf  >> /var/log/ar-sync/topology.log 2>&1
-20 0 * * * root /usr/libexec/ar-sync/topology-sync /etc/ar-sync/topology-sync.EGI.Cloudmon.conf  >> /var/log/ar-sync/topology.log 2>&1
