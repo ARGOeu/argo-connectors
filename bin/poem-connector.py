@@ -46,7 +46,7 @@ cpoem = None
 
 class PoemReader:
     def __init__(self):
-        self.poemRequest = '%s/poem/api/0.2/json/metrics_in_profiles?vo_name=%s'
+        self.poemRequest = 'https://%s/poem/api/0.2/json/metrics_in_profiles?vo_name=%s'
 
     def getProfiles(self):
         filteredProfiles = re.split('\s*,\s*', poemopts['FetchProfilesList'.lower()])
