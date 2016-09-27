@@ -1,1 +1,1 @@
-5 0 * * * root /usr/libexec/argo-egi-connectors/weights-gstat-connector.py
+5 0 * * * root /usr/libexec/argo-egi-connectors/weights-vapor-connector.py

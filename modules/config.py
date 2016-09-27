@@ -131,7 +131,7 @@ class CustomerConf:
                                                  'TopoType', 'TopoFeed'],
                     'poem-connector.py': [],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed'],
-                    'weights-gstat-connector.py': ['WeightsFeed'],
+                    'weights-vapor-connector.py': ['WeightsFeed'],
                     'prefilter-egi.py': []}
     _jobs, _jobattrs = {}, None
     tenantdir = ''

@@ -1,5 +1,5 @@
 Name: argo-egi-connectors
-Version: 1.4.6
+Version: 1.5.0
 Release: 1%{?dist}
 
 Group: EGI/SA4
@@ -44,6 +44,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0750,root,root) %dir %{_sharedstatedir}/argo-connectors/
 
 %changelog
+* Sat Sep 24 2016 Themis Zamani <themiszamani@gmail.com> - 1.5.0-1%{?dist}
+- New RPM package release
+* Wed Aug 31 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.4.6-2%{?dist} 
+- make use of VAPOR service for weights
+- extended cert verification with CAfile bundle
 * Tue Feb 16 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.4.6-1%{?dist}
 - topology data without mixed int and string values
 * Mon Feb 1 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.4.5-3%{?dist}

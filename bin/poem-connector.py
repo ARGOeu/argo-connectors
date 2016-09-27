@@ -245,7 +245,7 @@ def main():
     global logger
     logger = Logger(os.path.basename(sys.argv[0]))
 
-    certs = {'Authentication': ['HostKey', 'HostCert', 'VerifyServerCert', 'CAPath']}
+    certs = {'Authentication': ['HostKey', 'HostCert', 'VerifyServerCert', 'CAPath', 'CAFile']}
     schemas = {'AvroSchemas': ['Poem']}
     prefilter = {'Prefilter': ['PoemExpandedProfiles']}
     output = {'Output': ['Poem']}

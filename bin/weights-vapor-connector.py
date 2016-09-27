@@ -41,23 +41,26 @@ from urlparse import urlparse
 globopts = {}
 logger = None
 
-class GstatReader:
+class Vapor:
     def __init__(self, feed):
         self._o = urlparse(feed)
 
     def getWeights(self):
         res = make_connection(logger, globopts, self._o.scheme, self._o.netloc, self._o.path,
-                              "GstatReader.getWeights()):")
+                              "Vapor.getWeights()):")
         if res.status == 200:
             json_data = json.loads(res.read())
             weights = dict()
-            for site in json_data:
-                key = site['Sitename']
-                val = site['HEPSPEC06']
-                weights[key] = val
+            for ngi in json_data:
+                for site in ngi['site']:
+                    key = site['id']
+                    val = site['HEPSPEC2006']
+                    if val == 'NA':
+                        continue
+                    weights[key] = val
             return weights
         else:
-            logger.error('GStatReader.getWeights(): HTTP response: %s %s' % (str(res.status), res.reason))
+            logger.error('Vapor.getWeights(): HTTP response: %s %s' % (str(res.status), res.reason))
             raise SystemExit(1)
 
 def gen_outdict(data):
@@ -90,7 +93,7 @@ def main():
     global logger
     logger = Logger(os.path.basename(sys.argv[0]))
 
-    certs = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'VerifyServerCert']}
+    certs = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'CAFile', 'VerifyServerCert']}
     schemas = {'AvroSchemas': ['Weights']}
     output = {'Output': ['Weights']}
     conn = {'Connection': ['Timeout', 'Retry']}
@@ -103,13 +106,13 @@ def main():
     confcust = CustomerConf(sys.argv[0], confpath)
     confcust.parse()
     confcust.make_dirstruct()
-    feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed='http://gstat2.grid.sinica.edu.tw/gstat/summary/json/')
+    feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed='https://operations-portal.egi.eu/vapor/downloadLavoisier/option/json/view/VAPOR_Ngi_Sites_Info')
 
     timestamp = datetime.datetime.utcnow().strftime('%Y_%m_%d')
     oldDate = datetime.datetime.utcnow()
 
     for feed, jobcust in feeds.items():
-        weights = GstatReader(feed)
+        weights = Vapor(feed)
 
         newweights = dict()
         newweights.update(weights.getWeights());

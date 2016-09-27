@@ -1,5 +1,6 @@
 import logging, logging.handlers
 import sys
+import os
 import re
 import httplib
 import socket
@@ -9,27 +10,30 @@ from OpenSSL.SSL import TLSv1_METHOD, Context, Connection
 from OpenSSL.SSL import VERIFY_PEER, VERIFY_FAIL_IF_NO_PEER_CERT
 from OpenSSL.SSL import Error as SSLError
 from OpenSSL.SSL import OP_NO_SSLv3
+from OpenSSL.SSL import WantReadError as SSLWantReadError
+from time import sleep
 
+strerr = ''
+num_excp_expand = 0
 
 def errmsg_from_excp(e):
-    if getattr(e, 'args', False):
-        retstr = ''
-        if isinstance(e.args, list) or isinstance(e.args, tuple) \
-                or isinstance(e.args, dict):
-            for s in e.args:
-                if isinstance(s, str):
-                    retstr += s + ' '
-                if isinstance(s, tuple) or isinstance(s, tuple):
-                    retstr += ' '.join(s)
-            return retstr
-        elif isinstance(e.args, str):
-            return e.args
-        else:
-            for s in e.args:
-                retstr += str(s) + ' '
-            return retstr
-    else:
-        return str(e)
+    global strerr, num_excp_expand
+    if isinstance(e, Exception) and getattr(e, 'args', False):
+        num_excp_expand += 1
+        if not errmsg_from_excp(e.args):
+            return strerr
+    elif isinstance(e, dict):
+        for s in e.iteritems():
+            errmsg_from_excp(s)
+    elif isinstance(e, list):
+        for s in e:
+            errmsg_from_excp(s)
+    elif isinstance(e, tuple):
+        for s in e:
+            errmsg_from_excp(s)
+    elif isinstance(e, str):
+        if num_excp_expand <= 1:
+            strerr += e + ' '
 
 def gen_fname_repdate(logger, timestamp, option, path):
     if re.search(r'DATE(.\w+)$', option):
@@ -47,8 +51,8 @@ def make_connection(logger, globopts, scheme, host, url, msgprefix):
             try:
                 if scheme.startswith('https'):
                     if eval(globopts['AuthenticationVerifyServerCert'.lower()]):
-                        verify_cert(host, globopts['AuthenticationCAPath'.lower()],
-                                    timeout=int(globopts['ConnectionTimeout'.lower()]))
+                        verify_cert_cafile_capath(host, int(globopts['ConnectionTimeout'.lower()]),
+                                                  globopts['AuthenticationCAPath'.lower()], globopts['AuthenticationCAFile'.lower()])
                     conn = httplib.HTTPSConnection(host, 443,
                                                    globopts['AuthenticationHostKey'.lower()],
                                                    globopts['AuthenticationHostCert'.lower()],
@@ -76,34 +80,62 @@ def make_connection(logger, globopts, scheme, host, url, msgprefix):
         raise SystemExit(1)
 
 
-def verify_cert(host, capath, timeout):
-    server_ctx = Context(TLSv1_METHOD)
-    server_ctx.load_verify_locations(None, capath)
+def verify_cert_cafile_capath(host, timeout, capath, cafile):
+    def verify_cert(host, ca, timeout):
+        server_ctx = Context(TLSv1_METHOD)
+        server_cert_chain = []
 
-    def verify_cb(conn, cert, errnum, depth, ok):
-        return ok
-    server_ctx.set_verify(VERIFY_PEER|VERIFY_FAIL_IF_NO_PEER_CERT, verify_cb)
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((host, 443))
-
-    server_conn = Connection(server_ctx, sock)
-    server_conn.set_connect_state()
-
-    def handler(signum, frame):
-        raise socket.error([('Timeout', 'after', str(timeout) + 's')])
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(timeout)
-    signal.alarm(0)
-    try:
-        server_conn.do_handshake()
-    except SSLError as e:
-        if 'sslv3 alert handshake failure' in errmsg_from_excp(e):
-            pass
+        if os.path.isdir(ca):
+            server_ctx.load_verify_locations(None, ca)
         else:
-            raise SSLError(e.message)
+            server_ctx.load_verify_locations(ca, None)
 
-    server_conn.shutdown()
-    server_conn.close()
+        def verify_cb(conn, cert, errnum, depth, ok):
+            server_cert_chain.append(cert)
+            return ok
+        server_ctx.set_verify(VERIFY_PEER, verify_cb)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setblocking(1)
+        sock.settimeout(timeout)
+        sock.connect((host, 443))
+
+        server_conn = Connection(server_ctx, sock)
+        server_conn.set_connect_state()
+
+        def iosock_try():
+            ok = True
+            try:
+                server_conn.do_handshake()
+                sleep(0.5)
+            except SSLWantReadError as e:
+                ok = False
+                pass
+            except Exception as e:
+                raise e
+            return ok
+
+        try:
+            while True:
+                if iosock_try():
+                    break
+
+            server_subject = server_cert_chain[-1].get_subject()
+            if host != server_subject.CN:
+                raise SSLError('Server certificate CN does not match %s' % host)
+
+        except SSLError as e:
+            raise e
+        finally:
+            server_conn.shutdown()
+            server_conn.close()
+
+        return True
+
+    try:
+        verify_cert(host, capath, timeout)
+    except SSLError as e:
+        verify_cert(host, cafile, timeout)
+
 
     return True
