@@ -26,13 +26,6 @@ class Global:
     conf_weights_output = {'Output': ['Weights']}
     conf_poem_output = {'Output': ['Poem']}
     conf_poem_schemas = {'AvroSchemas': ['Poem']}
-    conf_poem_prefilter = {'Prefilter': ['PoemExpandedProfiles']}
-    conf_prefilter_prefilter = {'Prefilter': ['ConsumerFilePath',
-                                              'PoemExpandedProfiles',
-                                              'PoemNameMapping',
-                                              'LookbackPoemExpandedProfiles']}
-    conf_prefilter_schemas = {'AvroSchemas': ['Prefilter']}
-    conf_prefilter_output = {'Output': ['Prefilter']}
 
     def __init__(self, caller, confpath=None, **kwargs):
         self.optional = dict()
@@ -63,13 +56,7 @@ class Global:
                         'poem-connector.py':
                         self._merge_dict(self.shared_secopts,
                                          self.conf_poem_schemas,
-                                         self.conf_poem_output,
-                                         self.conf_poem_prefilter),
-                        'prefilter-egi.py':
-                        self._merge_dict(self.conf_general,
-                                         self.conf_prefilter_output,
-                                         self.conf_prefilter_schemas,
-                                         self.conf_prefilter_prefilter)
+                                         self.conf_poem_output)
                         }
 
         if caller:
@@ -185,78 +172,6 @@ class Global:
 
         return options
 
-class PoemConf:
-    options = {}
-
-    def __init__(self, confpath, *args):
-        self.logger = Logger(str(self.__class__))
-        self._args = args
-        self._filename = '/etc/argo-egi-connectors/poem-connector.conf' if not confpath else confpath
-
-    def parse(self):
-        config = ConfigParser.ConfigParser()
-        if not os.path.exists(self._filename):
-            self.logger.error('Could not find %s' % self._filename)
-            raise SystemExit(1)
-        config.read(self._filename)
-
-        try:
-            for arg in self._args:
-                for sect, opts in arg.items():
-                    for opt in opts:
-                        for section in config.sections():
-                            if section.lower().startswith(sect.lower()):
-                                lopts = config.options(section)
-                                for o in lopts:
-                                    if o.startswith(opt.lower()):
-                                        optget = config.get(section, o)
-                                        self.options.update({(section+o).lower(): optget})
-
-        except ConfigParser.NoOptionError as e:
-            self.logger.error(e.message)
-            raise SystemExit(1)
-        except ConfigParser.NoSectionError as e:
-            self.logger.error("No section '%s' defined" % (e.args[0]))
-            raise SystemExit(1)
-
-        return self.options
-
-    def _get_ngis(self, option):
-        ngis = {}
-
-        def filtkey(elem):
-            if option in elem and not\
-                    re.search('profiles[0-9]*', elem):
-                return True
-        for opt in filter(filtkey, self.options.keys()):
-            match = re.search('(%s)([0-9]+$)' % option, opt)
-            if match:
-                value = match.group(1)+'profiles'+match.group(2)
-                ngis.update({self.options[opt]:
-                                re.split('\s*,\s*', self.options[value])})
-            elif option == opt:
-                ngis.update({self.options[opt]:
-                                re.split('\s*,\s*', self.options[opt+'profiles'])})
-
-        return ngis
-
-    def get_allngi(self):
-        try:
-            return self._get_ngis('PrefilterDataAllNGI'.lower())
-        except KeyError as e:
-            self.logger.error("No option %s defined" % e)
-            raise SystemExit(1)
-
-    def get_servers(self):
-        poemservers = {}
-        for opt in self.options.keys():
-            if 'PoemServer'.lower() in opt:
-                key = re.search('\w+[0-9]+', opt)
-                key = 'PoemServer'.lower() if not key else key.group(0)
-                poemservers.update({self.options[key+'host']:
-                                    re.split('\s*,\s*', self.options[key+'vo'])})
-        return poemservers
-
 class CustomerConf:
     """
        Class with parser for customer.conf and additional helper methods
@@ -268,10 +183,12 @@ class CustomerConf:
                                                      'TopoSelectGroupOfEndpoints',
                                                      'TopoFeed',
                                                      'TopoFeedPaging'],
-                    'poem-connector.py': [],
+                    'poem-connector.py': ['PoemServerHost',
+                                          'PoemServerVO',
+                                          'PoemNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed'],
-                    'weights-vapor-connector.py': ['WeightsFeed'],
-                    'prefilter-egi.py': []}
+                    'weights-vapor-connector.py': ['WeightsFeed']
+                    }
     _jobs, _jobattrs = {}, None
     _cust_optional = ['AmsHost', 'AmsProject', 'AmsToken', 'AmsTopic',
                       'AmsPackSingleMsg', 'AuthenticationUsePlainHttpAuth',
@@ -550,3 +467,12 @@ class CustomerConf:
                         self._update_feeds(feeds, feedurl, job, c)
 
         return feeds
+
+    def get_poemserver_host(self, job):
+        return self._jobs[job]['PoemServerHost']
+
+    def get_poemserver_vo(self, job):
+        return self._jobs[job]['PoemServerVO']
+
+    def get_namespace(self, job):
+        return self._jobs[job]['PoemNamespace']
