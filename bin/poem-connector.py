@@ -43,13 +43,14 @@ globopts, poemopts = {}, {}
 cpoem = None
 custname = ''
 
-MIPAPI = '/poem/api/0.2/json/metrics_in_profiles?'
+MIPAPI = '/poem/api/v2/profiles/'
 
 class PoemReader:
-    def __init__(self, customer, job):
+    def __init__(self, customer, job, auth=None):
         self.state = True
         self.customer = customer
         self.job = job
+        self.custauth = auth
 
     def getProfiles(self, Profiles, namespace, PoemServer):
 
@@ -72,12 +73,11 @@ class PoemReader:
             profileListAvro = []
 
             for profile in validProfiles.values():
-                for metric in profile['metrics']:
-                    profileListAvro.append({'profile' : namespace + '.' + profile['name'], \
-                                            'metric' : metric['name'], \
-                                            'service' : metric['service_flavour'], \
-                                            'vo' : profile['vo'], \
-                                            'fqan' : metric['fqan']})
+                for metric in profile['metric_instances']:
+                    profileListAvro.append({'profile': namespace + '.' + profile['name'], \
+                                            'metric': metric['metric'], \
+                                            'service': metric['service_flavour'], \
+                                            'vo': profile['vo']})
         #
         except (KeyError, IndexError, AttributeError, TypeError) as e:
             self.state = False
@@ -90,61 +90,59 @@ class PoemReader:
     def loadProfilesFromServer(self, server, vo, namespace, Profiles):
         validProfiles = dict()
 
-        doFilterProfiles = False
-        if len(Profiles) > 0:
-            doFilterProfiles = True
-
         if not server.startswith('http'):
             server = 'https://' + server
 
         self._urlfeed = server + MIPAPI
-        for i in vo:
-            self._urlfeed = self._urlfeed + 'vo_name=' + i + '&'
 
+        # It is possible to have multiple profiles in customer.conf file,
+        # so multiple queries are made possible
+        profiles_data = []
         for j in Profiles:
-            self._urlfeed = self._urlfeed + 'profile=' + j + '&'
+            self._urlfeed = self._urlfeed + j
 
-        self._urlfeed = self._urlfeed[:-1]
+            o = urlparse.urlparse(self._urlfeed, allow_fragments=True)
 
-        Profiles = [namespace.upper() + '.' + Profiles[i] for i in range(len(Profiles))]
+            try:
+                assert o.scheme != '' and o.netloc != '' and o.path != ''
+            except AssertionError:
+                logger.error('Customer:%s Invalid POEM PI URL: %s' % (logger.customer, self._urlfeed))
+                raise SystemExit(1)
 
-        o = urlparse.urlparse(self._urlfeed, allow_fragments=True)
-
-        try:
-            assert o.scheme != '' and o.netloc != '' and o.path != ''
-        except AssertionError:
-            logger.error('Customer:%s Invalid POEM PI URL: %s' % (logger.customer, self._urlfeed))
-            raise SystemExit(1)
-
-        logger.info('Customer:%s Server:%s VO:%s' % (logger.customer, o.netloc, vo[0] if len(vo) == 1 else\
+            logger.info('Customer:%s Server:%s VO:%s' % (logger.customer, o.netloc, vo[0] if len(vo) == 1 else\
                                                      '{0}'.format(','.join(vo))))
 
-        try:
-            res = input.connection(logger, module_class_name(self), globopts,
-                                   o.scheme, o.netloc, o.path + '?' + o.query)
-            if not res:
-                raise input.ConnectorError()
+            try:
+                res = input.connection(logger, module_class_name(self),
+                                       globopts, o.scheme, o.netloc, o.path,
+                                       custauth=self.custauth)
+                if not res:
+                    raise input.ConnectorError()
 
-            json_data = input.parse_json(logger, module_class_name(self),
+                json_data = input.parse_json(logger, module_class_name(self),
                                          globopts, res, self._urlfeed)
 
-            if not json_data:
-                raise input.ConnectorError()
+                if not json_data:
+                    raise input.ConnectorError()
 
-        except input.ConnectorError:
-            self.state = False
+                # Checking if the requested VO is associated with the profile.
+                if json_data['vo'] in vo:
+                    profiles_data.append(json_data)
+
+            except input.ConnectorError:
+                self.state = False
+
+        try:
+            for profile in profiles_data:
+                if profile['name'] in Profiles:
+                    validProfiles[namespace.upper() + '.' + profile['name']] = \
+                        profile
+
+        except Exception as e:
+            raise e
 
         else:
-            try:
-                for profile in json_data[0]['profiles']:
-                    if not doFilterProfiles or profile['namespace'].upper()+'.'+profile['name'] in Profiles:
-                        validProfiles[profile['namespace'].upper()+'.'+profile['name']] = profile
-
-            except Exception as e:
-                raise e
-
-            else:
-                return validProfiles
+            return validProfiles
 
 def gen_outprofiles(lprofiles, matched):
     lfprofiles = []
@@ -155,7 +153,7 @@ def gen_outprofiles(lprofiles, matched):
             pt['metric'] = p['metric']
             pt['profile'] = p['profile']
             pt['service'] = p['service']
-            pt['tags'] = {'vo' : p['vo'], 'fqan' : p['fqan']}
+            pt['tags'] = {'vo' : p['vo']}
             lfprofiles.append(pt)
 
     return lfprofiles
@@ -185,6 +183,9 @@ def main():
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
 
+    auth_opts = dict((k, v) for k, v in globopts.items() if 'authentication'
+                      in k)
+
     for cust in confcust.get_customers():
 
         custname = confcust.get_custname(cust)
@@ -198,7 +199,7 @@ def main():
             namespace = confcust.get_namespace(job)
             poemserver[confcust.get_poemserver_host(job)] = confcust.get_poemserver_vo(job)
 
-            poem = PoemReader(custname, job)
+            poem = PoemReader(custname, job, auth_opts)
             psa = poem.getProfiles(profiles, namespace, poemserver)
 
             jobdir = confcust.get_fulldir(cust, job)

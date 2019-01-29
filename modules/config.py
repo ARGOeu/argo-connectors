@@ -11,7 +11,7 @@ class Global:
     conf_general = {'General': ['PublishAms', 'WriteAvro']}
     conf_auth = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'CAFile',
                                     'VerifyServerCert', 'UsePlainHttpAuth',
-                                    'HttpUser', 'HttpPass']}
+                                    'HttpUser', 'HttpPass', 'PoemToken']}
     conf_conn = {'Connection': ['Timeout', 'Retry', 'SleepRetry']}
     conf_state = {'InputState': ['SaveDir', 'Days']}
 
