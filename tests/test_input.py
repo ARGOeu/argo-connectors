@@ -362,75 +362,64 @@ class ConnectorSetup(object):
            </SERVICE_ENDPOINT>\n
            </results>\n"""
 
-    poem_feed = """
+    poem_feed = """[
+        {"name": "ops", 
+         "profiles":
+             [
                  {"name": "FEDCLOUD", 
-                  "description": "Profile for Fedcloud CentOS 7 instance",
-                  "vo": "ops", 
-                  "metric_instances": 
-                      [
-                          {"service_flavour": "eu.egi.cloud.vm-management.occi", 
-                           "metric": "eu.egi.cloud.OCCI-AppDB-Sync"}, 
-                          {"service_flavour": "eu.egi.cloud.vm-management.occi",
-                           "metric": "eu.egi.cloud.OCCI-Categories"}, 
-                          {"service_flavour": "eu.egi.cloud.vm-management.occi", 
-                           "metric": "eu.egi.cloud.OCCI-Context"}, 
-                          {"service_flavour": "eu.egi.cloud.vm-management.occi", 
-                           "metric": "eu.egi.cloud.OCCI-VM-OIDC"}, 
-                          {"service_flavour": "org.openstack.nova", 
-                           "metric": "eu.egi.cloud.OpenStack-VM-OIDC"}, 
-                          {"service_flavour": "org.openstack.nova", 
-                           "metric": "eu.egi.cloud.OpenStack-VM-VOMS-OIDC"}
-                      ]
-                  }
-       """
-
-    erroneous_poem_feed = """
-                 {"name": "FEDCLOUD", 
+                  "namespace": "ch.cern.SAM", 
                   "description": "Profile for Fedcloud CentOS 7 instance",
                   "vo": "ops", 
                   "metrics": 
                       [
                           {"service_flavour": "eu.egi.cloud.vm-management.occi", 
-                           "metric": "eu.egi.cloud.OCCI-AppDB-Sync"}, 
+                           "name": "eu.egi.cloud.OCCI-AppDB-Sync", 
+                           "fqan": ""}, 
                           {"service_flavour": "eu.egi.cloud.vm-management.occi",
-                           "metric": "eu.egi.cloud.OCCI-Categories"}, 
+                           "name": "eu.egi.cloud.OCCI-Categories", 
+                           "fqan": ""}, 
                           {"service_flavour": "eu.egi.cloud.vm-management.occi", 
-                           "metric": "eu.egi.cloud.OCCI-Context"}, 
+                           "name": "eu.egi.cloud.OCCI-Context", 
+                           "fqan": ""}, 
                           {"service_flavour": "eu.egi.cloud.vm-management.occi", 
-                           "metric": "eu.egi.cloud.OCCI-VM-OIDC"}, 
+                           "name": "eu.egi.cloud.OCCI-VM-OIDC", 
+                           "fqan": ""}, 
                           {"service_flavour": "org.openstack.nova", 
-                           "metric": "eu.egi.cloud.OpenStack-VM-OIDC"}, 
+                           "name": "eu.egi.cloud.OpenStack-VM-OIDC", 
+                           "fqan": ""}, 
                           {"service_flavour": "org.openstack.nova", 
-                           "metric": "eu.egi.cloud.OpenStack-VM-VOMS-OIDC"}
+                           "name": "eu.egi.cloud.OpenStack-VM-VOMS-OIDC", 
+                           "fqan": ""}
                       ]
                   }
-       """
-
+                 ]
+         }
+        ]"""
 
     poem = [{'metric': u'eu.egi.cloud.OCCI-AppDB-Sync',
              'profile': u'ch.cern.SAM.FEDCLOUD',
              'service': u'eu.egi.cloud.vm-management.occi',
-             'vo': 'ops'},
+             'fqan': u'', 'vo': 'ops'},
             {'metric': u'eu.egi.cloud.OCCI-Categories',
              'profile': u'ch.cern.SAM.FEDCLOUD',
              'service': u'eu.egi.cloud.vm-management.occi',
-             'vo': 'ops'},
+             'fqan': u'', 'vo': 'ops'},
             {'metric': u'eu.egi.cloud.OCCI-Context',
              'profile': u'ch.cern.SAM.FEDCLOUD',
              'service': u'eu.egi.cloud.vm-management.occi',
-             'vo': 'ops'},
+             'fqan': u'', 'vo': 'ops'},
             {'metric': u'eu.egi.cloud.OCCI-VM-OIDC',
              'profile': u'ch.cern.SAM.FEDCLOUD',
              'service': u'eu.egi.cloud.vm-management.occi',
-             'vo': 'ops'},
+             'fqan': u'', 'vo': 'ops'},
             {'metric': u'eu.egi.cloud.OpenStack-VM-OIDC',
              'profile': u'ch.cern.SAM.FEDCLOUD',
              'service': u'org.openstack.nova',
-             'vo': 'ops'},
+             'fqan': u'', 'vo': 'ops'},
             {'metric': u'eu.egi.cloud.OpenStack-VM-VOMS-OIDC',
              'profile': u'ch.cern.SAM.FEDCLOUD',
              'service': u'org.openstack.nova',
-             'vo': 'ops'}]
+             'fqan': u'', 'vo': 'ops'}]
 
     downtimes = [{'end_time': '2017-01-19T23:59:00Z',
                   'hostname': u'nagios.c4.csir.co.za',
@@ -804,8 +793,7 @@ class PoemJson(unittest.TestCase):
         self.connset = ConnectorSetup('poem-connector.py',
                                       'tests/global.conf',
                                       'tests/customer.conf')
-        for c in ['globalconfig', 'customerconfig', 'globopts', 'jobs',
-                  'poem_feed', 'erroneous_poem_feed', 'poem']:
+        for c in ['globalconfig', 'customerconfig', 'globopts', 'jobs', 'poem_feed', 'poem']:
             code = """self.%s = self.connset.%s""" % (c, c)
             exec code
 
@@ -832,16 +820,7 @@ class PoemJson(unittest.TestCase):
         mock_conn.__name__ = 'mock_conn'
         mock_conn.return_value = 'Erroneous JSON feed'
         self.mock_conn = mock_conn
-        with self.assertRaises(SystemExit) as cm:
-            self.poemreader.getProfiles(profiles, namespace, server)
-            self.assertEqual(cm.exception.code, 1)
-        self.assertFalse(self.poemreader.state)
-
-        mock_conn.return_value = self.erroneous_poem_feed
-        self.mock_conn = mock_conn
-        self.poemreader.state = True
-        self.assertEqual(self.poemreader.getProfiles(profiles,  namespace,
-                                                     server), [])
+        self.assertEqual(self.poemreader.getProfiles(profiles, namespace, server), [])
         self.assertFalse(self.poemreader.state)
 
         mock_conn.return_value = self.poem_feed
