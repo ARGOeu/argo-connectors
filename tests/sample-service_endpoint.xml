@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+  <SERVICE_ENDPOINT PRIMARY_KEY="14G0">
+    <PRIMARY_KEY>14G0</PRIMARY_KEY>
+    <HOSTNAME>grid13.gsi.de</HOSTNAME>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Service&amp;id=14</GOCDB_PORTAL_URL>
+    <BETA>N</BETA>
+    <SERVICE_TYPE>CE</SERVICE_TYPE>
+    <HOST_IP>140.181.76.82</HOST_IP>
+    <CORE/>
+    <IN_PRODUCTION>N</IN_PRODUCTION>
+    <NODE_MONITORED>N</NODE_MONITORED>
+    <NOTIFICATIONS>N</NOTIFICATIONS>
+    <SITENAME>GSI-LCG2</SITENAME>
+    <COUNTRY_NAME>Germany</COUNTRY_NAME>
+    <COUNTRY_CODE>DE</COUNTRY_CODE>
+    <ROC_NAME>NGI_DE</ROC_NAME>
+    <URL/>
+    <ENDPOINTS/>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+      <SCOPE>wlcg</SCOPE>
+      <SCOPE>tier2</SCOPE>
+      <SCOPE>alice</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SERVICE_ENDPOINT>
+  <SERVICE_ENDPOINT PRIMARY_KEY="782G0">
+    <PRIMARY_KEY>782G0</PRIMARY_KEY>
+    <HOSTNAME>arc-ce01.gridpp.rl.ac.uk</HOSTNAME>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Service&amp;id=782</GOCDB_PORTAL_URL>
+    <HOSTDN>/C=UK/O=eScience/OU=CLRC/L=RAL/CN=arc-ce01.gridpp.rl.ac.uk</HOSTDN>
+    <BETA>N</BETA>
+    <SERVICE_TYPE>gLite-APEL</SERVICE_TYPE>
+    <CORE/>
+    <IN_PRODUCTION>Y</IN_PRODUCTION>
+    <NODE_MONITORED>Y</NODE_MONITORED>
+    <NOTIFICATIONS>N</NOTIFICATIONS>
+    <SITENAME>RAL-LCG2</SITENAME>
+    <COUNTRY_NAME>United Kingdom</COUNTRY_NAME>
+    <COUNTRY_CODE>GB</COUNTRY_CODE>
+    <ROC_NAME>NGI_UK</ROC_NAME>
+    <URL/>
+    <ENDPOINTS/>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+      <SCOPE>wlcg</SCOPE>
+      <SCOPE>tier1</SCOPE>
+      <SCOPE>alice</SCOPE>
+      <SCOPE>atlas</SCOPE>
+      <SCOPE>cms</SCOPE>
+      <SCOPE>lhcb</SCOPE>
+    </SCOPES>
+    <EXTENSIONS>
+      <EXTENSION>
+        <LOCAL_ID>494</LOCAL_ID>
+        <KEY>InformationSystem</KEY>
+        <VALUE>https://www.gridpp.rl.ac.uk/RAL-LCG2/RAL-LCG2_CE.json</VALUE>
+      </EXTENSION>
+    </EXTENSIONS>
+  </SERVICE_ENDPOINT>
+  <SERVICE_ENDPOINT PRIMARY_KEY="1555G0">
+    <PRIMARY_KEY>1555G0</PRIMARY_KEY>
+    <HOSTNAME>ce.physics.science.az</HOSTNAME>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Service&amp;id=1555</GOCDB_PORTAL_URL>
+    <HOSTDN>/DC=ORG/DC=SEE-GRID/O=Hosts/O=Institute of Physics of ANAS/CN=ce.physics.science.az</HOSTDN>
+    <HOST_OS>Scientific Linux release 6.8 (Carbon)</HOST_OS>
+    <HOST_ARCH>x86_64</HOST_ARCH>
+    <BETA>N</BETA>
+    <SERVICE_TYPE>CREAM-CE</SERVICE_TYPE>
+    <HOST_IP>185.147.24.193</HOST_IP>
+    <CORE/>
+    <IN_PRODUCTION>Y</IN_PRODUCTION>
+    <NODE_MONITORED>Y</NODE_MONITORED>
+    <NOTIFICATIONS>N</NOTIFICATIONS>
+    <SITENAME>AZ-IFAN</SITENAME>
+    <COUNTRY_NAME>Azerbaijan</COUNTRY_NAME>
+    <COUNTRY_CODE>AZ</COUNTRY_CODE>
+    <ROC_NAME>NGI_TR</ROC_NAME>
+    <URL>ce.physics.science.az:8443/cream-pbs-ops</URL>
+    <ENDPOINTS>
+      <ENDPOINT>
+        <ID>7056</ID>
+        <NAME>ce.physics.science.az</NAME>
+        <EXTENSIONS/>
+        <URL>ce.physics.science.az:8443/cream-pbs-ops</URL>
+        <INTERFACENAME>CREAM-CE</INTERFACENAME>
+        <ENDPOINT_MONITORED>Y</ENDPOINT_MONITORED>
+      </ENDPOINT>
+    </ENDPOINTS>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+      <SCOPE>wlcg</SCOPE>
+      <SCOPE>atlas</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SERVICE_ENDPOINT>
+</results>

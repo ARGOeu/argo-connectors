@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+  <SITE ID="40G0" PRIMARY_KEY="73G0" NAME="Site1">
+    <PRIMARY_KEY>73G0</PRIMARY_KEY>
+    <SHORT_NAME>Site1</SHORT_NAME>
+    <CONTACT USER_ID="217G0" PRIMARY_KEY="217G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@email.hr</EMAIL>
+      <TEL>+111 11 111 1111</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>Site Security Officer</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="217G0" PRIMARY_KEY="217G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@email.hr</EMAIL>
+      <TEL>+111 11 111 1111</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>Site Operations Manager</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="256G0" PRIMARY_KEY="256G0">
+      <FORENAME>Name2</FORENAME>
+      <SURNAME>Surname2</SURNAME>
+      <TITLE>Mr.</TITLE>
+      <EMAIL>Name2.Surname2@email.hr</EMAIL>
+      <TEL>+2222 22222222</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name2 Surname2</CERTDN>
+      <ROLE_NAME>Site Operations Manager</ROLE_NAME>
+    </CONTACT>
+  </SITE>
+  <SITE ID="41G0" PRIMARY_KEY="201G0" NAME="Site2">
+    <PRIMARY_KEY>201G0</PRIMARY_KEY>
+    <SHORT_NAME>Site2</SHORT_NAME>
+    <CONTACT USER_ID="217G0" PRIMARY_KEY="217G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@email.hr</EMAIL>
+      <TEL>+111 11 111 1111</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>Site Operations Manager</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="256G0" PRIMARY_KEY="256G0">
+      <FORENAME>Name2</FORENAME>
+      <SURNAME>Surname2</SURNAME>
+      <TITLE>Mr.</TITLE>
+      <EMAIL>Name2.Surname2@email.hr</EMAIL>
+      <TEL>+2222 22222222</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name2 Surname2</CERTDN>
+      <ROLE_NAME>Site Operations Manager</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="256G0" PRIMARY_KEY="256G0">
+      <FORENAME>Name2</FORENAME>
+      <SURNAME>Surname2</SURNAME>
+      <TITLE>Mr.</TITLE>
+      <EMAIL>Name2.Surname2@email.hr</EMAIL>
+      <TEL>+2222 22222222</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name2 Surname2</CERTDN>
+      <ROLE_NAME>Site Security Officer</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="217G0" PRIMARY_KEY="217G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@email.hr</EMAIL>
+      <TEL>+111 11 111 1111</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>Site Security Officer</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="217G0" PRIMARY_KEY="217G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@email.hr</EMAIL>
+      <TEL>+111 11 111 1111</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>Site Administrator</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="256G0" PRIMARY_KEY="256G0">
+      <FORENAME>Name2</FORENAME>
+      <SURNAME>Surname2</SURNAME>
+      <TITLE>Mr.</TITLE>
+      <EMAIL>Name2.Surname2@email.hr</EMAIL>
+      <TEL>+2222 22222222</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name2 Surname2</CERTDN>
+      <ROLE_NAME>Site Administrator</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="266G0" PRIMARY_KEY="266G0">
+      <FORENAME>Name3</FORENAME>
+      <TITLE>Mr.</TITLE>
+      <EMAIL>Name3.Surname3@email.hr</EMAIL>
+      <TEL>+3333 33333333</TEL>
+      <CERTDN>/C=HR/O=CROGRID/O=SRCE/CN=Name3 Surname3</CERTDN>
+      <ROLE_NAME>Site Administrator</ROLE_NAME>
+    </CONTACT>
+  </SITE>
+</results>

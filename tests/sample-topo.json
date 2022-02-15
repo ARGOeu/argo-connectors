@@ -1,0 +1,16 @@
+[
+   {
+        "CONTACT_EMAIL": ["info@t-systems.com"],
+        "SERVICE_TYPE": "eu.eosc.portal.services.url",
+        "SITENAME-SERVICEGROUP": "Open Telekom Cloud",
+        "Service Unique ID": 227,
+        "URL": "https://open-telekom-cloud.com/en"
+   },
+   {
+       "CONTACT_EMAIL": ["infn-eosc@lists.infn.it"],
+        "SERVICE_TYPE": "eu.eosc.portal.services.url",
+        "SITENAME-SERVICEGROUP": "PaaS Orchestrator ",
+        "Service Unique ID": 243,
+        "URL": "https://indigo-paas.cloud.ba.infn.it"
+   }
+]

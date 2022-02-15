@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Copyright (c) 2013 GRNET S.A., SRCE, IN2P3 CNRS Computing Centre
 #
@@ -28,14 +28,19 @@ import argparse
 import os
 import re
 import sys
-import urlparse
 
-from argo_egi_connectors import input
-from argo_egi_connectors import output
+import uvloop
+import asyncio
+
+from argo_egi_connectors.io.http import SessionWithRetry
+from argo_egi_connectors.exceptions import ConnectorHttpError, ConnectorParseError
+from argo_egi_connectors.io.avrowrite import AvroWriter
+from argo_egi_connectors.io.statewrite import state_write
 from argo_egi_connectors.log import Logger
 
 from argo_egi_connectors.config import CustomerConf, Global
-from argo_egi_connectors.helpers import filename_date, module_class_name, datestamp, date_check
+from argo_egi_connectors.utils import filename_date, module_class_name, datestamp, date_check
+from argo_egi_connectors.parse.webapi_metricprofile import ParseMetricProfiles
 
 logger = None
 
@@ -44,80 +49,40 @@ custname = ''
 API_PATH = '/api/v2/metric_profiles'
 
 
-class WebAPI(object):
-    def __init__(self, customer, job, profiles, namespace, host, token):
-        self.state = True
-        self.customer = customer
-        self.job = job
-        self.host = host
-        self.token = token
-        self.profiles = profiles
-        self.namespace = namespace
+async def fetch_data(host, token):
+    session = SessionWithRetry(logger, os.path.basename(sys.argv[0]), globopts,
+                               token=token)
+    res = await session.http_get('{}://{}{}'.format('https', host, API_PATH))
+    return res
 
-    def get_profiles(self):
-        try:
-            fetched_profiles = self._fetch()
-            target_profiles = filter(lambda profile: profile['name'] in self.profiles, fetched_profiles)
-            profile_list = list()
 
-            if len(target_profiles) == 0:
-                self.state = False
-                logger.error('Customer:' + self.customer + ' Job:' + self.job + ': No profiles {0} were found!'.format(', '.join(self.profiles)))
+def parse_source(res, profiles, namespace):
+    metric_profiles = ParseMetricProfiles(logger, res, profiles, namespace).get_data()
+    return metric_profiles
 
-                raise SystemExit(1)
 
-            for profile in target_profiles:
-                for service in profile['services']:
-                    for metric in service['metrics']:
-                        if self.namespace:
-                            profile_name = '{0}.{1}'.format(self.namespace, profile['name'])
-                        else:
-                            profile_name = profile['name']
-                        profile_list.append({
-                            'profile': profile_name,
-                            'metric': metric,
-                            'service': service['service']
-                        })
+async def write_state(cust, job, confcust, fixed_date, state):
+    jobstatedir = confcust.get_fullstatedir(globopts['InputStateSaveDir'.lower()], cust, job)
+    if fixed_date:
+        await state_write(sys.argv[0], jobstatedir, state,
+                          globopts['InputStateDays'.lower()],
+                          fixed_date.replace('-', '_'))
+    else:
+        await state_write(sys.argv[0], jobstatedir, state,
+                          globopts['InputStateDays'.lower()])
 
-        except (KeyError, IndexError, AttributeError, TypeError) as e:
-            self.state = False
-            logger.error(module_class_name(self) + ' Customer:%s : Error parsing feed %s - %s' % (logger.customer,
-                                                                                                  self.host + API_PATH,
-                                                                                                  repr(e).replace('\'', '').replace('\"', '')))
-            return []
-        else:
-            return self._format(profile_list)
 
-    def _fetch(self):
-        try:
-            res = input.connection(logger, module_class_name(self), globopts,
-                                   'https', self.host, API_PATH,
-                                   custauth={'WebAPIToken'.lower(): self.token})
-            if not res:
-                raise input.ConnectorError()
-
-            json_data = input.parse_json(logger, module_class_name(self),
-                                         globopts, res, self.host + API_PATH)
-
-            if not json_data or not json_data.get('data', False):
-                raise input.ConnectorError()
-
-            return json_data['data']
-
-        except input.ConnectorError:
-            self.state = False
-
-    def _format(self, profile_list):
-        profiles = []
-
-        for p in profile_list:
-            pt = dict()
-            pt['metric'] = p['metric']
-            pt['profile'] = p['profile']
-            pt['service'] = p['service']
-            profiles.append(pt)
-
-        return profiles
+def write_avro(cust, job, confcust, fixed_date, fetched_profiles):
+    jobdir = confcust.get_fulldir(cust, job)
+    if fixed_date:
+        filename = filename_date(logger, globopts['OutputMetricProfile'.lower()], jobdir, fixed_date.replace('-', '_'))
+    else:
+        filename = filename_date(logger, globopts['OutputMetricProfile'.lower()], jobdir)
+    avro = AvroWriter(globopts['AvroSchemasMetricProfile'.lower()], filename)
+    ret, excep = avro.write(fetched_profiles)
+    if not ret:
+        logger.error('Customer:%s Job:%s %s' % (logger.customer, logger.job, repr(excep)))
+        raise SystemExit(1)
 
 
 def main():
@@ -144,6 +109,9 @@ def main():
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
 
+    loop = uvloop.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     for cust in confcust.get_customers():
         custname = confcust.get_custname(cust)
 
@@ -160,66 +128,27 @@ def main():
                 logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (custname, logger.job, 'webapi', ' '.join(missopt)))
                 continue
 
-            webapi = WebAPI(custname, job, profiles, confcust.get_namespace(job),
-                            webapi_opts['webapihost'],
-                            webapi_opts['webapitoken'])
-            fetched_profiles = webapi.get_profiles()
+            try:
+                res = loop.run_until_complete(
+                    fetch_data(webapi_opts['webapihost'], webapi_opts['webapitoken'])
+                )
 
-            jobdir = confcust.get_fulldir(cust, job)
-            jobstatedir = confcust.get_fullstatedir(globopts['InputStateSaveDir'.lower()], cust, job)
+                fetched_profiles = parse_source(res, profiles, confcust.get_namespace(job))
 
-            ams_custopts = confcust.get_amsopts(cust)
-            ams_opts = cglob.merge_opts(ams_custopts, 'ams')
-            ams_complete, missopt = cglob.is_complete(ams_opts, 'ams')
-            if not ams_complete:
-                logger.error('Customer:%s %s options incomplete, missing %s' % (custname, 'ams', ' '.join(missopt)))
-                continue
+                loop.run_until_complete(
+                    write_state(cust, job, confcust, fixed_date, True)
+                )
 
-            if fixed_date:
-                output.write_state(sys.argv[0], jobstatedir,
-                                   webapi.state,
-                                   globopts['InputStateDays'.lower()],
-                                   fixed_date.replace('-', '_'))
-            else:
-                output.write_state(sys.argv[0], jobstatedir,
-                                   webapi.state,
-                                   globopts['InputStateDays'.lower()])
+                if eval(globopts['GeneralWriteAvro'.lower()]):
+                    write_avro(cust, job, confcust, fixed_date, fetched_profiles)
 
-            if not webapi.state:
-                continue
+                logger.info('Customer:' + custname + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
 
-            if eval(globopts['GeneralPublishAms'.lower()]):
-                if fixed_date:
-                    partdate = fixed_date
-                else:
-                    partdate = datestamp(1).replace('_', '-')
-
-                ams = output.AmsPublish(ams_opts['amshost'],
-                                        ams_opts['amsproject'],
-                                        ams_opts['amstoken'],
-                                        ams_opts['amstopic'],
-                                        confcust.get_jobdir(job),
-                                        ams_opts['amsbulk'],
-                                        ams_opts['amspacksinglemsg'],
-                                        logger,
-                                        int(globopts['ConnectionRetry'.lower()]),
-                                        int(globopts['ConnectionTimeout'.lower()]))
-
-                ams.send(globopts['AvroSchemasMetricProfile'.lower()], 'metric_profile',
-                         partdate, fetched_profiles)
-
-            if eval(globopts['GeneralWriteAvro'.lower()]):
-                if fixed_date:
-                    filename = filename_date(logger, globopts['OutputMetricProfile'.lower()], jobdir, fixed_date.replace('-', '_'))
-                else:
-                    filename = filename_date(logger, globopts['OutputMetricProfile'.lower()], jobdir)
-                avro = output.AvroWriter(globopts['AvroSchemasMetricProfile'.lower()], filename)
-                ret, excep = avro.write(fetched_profiles)
-                if not ret:
-                    logger.error('Customer:%s Job:%s %s' % (logger.customer, logger.job, repr(excep)))
-                    raise SystemExit(1)
-
-            logger.info('Customer:' + custname + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
+            except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
+                logger.error(repr(exc))
+                loop.run_until_complete(
+                    write_state(cust, job, confcust, fixed_date, False)
+                )
 
 
 if __name__ == '__main__':

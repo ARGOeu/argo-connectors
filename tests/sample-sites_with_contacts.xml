@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+  <SITE ID="infn" PRIMARY_KEY="28aa65bd20e047cabb0d474427dadfc2" NAME="INFN">
+    <PRIMARY_KEY>28aa65bd20e047cabb0d474427dadfc2</PRIMARY_KEY>
+    <SHORT_NAME>INFN</SHORT_NAME>
+    <OFFICIAL_NAME>Istituto Nazionale di Fisica Nucleare</OFFICIAL_NAME>
+    <DPMT_URL>https://dp.eudat.eu/providers/infn</DPMT_URL>
+    <GOCDB_PORTAL_URL>No 'creg_id' found</GOCDB_PORTAL_URL>
+    <HOME_URL>https://www.infn.it/</HOME_URL>
+    <CONTACT_EMAIL>name1.surname1@ba.infn.it</CONTACT_EMAIL>
+    <CONTACT_TEL>not set</CONTACT_TEL>
+    <COUNTRY_CODE>IT</COUNTRY_CODE>
+    <COUNTRY>Italy</COUNTRY>
+    <ROC>EUDAT_REGISTRY</ROC>
+    <PRODUCTION_INFRASTRUCTURE>DICE</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Candidate</CERTIFICATION_STATUS>
+    <TIMEZONE></TIMEZONE>
+    <LATITUDE></LATITUDE>
+    <LONGITUDE></LONGITUDE>
+    <CSIRT_EMAIL>not set</CSIRT_EMAIL>
+    <DOMAIN>
+    <DOMAIN_NAME>infn.it</DOMAIN_NAME>
+    </DOMAIN>
+    <EXTENSIONS>
+    <EXTENSION>
+      <LOCAL_ID>undefined</LOCAL_ID>
+      <KEY>state</KEY>
+      <VALUE>internal</VALUE>
+    </EXTENSION>
+    </EXTENSIONS>
+  </SITE>
+  <SITE ID="DataCite" PRIMARY_KEY="ea9a749d796f4cfcab23764eec0d897a" NAME="DATACITE">
+    <PRIMARY_KEY>ea9a749d796f4cfcab23764eec0d897a</PRIMARY_KEY>
+    <SHORT_NAME>DATACITE</SHORT_NAME>
+    <OFFICIAL_NAME>DataCite</OFFICIAL_NAME>
+    <DPMT_URL>https://dp.eudat.eu/providers/DataCite</DPMT_URL>
+    <GOCDB_PORTAL_URL>No 'creg_id' found</GOCDB_PORTAL_URL>
+    <HOME_URL>http://datacite.org</HOME_URL>
+    <CONTACT_EMAIL>name2.surname2@email.com</CONTACT_EMAIL>
+    <CONTACT_TEL>not set</CONTACT_TEL>
+    <COUNTRY_CODE>DE</COUNTRY_CODE>
+    <COUNTRY>Germany</COUNTRY>
+    <ROC>EUDAT_REGISTRY</ROC>
+    <PRODUCTION_INFRASTRUCTURE>DICE</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Candidate</CERTIFICATION_STATUS>
+    <TIMEZONE></TIMEZONE>
+    <LATITUDE></LATITUDE>
+    <LONGITUDE></LONGITUDE>
+    <CSIRT_EMAIL>not set</CSIRT_EMAIL>
+    <DOMAIN>
+      <DOMAIN_NAME></DOMAIN_NAME>
+    </DOMAIN>
+    <EXTENSIONS>
+      <EXTENSION>
+      <LOCAL_ID>undefined</LOCAL_ID>
+      <KEY>state</KEY>
+      <VALUE>internal</VALUE>
+      </EXTENSION>
+    </EXTENSIONS>
+  </SITE>
+</results>

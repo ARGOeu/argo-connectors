@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Copyright (c) 2013 GRNET S.A., SRCE, IN2P3 CNRS Computing Centre
 #
@@ -25,26 +25,49 @@
 # Framework Programme (contract # INFSO-RI-261323)
 
 import argparse
-import copy
 import os
 import sys
-import re
+import xml.dom.minidom
 
-from argo_egi_connectors import input
-from argo_egi_connectors import output
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from urllib.parse import urlparse
+
+import asyncio
+import uvloop
+
+from argo_egi_connectors.exceptions import ConnectorParseError, ConnectorHttpError
+from argo_egi_connectors.io.http import SessionWithRetry
+from argo_egi_connectors.io.ldap import LDAPSessionWithRetry
+from argo_egi_connectors.io.webapi import WebAPI
+from argo_egi_connectors.io.avrowrite import AvroWriter
+from argo_egi_connectors.io.statewrite import state_write
 from argo_egi_connectors.log import Logger
+from argo_egi_connectors.mesh.srm_port import attach_srmport_topodata
+from argo_egi_connectors.mesh.storage_element_path import attach_sepath_topodata
+from argo_egi_connectors.mesh.contacts import attach_contacts_topodata
+from argo_egi_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
+from argo_egi_connectors.parse.gocdb_contacts import ParseSiteContacts, ParseServiceEndpointContacts, ParseServiceGroupRoles, ParseSitesWithContacts, ParseServiceGroupWithContacts
 
 from argo_egi_connectors.config import Global, CustomerConf
-from argo_egi_connectors.helpers import filename_date, module_class_name, datestamp, date_check
-from urlparse import urlparse
+
+from argo_egi_connectors.utils import filename_date, date_check
 
 logger = None
 
-SERVENDPI = '/gocdbpi/private/?method=get_service_endpoint'
-SITESPI = '/gocdbpi/private/?method=get_site'
-SERVGROUPPI = '/gocdbpi/private/?method=get_service_group'
+# GOCDB explicitly says &scope='' for all scopes
+# TODO: same methods can be served on different paths
+SERVICE_ENDPOINTS_PI = '/gocdbpi/private/?method=get_service_endpoint&scope='
+SITES_PI = '/gocdbpi/private/?method=get_site&scope='
+SERVICE_GROUPS_PI = '/gocdbpi/private/?method=get_service_group&scope='
 
-fetchtype = ''
+# SITES_PI = '/vapor/downloadLavoisier/option/xml/view/vapor_sites/param/vo=biomed'
+# SERVICE_ENDPOINTS_PI = '/vapor/downloadLavoisier/option/xml/view/vapor_endpoints'
+
+ROC_CONTACTS = '/gocdbpi/private/?method=get_roc_contacts'
+SITE_CONTACTS = '/gocdbpi/private/?method=get_site_contacts'
+PROJECT_CONTACTS = '/gocdbpi/private/?method=get_project_contacts'
+SERVICEGROUP_CONTACTS = '/gocdbpi/private/?method=get_service_group_role'
 
 globopts = {}
 custname = ''
@@ -52,367 +75,200 @@ custname = ''
 isok = True
 
 
-def rem_nonalpha(string):
-    return re.sub(r'\W*', '', string)
+def parse_source_servicegroups(res, custname, uidservtype, pass_extensions):
+    group_groups = ParseServiceGroups(logger, res, custname, uidservtype,
+                                      pass_extensions).get_group_groups()
+    group_endpoints = ParseServiceGroups(logger, res, custname, uidservtype,
+                                         pass_extensions).get_group_endpoints()
+
+    return group_groups, group_endpoints
 
 
-def getText(nodelist):
-    rc = []
-    for node in nodelist:
-        if node.nodeType == node.TEXT_NODE:
-            rc.append(node.data)
-    return ''.join(rc)
+def parse_source_endpoints(res, custname, uidservtype, pass_extensions):
+    group_endpoints = ParseServiceEndpoints(logger, res, custname, uidservtype,
+                                            pass_extensions).get_group_endpoints()
+
+    return group_endpoints
 
 
-class GOCDBReader:
-    def __init__(self, feed, scopes, paging=False, auth=None):
-        self._o = urlparse(feed)
-        self.scopes = scopes if scopes else set(['NoScope'])
-        for scope in self.scopes:
-            code = "self.serviceList%s = dict(); " % rem_nonalpha(scope)
-            code += "self.groupList%s = dict();" % rem_nonalpha(scope)
-            code += "self.siteList%s = dict()" % rem_nonalpha(scope)
-            exec code
-        self.fetched = False
-        self.state = True
-        self.paging = paging
-        self.custauth = auth
+def parse_source_sites(res, custname, uidservtype, pass_extensions):
+    group_groups = ParseSites(logger, res, custname, uidservtype,
+                              pass_extensions).get_group_groups()
 
-    def getGroupOfServices(self, uidservtype=False):
-        if not self.fetched:
-            if not self.state or not self.loadDataIfNeeded():
-                return []
-
-        groups, gl = list(), list()
-
-        for scope in self.scopes:
-            code = "gl = gl + [value for key, value in self.groupList%s.iteritems()]" % rem_nonalpha(scope)
-            exec code
-
-        for d in gl:
-            for service in d['services']:
-                g = dict()
-                g['type'] = fetchtype.upper()
-                g['group'] = d['name']
-                g['service'] = service['type']
-                if uidservtype:
-                    g['hostname'] = '{1}_{0}'.format(service['service_id'], service['hostname'])
-                else:
-                    g['hostname'] = service['hostname']
-                g['group_monitored'] = d['monitored']
-                g['tags'] = {'scope' : d['scope'], \
-                            'monitored' : '1' if service['monitored'].lower() == 'Y'.lower() or \
-                                                 service['monitored'].lower() == 'True'.lower() else '0', \
-                            'production' : '1' if service['production'].lower() == 'Y'.lower() or \
-                                                  service['production'].lower() == 'True'.lower() else '0'}
-                groups.append(g)
-
-        return groups
-
-    def getGroupOfGroups(self):
-        if not self.fetched:
-            if not self.state or not self.loadDataIfNeeded():
-                return []
-
-        groupofgroups, gl = list(), list()
-
-        if fetchtype == "ServiceGroups":
-            for scope in self.scopes:
-                code = "gl = gl + [value for key, value in self.groupList%s.iteritems()]" % rem_nonalpha(scope)
-                exec code
-            for d in gl:
-                g = dict()
-                g['type'] = 'PROJECT'
-                g['group'] = custname
-                g['subgroup'] = d['name']
-                g['tags'] = {'monitored' : '1' if d['monitored'].lower() == 'Y'.lower() or \
-                                                  d['monitored'].lower() == 'True'.lower() else '0',
-                            'scope' : d['scope']}
-                groupofgroups.append(g)
-        else:
-            gg = []
-            for scope in self.scopes:
-                code = "gg = gg + sorted([value for key, value in self.siteList%s.iteritems()], key=lambda s: s['ngi'])" % rem_nonalpha(scope)
-                exec code
-
-            for gr in gg:
-                g = dict()
-                g['type'] = 'NGI'
-                g['group'] = gr['ngi']
-                g['subgroup'] = gr['site']
-                g['tags'] = {'certification' : gr['certification'], \
-                             'scope' : gr['scope'], \
-                             'infrastructure' : gr['infrastructure']}
-
-                groupofgroups.append(g)
-
-        return groupofgroups
-
-    def getGroupOfEndpoints(self, uidservtype=False):
-        if not self.fetched:
-            if not self.state or not self.loadDataIfNeeded():
-                return []
-
-        groupofendpoints, ge = list(), list()
-        for scope in self.scopes:
-            code = "ge = ge + sorted([value for key, value in self.serviceList%s.iteritems()], key=lambda s: s['site'])" % rem_nonalpha(scope)
-            exec code
-
-        for gr in ge:
-            g = dict()
-            g['type'] = fetchtype.upper()
-            g['group'] = gr['site']
-            g['service'] = gr['type']
-            if uidservtype:
-                g['hostname'] = '{1}_{0}'.format(gr['service_id'], gr['hostname'])
-            else:
-                g['hostname'] = gr['hostname']
-            g['tags'] = {'scope': gr['scope'], \
-                         'monitored': '1' if gr['monitored'] == 'Y' or \
-                                             gr['monitored'] == 'True' else '0', \
-                         'production': '1' if gr['production'] == 'Y' or \
-                                              gr['production'] == 'True' else '0'}
-            groupofendpoints.append(g)
-
-        return groupofendpoints
-
-    def loadDataIfNeeded(self):
-        for scope in self.scopes:
-            scopequery = "'&scope='+scope" if scope != 'NoScope' else "'&scope='"
-            try:
-                eval("self.getServiceEndpoints(self.serviceList%s, %s)" % (rem_nonalpha(scope), scopequery))
-                eval("self.getServiceGroups(self.groupList%s, %s)" % (rem_nonalpha(scope), scopequery))
-                eval("self.getSitesInternal(self.siteList%s, %s)" % (rem_nonalpha(scope), scopequery))
-                self.fetched = True
-            except Exception:
-                self.state = False
-                return False
-
-        return True
-
-    def _get_xmldata(self, scope, pi):
-        res = input.connection(logger, module_class_name(self), globopts,
-                               self._o.scheme, self._o.netloc, pi + scope, custauth=self.custauth)
-        if not res:
-            raise input.ConnectorError()
-
-        doc = input.parse_xml(logger, module_class_name(self), globopts, res,
-                              self._o.scheme + '://' + self._o.netloc + pi)
-        return doc
-
-    def _get_service_endpoints(self, serviceList, scope, doc):
-        try:
-            services = doc.getElementsByTagName('SERVICE_ENDPOINT')
-            for service in services:
-                serviceId = ''
-                if service.getAttributeNode('PRIMARY_KEY'):
-                    serviceId = str(service.attributes['PRIMARY_KEY'].value)
-                if serviceId not in serviceList:
-                    serviceList[serviceId] = {}
-                serviceList[serviceId]['hostname'] = getText(service.getElementsByTagName('HOSTNAME')[0].childNodes)
-                serviceList[serviceId]['type'] = getText(service.getElementsByTagName('SERVICE_TYPE')[0].childNodes)
-                serviceList[serviceId]['monitored'] = getText(service.getElementsByTagName('NODE_MONITORED')[0].childNodes)
-                serviceList[serviceId]['production'] = getText(service.getElementsByTagName('IN_PRODUCTION')[0].childNodes)
-                serviceList[serviceId]['site'] = getText(service.getElementsByTagName('SITENAME')[0].childNodes)
-                serviceList[serviceId]['roc'] = getText(service.getElementsByTagName('ROC_NAME')[0].childNodes)
-                serviceList[serviceId]['service_id'] = serviceId
-                serviceList[serviceId]['scope'] = scope.split('=')[1]
-                serviceList[serviceId]['sortId'] = serviceList[serviceId]['hostname'] + '-' + serviceList[serviceId]['type'] + '-' + serviceList[serviceId]['site']
-
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as e:
-            logger.error(module_class_name(self) + 'Customer:%s Job:%s : Error parsing feed %s - %s' % (logger.customer, logger.job, self._o.scheme + '://' + self._o.netloc + SERVENDPI,
-                                                                                                      repr(e).replace('\'', '').replace('\"', '')))
-            raise e
-
-    def getServiceEndpoints(self, serviceList, scope):
-        try:
-            if self.paging:
-                count, cursor = 1, 0
-                while count != 0:
-                    doc = self._get_xmldata(scope, SERVENDPI + '&next_cursor=' + str(cursor))
-                    count = int(doc.getElementsByTagName('count')[0].childNodes[0].data)
-                    links = doc.getElementsByTagName('link')
-                    for le in links:
-                        if le.getAttribute('rel') == 'next':
-                            href = le.getAttribute('href')
-                            for e in href.split('&'):
-                                if 'next_cursor' in e:
-                                    cursor = e.split('=')[1]
-                    self._get_service_endpoints(serviceList, scope, doc)
-
-            else:
-                doc = self._get_xmldata(scope, SERVENDPI)
-                self._get_service_endpoints(serviceList, scope, doc)
-
-        except input.ConnectorError as e:
-            raise e
-
-        except Exception as e:
-            raise e
-
-    def _get_sites_internal(self, siteList, scope, doc):
-        try:
-            sites = doc.getElementsByTagName('SITE')
-            for site in sites:
-                siteName = site.getAttribute('NAME')
-                if siteName not in siteList:
-                    siteList[siteName] = {'site': siteName}
-                siteList[siteName]['infrastructure'] = getText(site.getElementsByTagName('PRODUCTION_INFRASTRUCTURE')[0].childNodes)
-                siteList[siteName]['certification'] = getText(site.getElementsByTagName('CERTIFICATION_STATUS')[0].childNodes)
-                siteList[siteName]['ngi'] = getText(site.getElementsByTagName('ROC')[0].childNodes)
-                siteList[siteName]['scope'] = scope.split('=')[1]
-
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as e:
-            logger.error(module_class_name(self) + 'Customer:%s Job:%s : Error parsing feed %s - %s' % (logger.customer, logger.job, self._o.scheme + '://' + self._o.netloc + SITESPI,
-                                                                                                        repr(e).replace('\'', '').replace('\"', '')))
-            raise e
-
-    def getSitesInternal(self, siteList, scope):
-        try:
-            if self.paging:
-                count, cursor = 1, 0
-                while count != 0:
-                    doc = self._get_xmldata(scope, SITESPI + '&next_cursor=' + str(cursor))
-                    count = int(doc.getElementsByTagName('count')[0].childNodes[0].data)
-                    links = doc.getElementsByTagName('link')
-                    for le in links:
-                        if le.getAttribute('rel') == 'next':
-                            href = le.getAttribute('href')
-                            for e in href.split('&'):
-                                if 'next_cursor' in e:
-                                    cursor = e.split('=')[1]
-                    self._get_sites_internal(siteList, scope, doc)
-
-            else:
-                doc = self._get_xmldata(scope, SITESPI)
-                self._get_sites_internal(siteList, scope, doc)
-
-        except input.ConnectorError as e:
-            raise e
-
-        except Exception as e:
-            raise e
-
-    def _get_service_groups(self, groupList, scope, doc):
-        try:
-            doc = self._get_xmldata(scope, SERVGROUPPI)
-            groups = doc.getElementsByTagName('SERVICE_GROUP')
-            for group in groups:
-                groupId = group.getAttribute('PRIMARY_KEY')
-                if groupId not in groupList:
-                    groupList[groupId] = {}
-                groupList[groupId]['name'] = getText(group.getElementsByTagName('NAME')[0].childNodes)
-                groupList[groupId]['monitored'] = getText(group.getElementsByTagName('MONITORED')[0].childNodes)
-                groupList[groupId]['scope'] = scope.split('=')[1]
-                groupList[groupId]['services'] = []
-                services = group.getElementsByTagName('SERVICE_ENDPOINT')
-                for service in services:
-                    serviceDict = {}
-                    serviceDict['hostname'] = getText(service.getElementsByTagName('HOSTNAME')[0].childNodes)
-                    try:
-                        serviceDict['service_id'] = getText(service.getElementsByTagName('PRIMARY_KEY')[0].childNodes)
-                    except IndexError:
-                        serviceDict['service_id'] = service.getAttribute('PRIMARY_KEY')
-                    serviceDict['type'] = getText(service.getElementsByTagName('SERVICE_TYPE')[0].childNodes)
-                    serviceDict['monitored'] = getText(service.getElementsByTagName('NODE_MONITORED')[0].childNodes)
-                    serviceDict['production'] = getText(service.getElementsByTagName('IN_PRODUCTION')[0].childNodes)
-                    groupList[groupId]['services'].append(serviceDict)
-
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as e:
-            logger.error(module_class_name(self) + 'Customer:%s Job:%s : Error parsing feed %s - %s' % (logger.customer, logger.job, self._o.scheme + '://' + self._o.netloc + SERVGROUPPI,
-                                                                                                        repr(e).replace('\'','').replace('\"', '')))
-            raise e
-
-    def getServiceGroups(self, groupList, scope):
-        try:
-            if self.paging:
-                count, cursor = 1, 0
-                while count != 0:
-                    doc = self._get_xmldata(scope, SERVGROUPPI + '&next_cursor=' + str(cursor))
-                    count = int(doc.getElementsByTagName('count')[0].childNodes[0].data)
-                    links = doc.getElementsByTagName('link')
-                    for le in links:
-                        if le.getAttribute('rel') == 'next':
-                            href = le.getAttribute('href')
-                            for e in href.split('&'):
-                                if 'next_cursor' in e:
-                                    cursor = e.split('=')[1]
-                    self._get_service_groups(groupList, scope, doc)
-
-            else:
-                doc = self._get_xmldata(scope, SERVGROUPPI)
-                self._get_service_groups(groupList, scope, doc)
-
-        except input.ConnectorError as e:
-            raise e
-
-        except Exception as e:
-            raise e
+    return group_groups
 
 
-class TopoFilter(object):
-    def __init__(self, gg, ge, ggfilter, gefilter):
-        self.gg = gg
-        self.ge = ge
-        self.ggfilter = copy.copy(ggfilter)
-        self.gefilter = copy.copy(gefilter)
-        self.subgroupfilter = self.extract_filter('site', self.ggfilter) or \
-            self.extract_filter('servicegroup', self.ggfilter)
-        self.groupfilter = self.extract_filter('ngi', self.ggfilter)
-        self.topofilter()
+def parse_source_sitescontacts(res, custname):
+    contacts = ParseSiteContacts(logger, res)
+    return contacts.get_contacts()
 
-    def topofilter(self):
-        if self.subgroupfilter:
-            self.gg = filter(lambda e: e['subgroup'].lower() in self.subgroupfilter, self.gg)
 
-        if self.groupfilter:
-            self.gg = filter(lambda e: e['group'].lower() in self.groupfilter, self.gg)
+def parse_source_siteswithcontacts(res, custname):
+    contacts = ParseSitesWithContacts(logger, res)
+    return contacts.get_contacts()
 
-        if self.ggfilter:
-            self.gg = self.filter_tags(self.ggfilter, self.gg)
+def parse_source_servicegroupscontacts(res, custname):
+    contacts = ParseServiceGroupWithContacts(logger, res)
+    return contacts.get_contacts()
 
-        allsubgroups = set([e['subgroup'] for e in self.gg])
-        if allsubgroups:
-            self.ge = filter(lambda e: e['group'] in allsubgroups, self.ge)
+def parse_source_servicegroupsroles(res, custname):
+    contacts = ParseServiceGroupRoles(logger, res)
+    return contacts.get_contacts()
 
-        if self.gefilter:
-            self.ge = self.filter_tags(self.gefilter, self.ge)
+def parse_source_serviceendpoints_contacts(res, custname):
+    contacts = ParseServiceEndpointContacts(logger, res)
+    return contacts.get_contacts()
 
-    def extract_filter(self, tag, ggtags):
-        gg = None
-        if tag.lower() in [t.lower() for t in ggtags.iterkeys()]:
-            for k, v in ggtags.iteritems():
-                if tag.lower() in k.lower():
-                    gg = ggtags[k]
-                    key = k
-            ggtags.pop(key)
-            if isinstance(gg, list):
-                gg = [t.lower() for t in gg]
-            else:
-                gg = gg.lower()
 
-        return gg
+def get_webapi_opts(cglob, confcust):
+    webapi_custopts = confcust.get_webapiopts()
+    webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
+    webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
+    if not webapi_complete:
+        logger.error('Customer:%s %s options incomplete, missing %s' % (logger.customer, 'webapi', ' '.join(missopt)))
+        raise SystemExit(1)
+    return webapi_opts
 
-    def filter_tags(self, tags, listofelem):
-        for attr in tags.keys():
-            def getit(elem):
-                value = elem['tags'][attr.lower()]
-                if value == '1':
-                    value = 'Y'
-                elif value == '0':
-                    value = 'N'
-                if isinstance(tags[attr], list):
-                    for a in tags[attr]:
-                        if value.lower() == a.lower():
-                            return True
-                else:
-                    if value.lower() == tags[attr].lower():
-                        return True
-            try:
-                listofelem = filter(getit, listofelem)
-            except KeyError as e:
-                logger.error('Customer:%s Job:%s : Wrong tags specified: %s' % (logger.customer, logger.job, e))
-        return listofelem
+
+async def write_state(confcust, fixed_date, state):
+    # safely assume here one customer defined in customer file
+    cust = list(confcust.get_customers())[0]
+    statedir = confcust.get_fullstatedir(globopts['InputStateSaveDir'.lower()], cust)
+    if fixed_date:
+        await state_write(sys.argv[0], statedir, state,
+                          globopts['InputStateDays'.lower()],
+                          fixed_date.replace('-', '_'))
+    else:
+        await state_write(sys.argv[0], statedir, state,
+                          globopts['InputStateDays'.lower()])
+
+
+def find_next_paging_cursor_count(res):
+    cursor, count = None, None
+
+    doc = xml.dom.minidom.parseString(res)
+    count = int(doc.getElementsByTagName('count')[0].childNodes[0].data)
+    links = doc.getElementsByTagName('link')
+    for link in links:
+        if link.getAttribute('rel') == 'next':
+            href = link.getAttribute('href')
+            for query in href.split('&'):
+                if 'next_cursor' in query:
+                    cursor = query.split('=')[1]
+
+    return count, cursor
+
+
+def filter_multiple_tags(data):
+    """
+        Paginated content is represented with multiple XML enclosing tags
+        in a single buffer:
+
+        <?xml version="1.0" encoding="UTF-8"?>
+        <results>
+            topology entities
+        </results>
+        <?xml version="1.0" encoding="UTF-8"?>
+        <results>
+            topology entities
+        </results>
+        ...
+
+        Remove them and leave only one enclosing.
+    """
+    data_lines = data.split('\n')
+    data_lines = list(filter(lambda line:
+                             '</results>' not in line
+                             and '<results>' not in line
+                             and '<?xml' not in line,
+                             data_lines))
+    data_lines.insert(0, '<?xml version="1.0" encoding="UTF-8"?>')
+    data_lines.insert(1, '<results>')
+    data_lines.append('</results>')
+    return '\n'.join(data_lines)
+
+
+async def fetch_data(api, auth_opts, paginated):
+    feed_parts = urlparse(api)
+    fetched_data = list()
+    if paginated:
+        count, cursor = 1, 0
+        while count != 0:
+            session = SessionWithRetry(logger, os.path.basename(sys.argv[0]),
+                                       globopts, custauth=auth_opts)
+            res = await session.http_get('{}&next_cursor={}'.format(api,
+                                                                    cursor))
+            count, cursor = find_next_paging_cursor_count(res)
+            fetched_data.append(res)
+        return filter_multiple_tags(''.join(fetched_data))
+
+    else:
+        session = SessionWithRetry(logger, os.path.basename(sys.argv[0]),
+                                   globopts, custauth=auth_opts)
+        res = await session.http_get(api)
+        return res
+
+
+async def send_webapi(webapi_opts, data, topotype, fixed_date=None):
+    webapi = WebAPI(sys.argv[0], webapi_opts['webapihost'],
+                    webapi_opts['webapitoken'], logger,
+                    int(globopts['ConnectionRetry'.lower()]),
+                    int(globopts['ConnectionTimeout'.lower()]),
+                    int(globopts['ConnectionSleepRetry'.lower()]),
+                    date=fixed_date)
+    await webapi.send(data, topotype)
+
+
+def write_avro(confcust, group_groups, group_endpoints, fixed_date):
+    custdir = confcust.get_custdir()
+    if fixed_date:
+        filename = filename_date(logger, globopts['OutputTopologyGroupOfGroups'.lower()], custdir, fixed_date.replace('-', '_'))
+    else:
+        filename = filename_date(logger, globopts['OutputTopologyGroupOfGroups'.lower()], custdir)
+    avro = AvroWriter(globopts['AvroSchemasTopologyGroupOfGroups'.lower()], filename)
+    ret, excep = avro.write(group_groups)
+    if not ret:
+        logger.error('Customer:%s : %s' % (logger.customer, repr(excep)))
+        raise SystemExit(1)
+
+    if fixed_date:
+        filename = filename_date(logger, globopts['OutputTopologyGroupOfEndpoints'.lower()], custdir, fixed_date.replace('-', '_'))
+    else:
+        filename = filename_date(logger, globopts['OutputTopologyGroupOfEndpoints'.lower()], custdir)
+    avro = AvroWriter(globopts['AvroSchemasTopologyGroupOfEndpoints'.lower()], filename)
+    ret, excep = avro.write(group_endpoints)
+    if not ret:
+        logger.error('Customer:%s: %s' % (logger.customer, repr(excep)))
+        raise SystemExit(1)
+
+
+def get_bdii_opts(confcust):
+    bdii_custopts = confcust._get_cust_options('BDIIOpts')
+    if bdii_custopts:
+        bdii_complete, missing = confcust.is_complete_bdii(bdii_custopts)
+        if not bdii_complete:
+            logger.error('%s options incomplete, missing %s' % ('bdii', ' '.join(missing)))
+            raise SystemExit(1)
+        return bdii_custopts
+    else:
+        return None
+
+
+# Fetches data from LDAP, connection parameters are set in customer.conf
+async def fetch_ldap_data(host, port, base, filter, attributes):
+    ldap_session = LDAPSessionWithRetry(logger, int(globopts['ConnectionRetry'.lower()]),
+        int(globopts['ConnectionSleepRetry'.lower()]), int(globopts['ConnectionTimeout'.lower()]))
+
+    res = await ldap_session.search(host, port, base, filter, attributes)
+    return res
+
+
+def contains_exception(list):
+    for a in list:
+        if isinstance(a, Exception):
+            return (True, a)
+
+    return (False, None)
 
 
 def main():
@@ -434,135 +290,236 @@ def main():
     confpath = args.gloconf[0] if args.gloconf else None
     cglob = Global(sys.argv[0], confpath)
     globopts = cglob.parse()
+    pass_extensions = eval(globopts['GeneralPassExtensions'.lower()])
 
     confpath = args.custconf[0] if args.custconf else None
     confcust = CustomerConf(sys.argv[0], confpath)
     confcust.parse()
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-    feeds = confcust.get_mapfeedjobs(sys.argv[0], 'GOCDB', deffeed='https://goc.egi.eu/gocdbpi/')
+    topofeed = confcust.get_topofeed()
+    topofeedpaging = confcust.get_topofeedpaging()
+    uidservtype = confcust.get_uidserviceendpoints()
+    topofetchtype = confcust.get_topofetchtype()
+    custname = confcust.get_custname()
+    logger.customer = custname
 
-    for feed, jobcust in feeds.items():
-        scopes = confcust.get_feedscopes(feed, jobcust)
-        paging = confcust.is_paginated(feed, jobcust)
-        auth_custopts = confcust.get_authopts(feed, jobcust)
-        auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
-        auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
-        if auth_complete:
-            gocdb = GOCDBReader(feed, scopes, paging, auth=auth_opts)
+    auth_custopts = confcust.get_authopts()
+    auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
+    auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
+    if not auth_complete:
+        logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
+        raise SystemExit(1)
+
+    bdii_opts = get_bdii_opts(confcust)
+
+    loop = uvloop.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    group_endpoints, group_groups = list(), list()
+    parsed_site_contacts, parsed_servicegroups_contacts, parsed_serviceendpoint_contacts = None, None, None
+
+    try:
+        contact_coros = [
+            fetch_data(topofeed + SITE_CONTACTS, auth_opts, False),
+            fetch_data(topofeed + SERVICEGROUP_CONTACTS, auth_opts, False)
+        ]
+        contacts = loop.run_until_complete(asyncio.gather(*contact_coros, return_exceptions=True))
+
+        exc_raised, exc = contains_exception(contacts)
+        if exc_raised:
+            raise ConnectorHttpError(repr(exc))
+
+        parsed_site_contacts = parse_source_sitescontacts(contacts[0], custname)
+        parsed_servicegroups_contacts = parse_source_servicegroupsroles(contacts[1], custname)
+
+
+    except (ConnectorHttpError, ConnectorParseError) as exc:
+        logger.warn('SITE_CONTACTS and SERVICERGOUP_CONTACT methods not implemented')
+
+    try:
+        toposcope = confcust.get_toposcope()
+        topofeedendpoints = confcust.get_topofeedendpoints()
+        topofeedservicegroups = confcust.get_topofeedservicegroups()
+        topofeedsites = confcust.get_topofeedsites()
+        global SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI, SITES_PI
+        if toposcope:
+            SERVICE_ENDPOINTS_PI = SERVICE_ENDPOINTS_PI + toposcope
+            SERVICE_GROUPS_PI = SERVICE_GROUPS_PI + toposcope
+            SITES_PI = SITES_PI + toposcope
+        if topofeedendpoints:
+            SERVICE_ENDPOINTS_PI = topofeedendpoints
         else:
-            logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
-            continue
+            SERVICE_ENDPOINTS_PI = topofeed + SERVICE_ENDPOINTS_PI
+        if topofeedservicegroups:
+            SERVICE_GROUPS_PI = topofeedservicegroups
+        else:
+            SERVICE_GROUPS_PI = topofeed + SERVICE_GROUPS_PI
+        if topofeedsites:
+            SITES_PI = topofeedsites
+        else:
+            SITES_PI = topofeed + SITES_PI
 
-        for job, cust in jobcust:
-            jobdir = confcust.get_fulldir(cust, job)
-            jobstatedir = confcust.get_fullstatedir(globopts['InputStateSaveDir'.lower()], cust, job)
+        fetched_sites, fetched_servicegroups, fetched_endpoints = None, None, None
+        fetched_bdii = None
 
-            global fetchtype, custname
-            fetchtype = confcust.get_fetchtype(job)
-            uidservtype = confcust.pass_uidserviceendpoints(job)
-            custname = confcust.get_custname(cust)
+        coros = [fetch_data(SERVICE_ENDPOINTS_PI, auth_opts, topofeedpaging)]
+        if 'servicegroups' in topofetchtype:
+            coros.append(fetch_data(SERVICE_GROUPS_PI, auth_opts, topofeedpaging))
+        if 'sites' in topofetchtype:
+            coros.append(fetch_data(SITES_PI, auth_opts, topofeedpaging))
 
-            logger.customer = custname
-            logger.job = job
+        if bdii_opts and eval(bdii_opts['bdii']):
+            host = bdii_opts['bdiihost']
+            port = bdii_opts['bdiiport']
+            base = bdii_opts['bdiiquerybase']
 
-            ams_custopts = confcust.get_amsopts(cust)
-            ams_opts = cglob.merge_opts(ams_custopts, 'ams')
-            ams_complete, missopt = cglob.is_complete(ams_opts, 'ams')
-            if not ams_complete:
-                logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (custname, logger.job, 'ams', ' '.join(missopt)))
-                continue
+            coros.append(fetch_ldap_data(host, port, base,
+                                         bdii_opts['bdiiqueryfiltersrm'],
+                                         bdii_opts['bdiiqueryattributessrm'].split(' ')))
 
-            if fetchtype == 'ServiceGroups':
-                group_endpoints = gocdb.getGroupOfServices(uidservtype)
-            else:
-                group_endpoints = gocdb.getGroupOfEndpoints(uidservtype)
-            group_groups = gocdb.getGroupOfGroups()
+            coros.append(fetch_ldap_data(host, port, base,
+                                         bdii_opts['bdiiqueryfiltersepath'],
+                                         bdii_opts['bdiiqueryattributessepath'].split(' ')))
 
-            if fixed_date:
-                output.write_state(sys.argv[0], jobstatedir, gocdb.state,
-                                   globopts['InputStateDays'.lower()],
-                                   fixed_date.replace('-', '_'))
-            else:
-                output.write_state(sys.argv[0], jobstatedir, gocdb.state,
-                                   globopts['InputStateDays'.lower()])
+        # fetch topology data concurrently in coroutines
+        fetched_topology = loop.run_until_complete(asyncio.gather(*coros, return_exceptions=True))
 
-            if not gocdb.state:
-                continue
+        fetched_endpoints = fetched_topology[0]
+        if bdii_opts and eval(bdii_opts['bdii']):
+            fetched_bdii = list()
+            fetched_bdii.append(fetched_topology[-2])
+            fetched_bdii.append(fetched_topology[-1])
+        if 'sites' in topofetchtype and 'servicegroups' in topofetchtype:
+            fetched_servicegroups, fetched_sites = (fetched_topology[1], fetched_topology[2])
+        elif 'sites' in topofetchtype:
+            fetched_sites = fetched_topology[1]
+        elif 'servicegroups' in topofetchtype:
+            fetched_servicegroups = fetched_topology[1]
 
-            numge = len(group_endpoints)
-            numgg = len(group_groups)
+        exc_raised, exc = contains_exception(fetched_topology)
+        if exc_raised:
+            raise ConnectorHttpError(repr(exc))
 
-            ggtags = confcust.get_gocdb_ggtags(job)
-            getags = confcust.get_gocdb_getags(job)
-            tf = TopoFilter(group_groups, group_endpoints, ggtags, getags)
-            group_groups = tf.gg
-            group_endpoints = tf.ge
+        # proces data in parallel using multiprocessing
+        executor = ProcessPoolExecutor(max_workers=3)
+        parse_workers = list()
+        exe_parse_source_endpoints = partial(parse_source_endpoints,
+                                             fetched_endpoints, custname,
+                                             uidservtype, pass_extensions)
+        exe_parse_source_servicegroups = partial(parse_source_servicegroups,
+                                                 fetched_servicegroups,
+                                                 custname, uidservtype,
+                                                 pass_extensions)
+        exe_parse_source_sites = partial(parse_source_sites, fetched_sites,
+                                         custname, uidservtype,
+                                         pass_extensions)
 
-            if eval(globopts['GeneralPublishAms'.lower()]):
-                if fixed_date:
-                    partdate = fixed_date
-                else:
-                    partdate = datestamp(1).replace('_', '-')
+        # parse topology depend on configured components fetch. we can fetch
+        # only sites, only servicegroups or both.
+        if fetched_servicegroups and fetched_sites:
+            parse_workers.append(
+                loop.run_in_executor(executor, exe_parse_source_endpoints)
+            )
+            parse_workers.append(
+                loop.run_in_executor(executor, exe_parse_source_servicegroups)
+            )
+            parse_workers.append(
+                loop.run_in_executor(executor, exe_parse_source_sites)
+            )
+        elif fetched_servicegroups and not fetched_sites:
+            parse_workers.append(
+                loop.run_in_executor(executor, exe_parse_source_servicegroups)
+            )
+        elif fetched_sites and not fetched_servicegroups:
+            parse_workers.append(
+                loop.run_in_executor(executor, exe_parse_source_endpoints)
+            )
+            parse_workers.append(
+                loop.run_in_executor(executor, exe_parse_source_sites)
+            )
 
-                ams = output.AmsPublish(ams_opts['amshost'],
-                                        ams_opts['amsproject'],
-                                        ams_opts['amstoken'],
-                                        ams_opts['amstopic'],
-                                        confcust.get_jobdir(job),
-                                        ams_opts['amsbulk'],
-                                        ams_opts['amspacksinglemsg'],
-                                        logger,
-                                        int(globopts['ConnectionRetry'.lower()]),
-                                        int(globopts['ConnectionTimeout'.lower()]))
+        parsed_topology = loop.run_until_complete(asyncio.gather(*parse_workers))
 
-                ams.send(globopts['AvroSchemasTopologyGroupOfGroups'.lower()],
-                         'group_groups', partdate, group_groups)
+        if fetched_servicegroups and fetched_sites:
+            group_endpoints = parsed_topology[0]
+            group_groups, group_endpoints_sg = parsed_topology[1]
+            group_endpoints += group_endpoints_sg
+            group_groups += parsed_topology[2]
+        elif fetched_servicegroups and not fetched_sites:
+            group_groups, group_endpoints = parsed_topology[0]
+        elif fetched_sites and not fetched_servicegroups:
+            group_endpoints = parsed_topology[0]
+            group_groups = parsed_topology[1]
 
-                ams.send(globopts['AvroSchemasTopologyGroupOfEndpoints'.lower()],
-                         'group_endpoints', partdate, group_endpoints)
+        # check if we fetched SRM port info and attach it appropriate endpoint
+        # data
+        if bdii_opts and eval(bdii_opts['bdii']):
+            attach_srmport_topodata(logger, bdii_opts['bdiiqueryattributessrm'].split(' ')[0], fetched_bdii[0], group_endpoints)
+            attach_sepath_topodata(logger, bdii_opts['bdiiqueryattributessepath'].split(' ')[0], fetched_bdii[1], group_endpoints)
 
-            if eval(globopts['GeneralWriteAvro'.lower()]):
-                if fixed_date:
-                    filename = filename_date(logger, globopts['OutputTopologyGroupOfGroups'.lower()], jobdir, fixed_date.replace('-', '_'))
-                else:
-                    filename = filename_date(logger, globopts['OutputTopologyGroupOfGroups'.lower()], jobdir)
-                avro = output.AvroWriter(globopts['AvroSchemasTopologyGroupOfGroups'.lower()], filename)
-                ret, excep = avro.write(group_groups)
-                if not ret:
-                    logger.error('Customer:%s Job:%s : %s' % (logger.customer, logger.job, repr(excep)))
-                    raise SystemExit(1)
+        # parse contacts from fetched service endpoints topology, if there are
+        # any
+        parsed_serviceendpoint_contacts = parse_source_serviceendpoints_contacts(fetched_endpoints, custname)
 
-                if fixed_date:
-                    filename = filename_date(logger, globopts['OutputTopologyGroupOfEndpoints'.lower()], jobdir, fixed_date.replace('-', '_'))
-                else:
-                    filename = filename_date(logger, globopts['OutputTopologyGroupOfEndpoints'.lower()], jobdir)
-                avro = output.AvroWriter(globopts['AvroSchemasTopologyGroupOfEndpoints'.lower()], filename)
-                ret, excep = avro.write(group_endpoints)
-                if not ret:
-                    logger.error('Customer:%s Job:%s : %s' % (logger.customer, logger.job, repr(excep)))
-                    raise SystemExit(1)
+        if not parsed_site_contacts and fetched_sites:
+            # GOCDB has not SITE_CONTACTS, try to grab contacts from fetched
+            # sites topology entities
+            parsed_site_contacts = parse_source_siteswithcontacts(fetched_sites, custname)
 
-            logger.info('Customer:' + custname + ' Job:' + job + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (fetchtype, numgg))
-            if getags or ggtags:
-                selstr = 'Customer:%s Job:%s Selected ' % (custname, job)
-                selge, selgg = '', ''
-                if getags:
-                    for key, value in getags.items():
-                        if isinstance(value, list):
-                            value = '[' + ','.join(value) + ']'
-                        selge += '%s:%s,' % (key, value)
-                    selstr += 'Endpoints(%s):' % selge[:len(selge) - 1]
-                    selstr += '%d ' % (len(group_endpoints))
-                if ggtags:
-                    for key, value in ggtags.items():
-                        if isinstance(value, list):
-                            value = '[' + ','.join(value) + ']'
-                        selgg += '%s:%s,' % (key, value)
-                    selstr += 'Groups(%s):' % selgg[:len(selgg) - 1]
-                    selstr += '%d' % (len(group_groups))
+        attach_contacts_workers = [
+            loop.run_in_executor(executor, partial(attach_contacts_topodata,
+                                                   logger,
+                                                   parsed_site_contacts,
+                                                   group_groups)),
+            loop.run_in_executor(executor, partial(attach_contacts_topodata,
+                                                   logger,
+                                                   parsed_serviceendpoint_contacts,
+                                                   group_endpoints))
+        ]
 
-                logger.info(selstr)
+        executor = ProcessPoolExecutor(max_workers=2)
+        group_groups, group_endpoints = loop.run_until_complete(asyncio.gather(*attach_contacts_workers))
+
+        if parsed_servicegroups_contacts:
+            attach_contacts_topodata(logger, parsed_servicegroups_contacts, group_groups)
+        elif fetched_servicegroups:
+            # GOCDB has not SERVICEGROUP_CONTACTS, try to grab contacts from fetched
+            # servicegroups topology entities
+            parsed_servicegroups_contacts = parse_source_servicegroupscontacts(fetched_servicegroups, custname)
+            attach_contacts_topodata(logger, parsed_servicegroups_contacts, group_groups)
+
+        loop.run_until_complete(
+            write_state(confcust, fixed_date, True)
+        )
+
+        webapi_opts = get_webapi_opts(cglob, confcust)
+
+        numge = len(group_endpoints)
+        numgg = len(group_groups)
+
+        # send concurrently to WEB-API in coroutines
+        if eval(globopts['GeneralPublishWebAPI'.lower()]):
+            loop.run_until_complete(
+                asyncio.gather(
+                    send_webapi(webapi_opts, group_groups, 'groups', fixed_date),
+                    send_webapi(webapi_opts, group_endpoints,'endpoints', fixed_date)
+                )
+            )
+
+        if eval(globopts['GeneralWriteAvro'.lower()]):
+            write_avro(confcust, group_groups, group_endpoints, fixed_date)
+
+        logger.info('Customer:' + custname + ' Type:%s ' % (','.join(topofetchtype)) + 'Fetched Endpoints:%d' % (numge) + ' Groups:%d' % (numgg))
+
+    except (ConnectorParseError, ConnectorHttpError, KeyboardInterrupt) as exc:
+        logger.error(repr(exc))
+        loop.run_until_complete(
+            write_state(confcust, fixed_date, False)
+        )
+
+    finally:
+        loop.close()
 
 
 if __name__ == '__main__':

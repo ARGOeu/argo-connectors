@@ -1,0 +1,50 @@
+<results>
+    <SERVICE_ENDPOINT PRIMARY_KEY="375G0">
+        <PRIMARY_KEY>375G0</PRIMARY_KEY>
+        <HOSTNAME>kalkan1.ulakbim.gov.tr</HOSTNAME>
+        <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Service&amp;id=375</GOCDB_PORTAL_URL>
+        <HOSTDN>/C=TR/O=TRGrid/OU=TUBITAK-ULAKBIM/CN=kalkan1.ulakbim.gov.tr</HOSTDN>
+        <HOST_OS>Scientific Linux 6.2</HOST_OS>
+        <BETA>N</BETA>
+        <SERVICE_TYPE>APEL</SERVICE_TYPE>
+        <HOST_IP>193.140.99.15</HOST_IP>
+        <CORE/>
+        <IN_PRODUCTION>Y</IN_PRODUCTION>
+        <NODE_MONITORED>Y</NODE_MONITORED>
+        <NOTIFICATIONS>N</NOTIFICATIONS>
+        <SITENAME>TR-10-ULAKBIM</SITENAME>
+        <COUNTRY_NAME>Turkey</COUNTRY_NAME>
+        <COUNTRY_CODE>TR</COUNTRY_CODE>
+        <ROC_NAME>NGI_TR</ROC_NAME>
+        <URL/>
+        <ENDPOINTS/>
+        <SCOPES>
+            <SCOPE>EGI</SCOPE>
+            <SCOPE>wlcg</SCOPE>
+            <SCOPE>tier2</SCOPE>
+            <SCOPE>atlas</SCOPE>
+        </SCOPES>
+        <EXTENSIONS/>
+    </SERVICE_ENDPOINT>
+    <SERVICE_ENDPOINT PRIMARY_KEY="451G0">
+        <PRIMARY_KEY>451G0</PRIMARY_KEY>
+        <HOSTNAME>cream-ce01.marie.hellasgrid.gr</HOSTNAME>
+        <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Service&amp;id=451</GOCDB_PORTAL_URL>
+        <BETA>N</BETA>
+        <SERVICE_TYPE>APEL</SERVICE_TYPE>
+        <CORE/>
+        <IN_PRODUCTION>Y</IN_PRODUCTION>
+        <NODE_MONITORED>Y</NODE_MONITORED>
+        <NOTIFICATIONS>N</NOTIFICATIONS>
+        <SITENAME>HG-02-IASA</SITENAME>
+        <COUNTRY_NAME>Greece</COUNTRY_NAME>
+        <COUNTRY_CODE>GR</COUNTRY_CODE>
+        <ROC_NAME>NGI_GRNET</ROC_NAME>
+        <URL/>
+        <ENDPOINTS/>
+        <SCOPES>
+            <SCOPE>EGI</SCOPE>
+        </SCOPES>
+        <EXTENSIONS/>
+    </SERVICE_ENDPOINT>
+</results>

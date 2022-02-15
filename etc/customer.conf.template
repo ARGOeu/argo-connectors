@@ -1,29 +1,27 @@
 [CUSTOMER_EGI]
 Name = EGI
 OutputDir = /var/lib/argo-connectors/EGI/
-Jobs = JOB_EGICritical, JOB_EGIFedcloud, JOB_EOSCCritical
+Jobs = Critical
+AuthenticationUsePlainHttpAuth = False
+AuthenticationHttpUser = xxxx
+AuthenticationHttpPass = xxxx
+WebAPIToken = xxxx
+TopoFeed = https://goc.egi.eu/gocdbpi/
+TopoFetchType = Sites, ServiceGroups
+TopoType = GOCDB
+TopoFeedPaging = True
+WeightsEmpty = False
+DowntimesEmpty = False
+BDII = True
+BDIIHost = bdii.egi.cro-ngi.hr
+BDIIPort = 2170
+BDIIQueryBase = o=grid
+BDIIQueryFilterSRM = (&(objectClass=GlueService)(|(GlueServiceType=srm_v1)(GlueServiceType=srm)))
+BDIIQueryAttributesSRM = GlueServiceEndpoint
+BDIIQueryFilterSEPATH = (objectClass=GlueSATop)
+BDIIQueryAttributesSEPATH = GlueVOInfoAccessControlBaseRule GlueVOInfoPath
 
-[JOB_EGICritical]
+[Critical]
 Dirname = EGI_Critical
 Profiles = ARGO_MON_CRITICAL
 MetricProfileNamespace = ch.cern.SAM
-TopoFetchType = Sites
-TopoSelectGroupOfEndpoints = Production:Y, Monitored:Y, Scope:EGI
-TopoSelectGroupOfGroups = NGI:EGI.eu, Certification:Certified, Infrastructure:Production, Scope:EGI
-TopoFeedPaging = True
-
-[JOB_EGIFedcloud]
-Dirname = EGI_Fedcloud
-Profiles = FEDCLOUD
-MetricProfileNamespace = ch.cern.SAM
-TopoFetchType = Sites
-TopoSelectGroupOfEndpoints = Monitored:Y, Scope:EGI
-TopoSelectGroupOfGroups = Scope:EGI
-TopoFeedPaging = True
-
-[JOB_EOSCCritical]
-Dirname = Critical
-Profiles = EOSC_CRITICAL
-TopoFeed = https://marketplace.grid.cyfronet.pl/api/services
-TopoFetchType = ServiceGroups
-TopoUIDServiceEndpoints = True

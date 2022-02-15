@@ -6,9 +6,28 @@
         {"name": "group", "type": "string"},
         {"name": "service", "type": "string"},
         {"name": "hostname", "type": "string"},
-        {"name": "tags", "type" : ["null", { "name" : "Tags",
-                                             "type" : "map",
-                                             "values" : "string"
-                                          }]
+        {"name": "notifications", "type" : [ "null",
+                                            {
+                                              "name": "contacts",
+                                              "type": "map",
+                                              "values": [
+                                                {
+                                                  "type": "array",
+                                                  "name": "listOfContacts",
+                                                  "items": "string"
+                                                },
+                                                {
+                                                  "type": "boolean",
+                                                  "name": "enabled"
+                                                }
+                                              ]
+                                            }
+                                        ]},
+        {"name": "tags", "type" : ["null",
+                                   {
+                                     "name" : "Tags",
+                                     "type" : "map",
+                                     "values" : "string"
+                                   }]
         }]
 }

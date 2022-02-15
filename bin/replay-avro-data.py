@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import argparse
 from argo_egi_connectors.output import AmsPublish, load_schema
 from avro.datafile import DataFileReader
@@ -82,7 +82,7 @@ def main():
     avro = AvroReader(args.avrofile)
     ret, data = avro.read()
     if not ret:
-        print "Error: " + data
+        print("Error: " + data)
         raise SystemExit(1)
 
     amshost = args.host  # ams host

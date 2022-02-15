@@ -2,16 +2,9 @@
 SchemaDir = /etc/argo-egi-connectors/schemas/
 
 [General]
-PublishAms = True
 WriteAvro = True
-
-[AMS]
-Host = messaging-devel.argo.grnet.gr
-Token = EGIKEY
-Project = EGI
-Topic = TOPIC
-Bulk = 100
-PackSingleMsg = True
+PublishWebAPI = False
+PassExtensions = True
 
 [Authentication]
 VerifyServerCert = False
@@ -24,7 +17,7 @@ HttpUser = xxxx
 HttpPass = xxxx
 
 [WebAPI]
-Token = xxxx 
+Token = xxxx
 Host = api.devel.argo.grnet.gr
 
 [Connection]

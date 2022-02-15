@@ -1,0 +1,4 @@
+Service Unique ID,URL,SERVICE_TYPE,Service Description (Alphanumeric and basic punctuation),SITENAME-SERVICEGROUP,COUNTRY_NAME,CONTACT_EMAIL,notification flag?,Status
+tenant_1,https://files.dev.tenant.eu,nextcloud,tenant project Data sharing service,NextCloud,Country,name.surname@country.com,Yes,Development
+tenant_2,https://files.tenant.eu,nextcloud,tenant project Data sharing service,NextCloud,Country,name.surname@country.com,Yes,Development
+tenant_3,https://sso.tenant.eu,aai,tenant project SSO service,AAI,Greece,name.surname@country.com,Yes,Production

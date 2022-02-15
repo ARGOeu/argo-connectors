@@ -1,9 +1,9 @@
-import ConfigParser
+import configparser
 import errno
 import os
 import re
 
-from log import Logger
+from .log import Logger
 
 
 class Global(object):
@@ -11,8 +11,7 @@ class Global(object):
        Class represents parser for global.conf
     """
     # options common for all connectors
-    conf_ams = {'AMS': ['Host', 'Token', 'Project', 'Topic', 'Bulk', 'PackSingleMsg']}
-    conf_general = {'General': ['PublishAms', 'WriteAvro']}
+    conf_general = {'General': ['WriteAvro', 'PublishWebAPI', 'PassExtensions']}
     conf_auth = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'CAFile',
                                     'VerifyServerCert', 'UsePlainHttpAuth',
                                     'HttpUser', 'HttpPass']}
@@ -39,12 +38,10 @@ class Global(object):
         self._filename = '/etc/argo-egi-connectors/global.conf' if not confpath else confpath
         self._checkpath = kwargs['checkpath'] if 'checkpath' in kwargs.keys() else False
 
-        self.optional.update(self._lowercase_dict(self.conf_ams))
         self.optional.update(self._lowercase_dict(self.conf_auth))
         self.optional.update(self._lowercase_dict(self.conf_webapi))
 
-        self.shared_secopts = self._merge_dict(self.conf_ams,
-                                               self.conf_general,
+        self.shared_secopts = self._merge_dict(self.conf_general,
                                                self.conf_auth, self.conf_conn,
                                                self.conf_state,
                                                self.conf_webapi)
@@ -52,7 +49,7 @@ class Global(object):
                         self._merge_dict(self.shared_secopts,
                                          self.conf_topo_schemas,
                                          self.conf_topo_output),
-                        'topology-eosc-connector.py':
+                        'topology-json-connector.py':
                         self._merge_dict(self.shared_secopts,
                                          self.conf_topo_schemas,
                                          self.conf_topo_output),
@@ -64,6 +61,10 @@ class Global(object):
                         self._merge_dict(self.shared_secopts,
                                          self.conf_weights_schemas,
                                          self.conf_weights_output),
+                        'topology-csv-connector.py':
+                        self._merge_dict(self.shared_secopts,
+                                         self.conf_topo_schemas,
+                                         self.conf_topo_output),
                         'metricprofile-webapi-connector.py':
                         self._merge_dict(self.shared_secopts,
                                          self.conf_metricprofile_schemas,
@@ -83,7 +84,7 @@ class Global(object):
 
     def _lowercase_dict(self, d):
         newd = dict()
-        for k in d.iterkeys():
+        for k in d.keys():
             opts = [o.lower() for o in d[k]]
             newd[k.lower()] = opts
         return newd
@@ -108,7 +109,7 @@ class Global(object):
     def _concat_sectopt(self, d):
         opts = list()
 
-        for k in d.iterkeys():
+        for k in d.keys():
             for v in d[k]:
                 opts.append(k + v)
 
@@ -125,7 +126,7 @@ class Global(object):
             return False
 
     def parse(self):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
 
         if not os.path.exists(self._filename):
             self.logger.error('Could not find %s' % self._filename)
@@ -138,9 +139,9 @@ class Global(object):
 
         try:
             for sect, opts in self.caller_secopts.items():
-                if (sect.lower() not in lower_section and
-                    sect.lower() not in self.optional.keys()):
-                    raise ConfigParser.NoSectionError(sect.lower())
+                if (sect.lower() not in lower_section and sect.lower() not in
+                    self.optional.keys()):
+                    raise configparser.NoSectionError(sect.lower())
 
                 for opt in opts:
                     for section in config.sections():
@@ -150,14 +151,14 @@ class Global(object):
                                 if self._checkpath and os.path.isfile(optget) is False:
                                     raise OSError(errno.ENOENT, optget)
 
-                                if ('output' in section.lower() and
-                                    'DATE' not in optget):
-                                        logger.error('No DATE placeholder in %s' % option)
-                                        raise SystemExit(1)
+                                if ('output' in section.lower() and 'DATE' not
+                                    in optget):
+                                    self.logger.error('No DATE placeholder in %s' % opt)
+                                    raise SystemExit(1)
 
-                                options.update({(sect+opt).lower(): optget})
+                                options.update({(sect + opt).lower(): optget})
 
-                            except ConfigParser.NoOptionError as e:
+                            except configparser.NoOptionError as e:
                                 s = e.section.lower()
                                 if (s in self.optional.keys() and
                                     e.option in self.optional[s]):
@@ -171,10 +172,10 @@ class Global(object):
                 self.logger.error('At least one of %s needs to be True' % (', '.join(self._concat_sectopt(self.conf_general))))
                 raise SystemExit(1)
 
-        except ConfigParser.NoOptionError as e:
+        except configparser.NoOptionError as e:
             self.logger.error(e.message)
             raise SystemExit(1)
-        except ConfigParser.NoSectionError as e:
+        except configparser.NoSectionError as e:
             self.logger.error("%s defined" % (e.args[0]))
             raise SystemExit(1)
         except OSError as e:
@@ -190,23 +191,22 @@ class CustomerConf(object):
     """
     _custattrs = None
     _cust = {}
-    _defjobattrs = {'topology-gocdb-connector.py': ['TopoFetchType',
-                                                    'TopoSelectGroupOfGroups',
-                                                    'TopoSelectGroupOfEndpoints',
-                                                    'TopoUIDServiceEndpoints',
-                                                    'TopoFeed',
-                                                    'TopoFeedPaging'],
-                    'topology-eosc-connector.py': ['TopoFeed', 'TopoFile', 'TopoFetchType',
-                                                   'TopoUIDServiceEndpoints'],
+    _defjobattrs = {'topology-gocdb-connector.py': [''],
+                    'topology-json-connector.py': [''],
+                    'topology-csv-connector.py': [''],
                     'metricprofile-webapi-connector.py': ['MetricProfileNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
-                    'weights-vapor-connector.py': ['WeightsFeed']
+                    'weights-vapor-connector.py': ['WeightsFeed',
+                                                   'TopoFetchType']
                     }
     _jobs, _jobattrs = {}, None
-    _cust_optional = ['AmsHost', 'AmsProject', 'AmsToken', 'AmsTopic',
-                      'AmsPackSingleMsg', 'AuthenticationUsePlainHttpAuth',
-                      'AuthenticationHttpUser', 'AuthenticationHttpPass',
-                      'WebAPIToken', 'WeightsEmpty', 'DowntimesEmpty']
+    _cust_optional = ['AuthenticationUsePlainHttpAuth',
+                      'TopoUIDServiceEnpoints', 'AuthenticationHttpUser',
+                      'AuthenticationHttpPass', 'BDII', 'BDIIHost', 'BDIIPort',
+                      'BDIIQueryBase', 'BDIIQueryFilterSRM',
+                      'BDIIQueryAttributesSRM', 'BDIIQueryFilterSEPATH',
+                      'BDIIQueryAttributesSEPATH', 'WebAPIToken',
+                      'WeightsEmpty', 'DowntimesEmpty']
     tenantdir = ''
     deftopofeed = 'https://goc.egi.eu/gocdbpi/'
 
@@ -222,7 +222,7 @@ class CustomerConf(object):
                 self._custattrs = kwargs['custattrs']
 
     def parse(self):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         if not os.path.exists(self._filename):
             self.logger.error('Could not find %s' % self._filename)
             raise SystemExit(1)
@@ -239,36 +239,58 @@ class CustomerConf(object):
                     custjobs = [job.strip() for job in custjobs]
                     custdir = config.get(section, 'OutputDir')
                     custname = config.get(section, 'Name')
+                    topofetchtype = config.get(section, 'TopoFetchType')
+                    topofeed = config.get(section, 'TopoFeed')
+                    topotype = config.get(section, 'TopoType')
+                    topouidservendpoints = config.get(section, 'TopoUIDServiceEndpoints', fallback=False)
+                    toposcope = config.get(section, 'TopoScope', fallback=None)
+                    topofeedsites = config.get(section, 'TopoFeedSites', fallback=None)
+                    topofeedendpoints = config.get(section, 'TopoFeedServiceEndpoints', fallback=None)
+                    topofeedservicegroups = config.get(section, 'TopoFeedServiceGroups', fallback=None)
+                    topofeedpaging = config.get(section, 'TopoFeedPaging', fallback='GOCDB')
+
+                    if not custdir.endswith('/'):
+                        custdir = '{}/'.format(custdir)
 
                     for o in lower_custopt:
                         try:
                             code = "optopts.update(%s = config.get(section, '%s'))" % (o, o)
-                            exec code
-                        except ConfigParser.NoOptionError as e:
+                            exec(code)
+                        except configparser.NoOptionError as e:
                             if e.option in lower_custopt:
                                 pass
                             else:
                                 raise e
 
-                except ConfigParser.NoOptionError as e:
+                except configparser.NoOptionError as e:
                     self.logger.error(e.message)
                     raise SystemExit(1)
 
-                self._cust.update({section: {'Jobs': custjobs, 'OutputDir': custdir, 'Name': custname}})
+                self._cust.update({section: {'Jobs': custjobs, 'OutputDir':
+                                             custdir, 'Name': custname,
+                                             'TopoFetchType': topofetchtype,
+                                             'TopoFeedPaging': topofeedpaging,
+                                             'TopoScope': toposcope,
+                                             'TopoFeed': topofeed,
+                                             'TopoFeedSites': topofeedsites,
+                                             'TopoFeedServiceGroups': topofeedservicegroups,
+                                             'TopoFeedEndpoints': topofeedendpoints,
+                                             'TopoUIDServiceEnpoints': topouidservendpoints,
+                                             'TopoType': topotype}})
                 if optopts:
-                    ams, auth, webapi, empty_data = {}, {}, {}, {}
-                    for k, v in optopts.iteritems():
-                        if k.startswith('ams'):
-                            ams.update({k: v})
+                    auth, webapi, empty_data, bdii = {}, {}, {}, {}
+                    for k, v in optopts.items():
                         if k.startswith('authentication'):
                             auth.update({k: v})
                         if k.startswith('webapi'):
                             webapi.update({k: v})
+                        if k.startswith('bdii'):
+                            bdii.update({k: v})
                         if k.endswith('empty'):
                             empty_data.update({k: v})
-                    self._cust[section].update(AmsOpts=ams)
                     self._cust[section].update(AuthOpts=auth)
                     self._cust[section].update(WebAPIOpts=webapi)
+                    self._cust[section].update(BDIIOpts=bdii)
                     self._cust[section].update(EmptyDataOpts=empty_data)
 
                 if self._custattrs:
@@ -276,14 +298,13 @@ class CustomerConf(object):
                         if config.has_option(section, attr):
                             self._cust[section].update({attr: config.get(section, attr)})
 
-
         for cust in self._cust:
             for job in self._cust[cust]['Jobs']:
                 if config.has_section(job):
                     try:
                         profiles = config.get(job, 'Profiles')
                         dirname = config.get(job, 'Dirname')
-                    except ConfigParser.NoOptionError as e:
+                    except configparser.NoOptionError as e:
                         self.logger.error(e.message)
                         raise SystemExit(1)
 
@@ -323,36 +344,64 @@ class CustomerConf(object):
     def get_jobdir(self, job):
         return self._dir_from_sect(job, self._jobs)
 
-    def get_amsopts(self, cust):
-        if 'AmsOpts' in self._cust[cust]:
-            return self._cust[cust]['AmsOpts']
+    def get_authopts(self, feed=None, jobcust=None):
+        if jobcust:
+            for job, cust in jobcust:
+                if 'AuthOpts' in self._cust[cust]:
+                    return self._cust[cust]['AuthOpts']
+                else:
+                    return dict()
         else:
-            return dict()
+            return self._get_cust_options('AuthOpts')
 
-    def get_authopts(self, feed, jobcust):
-        for job, cust in jobcust:
-            if 'AuthOpts' in self._cust[cust]:
-                return self._cust[cust]['AuthOpts']
+    def get_bdiiopts(self, cust=None):
+        if cust:
+            if 'BDIIOpts' in self._cust[cust]:
+                return self._cust[cust]['BDIIOpts']
             else:
                 return dict()
+        else:
+            return self._get_cust_options('BDIIOpts')
+
+    def is_complete_bdii(self, opts):
+        diff = []
+        for opt in self._cust_optional:
+            if opt.lower().startswith('bdii'):
+                if opt.lower() not in opts:
+                    diff.append(opt)
+        if len(diff) > 0:
+            return (False, diff)
+        return (True, None)
 
     def get_fulldir(self, cust, job):
         return self.get_custdir(cust) + '/' + self.get_jobdir(job) + '/'
 
-    def get_fullstatedir(self, root, cust, job):
-        return root + '/' + self.get_custname(cust) + '/' + self.get_jobdir(job)
-
-    def get_custdir(self, cust):
-        return self._dir_from_sect(cust, self._cust)
-
-    def get_custname(self, cust):
-        return self._cust[cust]['Name']
-
-    def get_webapiopts(self, cust):
-        if 'WebAPIOpts' in self._cust[cust]:
-            return self._cust[cust]['WebAPIOpts']
+    def get_fullstatedir(self, root, cust, job=None):
+        if job:
+            return root + '/' + self.get_custname(cust) + '/' + self.get_jobdir(job)
         else:
-            return dict()
+            return root + '/' + self.get_custname(cust) + '/'
+
+    def get_custdir(self, cust=None):
+        if cust:
+            return self._dir_from_sect(cust, self._cust)
+        else:
+            return self._get_cust_options('OutputDir')
+
+    def get_custname(self, cust=None):
+        if cust:
+            return self._cust[cust]['Name']
+        else:
+            return self._get_cust_options('Name')
+
+    def get_webapiopts(self, cust=None):
+        if cust:
+            if 'WebAPIOpts' in self._cust[cust]:
+                return self._cust[cust]['WebAPIOpts']
+            else:
+                return dict()
+        else:
+            return self._get_cust_options('WebAPIOpts')
 
     def make_dirstruct(self, root=None):
         dirs = []
@@ -424,6 +473,49 @@ class CustomerConf(object):
             feed = ''
         return feed
 
+    def _get_cust_options(self, opt):
+        target_option = None
+
+        # safely assume here only one customer definition in the config file
+        for options in self._cust.values():
+            for option in options:
+                if option.lower() == opt.lower():
+                    target_option = options[option]
+        return target_option
+
+    def get_topofeed(self):
+        return self._get_cust_options('TopoFeed')
+
+    def get_topofeedsites(self):
+        return self._get_cust_options('TopoFeedSites')
+
+    def get_topofeedendpoints(self):
+        return self._get_cust_options('TopoFeedEndpoints')
+
+    def get_topofeedservicegroups(self):
+        return self._get_cust_options('TopoFeedServiceGroups')
+
+    def get_topofeedpaging(self):
+        return eval(self._get_cust_options('TopoFeedPaging'))
+
+    def get_toposcope(self):
+        return self._get_cust_options('TopoScope')
+
+    def get_topofetchtype(self):
+        fetchtype = self._get_cust_options('TopoFetchType')
+        if ',' in fetchtype:
+            fetchtype = [type.strip().lower() for type in fetchtype.split(',')]
+        else:
+            fetchtype = [fetchtype.lower()]
+        return fetchtype
+
+    def get_uidserviceendpoints(self):
+        uidservend = self._get_cust_options('TopoUIDServiceEnpoints')
+        if isinstance(uidservend, str):
+            return eval(uidservend)
+        else:
+            return False
+
     def _is_paginated(self, job):
         paging = False
 
@@ -440,20 +532,6 @@ class CustomerConf(object):
         elif feedurl:
             feeds[feedurl] = []
             feeds[feedurl].append((job, cust))
-
-    def get_feedscopes(self, feed, jobcust):
-        distinct_scopes = set()
-        for job, cust in jobcust:
-            gg = self._get_tags(job, 'TopoSelectGroupOfGroups')
-            ge = self._get_tags(job, 'TopoSelectGroupOfEndpoints')
-            for g in gg.items() + ge.items():
-                if 'Scope'.lower() == g[0].lower():
-                    if isinstance(g[1], list):
-                        distinct_scopes.update(g[1])
-                    else:
-                        distinct_scopes.update([g[1]])
-
-        return distinct_scopes
 
     def is_paginated(self, feed, jobcust):
         paginated = False
@@ -489,16 +567,7 @@ class CustomerConf(object):
         feeds = {}
         for c in self.get_customers():
             for job in self.get_jobs(c):
-                if 'topology' in caller:
-                    feedurl = self._get_feed(job, 'TopoFile')
-                    if not feedurl:
-                        feedurl = self._get_feed(job, 'TopoFeed')
-                    if feedurl:
-                        self._update_feeds(feeds, feedurl, job, c)
-                    else:
-                        feedurl = deffeed
-                        self._update_feeds(feeds, feedurl, job, c)
-                elif 'downtimes' in caller:
+                if 'downtimes' in caller:
                     feedurl = self._get_feed(job, 'DowntimesFeed')
                     if feedurl:
                         self._update_feeds(feeds, feedurl, job, c)
@@ -515,12 +584,18 @@ class CustomerConf(object):
 
         return feeds
 
-    def send_empty(self, caller, cust):
+    def send_empty(self, caller, cust=None):
         try:
-            if 'downtimes' in caller:
-                return eval(self._cust[cust]['EmptyDataOpts']['downtimesempty'])
-            elif 'weights' in caller:
-                return eval(self._cust[cust]['EmptyDataOpts']['weightsempty'])
+            if cust:
+                if 'downtimes' in caller:
+                    return eval(self._cust[cust]['EmptyDataOpts']['downtimesempty'])
+                elif 'weights' in caller:
+                    return eval(self._cust[cust]['EmptyDataOpts']['weightsempty'])
+            else:
+                if 'downtimes' in caller:
+                    return eval(self._get_cust_options('EmptyDataOpts')['downtimesempty'])
+                elif 'weights' in caller:
+                    return eval(self._get_cust_options('EmptyDataOpts')['weightsempty'])
         except KeyError:
             return False
 

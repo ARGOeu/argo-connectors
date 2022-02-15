@@ -1,0 +1,4 @@
+<results>
+    <SITE ID="67" PRIMARY_KEY="284G0" NAME="CNR-ILC-PISA" COUNTRY="Italy" COUNTRY_CODE="IT" ROC="NGI_IT" SUBGRID="" GIIS_URL="ldap://gridbdii.ilc.cnr.it:2170/mds-vo-name=CNR-ILC-PISA,o=grid"/>
+    <SITE ID="101" PRIMARY_KEY="235G0" NAME="AUVERGRID" COUNTRY="France" COUNTRY_CODE="FR" ROC="NGI_FRANCE" SUBGRID="" GIIS_URL="ldap://obssbdii.univ-bpclermont.fr:2170/mds-vo-name=AUVERGRID,o=grid"/>
+</results>

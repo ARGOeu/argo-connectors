@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+  <ROC ID="3" ROC_NAME="CERN">
+    <ROCNAME>CERN</ROCNAME>
+    <MAIL_CONTACT>roc-contact@example.com</MAIL_CONTACT>
+    <GOCDB_PORTAL_URL>https://url.com</GOCDB_PORTAL_URL>
+    <CONTACT USER_ID="60G0" PRIMARY_KEY="60G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@example.com</EMAIL>
+      <TEL>+11 11 11 11111</TEL>
+      <CERTDN>/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=Name1/CN=11111/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>NGI Operations Manager</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="204G0" PRIMARY_KEY="204G0">
+      <FORENAME>Name2</FORENAME>
+      <SURNAME>Surname2</SURNAME>
+      <TITLE>Dr.</TITLE>
+      <EMAIL>Name2.Surname2@example.com</EMAIL>
+      <TEL>+22 22 222 2222</TEL>
+      <CERTDN>/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=Name2/CN=111111/CN=Name2 Surname2</CERTDN>
+      <ROLE_NAME>NGI Security Officer</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="331G0" PRIMARY_KEY="331G0">
+      <FORENAME>Name3</FORENAME>
+      <SURNAME>Surname3</SURNAME>
+      <TITLE/>
+      <EMAIL>Name3.Surname3@example.com</EMAIL>
+      <TEL>3333333333333</TEL>
+      <CERTDN>/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=Name3/CN=222222/CN=Name3 Surname3</CERTDN>
+      <ROLE_NAME>NGI Operations Deputy Manager</ROLE_NAME>
+    </CONTACT>
+  </ROC>
+  <ROC ID="4" ROC_NAME="EGI.eu">
+    <ROCNAME>EGI.eu</ROCNAME>
+    <MAIL_CONTACT>operations@egi.eu</MAIL_CONTACT>
+    <GOCDB_PORTAL_URL>https://url.com</GOCDB_PORTAL_URL>
+    <CONTACT USER_ID="406G0" PRIMARY_KEY="406G0">
+      <FORENAME>Name1</FORENAME>
+      <SURNAME>Surname1</SURNAME>
+      <TITLE/>
+      <EMAIL>Name1.Surname1@email.com</EMAIL>
+      <TEL>555555555555</TEL>
+      <CERTDN>/C=HR/O=edu/OU=srce/CN=Name1 Surname1</CERTDN>
+      <ROLE_NAME>Regional Staff (ROD)</ROLE_NAME>
+    </CONTACT>
+    <CONTACT USER_ID="6079G0" PRIMARY_KEY="6079G0">
+      <FORENAME>Name2</FORENAME>
+      <SURNAME>Surname2</SURNAME>
+      <TITLE>Dr</TITLE>
+      <EMAIL>Name2.Surname2@email.com</EMAIL>
+      <TEL/>
+      <CERTDN>1111111@egi.eu</CERTDN>
+      <ROLE_NAME>Regional Staff (ROD)</ROLE_NAME>
+    </CONTACT>
+  </ROC>
+</results>
