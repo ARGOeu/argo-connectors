@@ -7,7 +7,7 @@ description: This document describes the available connectors for data in EGI in
 
 ## Description
 
-`argo-egi-connectors` is a bundle of connectors/sync components for various data sources established in EGI infrastructure, most notably GOCDB (EGI topology, downtimes), but there's also support for fetching weights information via VAPOR service and POEM metric profiles.
+`argo-connectors` is a bundle of connectors/sync components for various data sources established in EGI infrastructure, most notably GOCDB (EGI topology, downtimes), but there's also support for fetching weights information via VAPOR service and POEM metric profiles.
 
 Bundle consists of the following connectors: 
 
@@ -27,15 +27,15 @@ The bundle also contains a helper script `replay-avro-data.py` which is intended
 
 Installation narrows down to simply installing the package:
 	
-	yum -y install argo-egi-connectors
+	yum -y install argo-connectors
 
 **`Components require avro, argo-ams-library and pyOpenSSL packages to be installed/available.`**
 
 
 | File Types | Destination |
 | :--- | :--- |
-| Configuration files|  `/etc/argo-egi-connectors`|
-| Components|  `/usr/libexec/argo-egi-connectors`|
+| Configuration files|  `/etc/argo-connectors`|
+| Components|  `/usr/libexec/argo-connectors`|
 | Cronjobs (configured to be executed once per day) | `/etc/cron.d` |
 | Directory where components will put their files| `/var/lib/argo-connectors/EGI`|
 
@@ -48,7 +48,7 @@ Configuration of all components is centered around two configuration files: `glo
 | `global.conf` | Config file consists of global options common to all connectors like the FQDN of AMS service, the path of host certificate to authenticate to a peer, path of correct avro schema and some connection settings like timeout and number of retries. |<a href="#sync1">Description</a>|
 | `customer.conf` | This configuration file is specific for each customer and it consists of listed jobs and their attributes | <a href="#sync2">Description</a>|
 
-All configuration files reside in `/etc/argo-egi-connectors/` after the installation of the package. That's the default location that each component will try to read configuration from. Location can be overridden since every component takes `-c` and `-g` arguments to explicitly define the paths to `customer.conf` and `global.conf`, respectively. Example:
+All configuration files reside in `/etc/argo-connectors/` after the installation of the package. That's the default location that each component will try to read configuration from. Location can be overridden since every component takes `-c` and `-g` arguments to explicitly define the paths to `customer.conf` and `global.conf`, respectively. Example:
 
 	topology-gocdb-connector.py -c /path/to/customer-foo.conf -g /path/to/global-foo.conf
 
@@ -60,7 +60,7 @@ All configuration files reside in `/etc/argo-egi-connectors/` after the installa
 Config file is read by _every_ component because every component needs to, at least, fetch host certificate to authenticate to a peer, find correct avro schema, know the FQDN of AMS service and have connection parameter properly configured. Config options are case insensitive and whole config file is splitted into a few sections:
 
 	[DEFAULT]
-	SchemaDir = /etc/argo-egi-connectors/schemas/
+	SchemaDir = /etc/argo-connectors/schemas/
 
 Section contains options that will be combined with others mainly to circumvent the inconvenience of listing their values multiple times along the configuration. Every component generates output file in an avro binary format. `SchemaDir` option points to a directory that holds all avro schemas. 
 
@@ -343,7 +343,7 @@ For customer's job `JOB_EGICritical`, we are selecting only those sites that mat
 <strong>Downtimes:</strong>
 
 <pre>
-	% /usr/libexec/argo-egi-connectors/downtimes-gocdb-connector.py -d 2015-04-07
+	% /usr/libexec/argo-connectors/downtimes-gocdb-connector.py -d 2015-04-07
 	% find /var/lib/argo-connectors -name '*downtimes*'
 	/var/lib/argo-connectors/EGI/EGI_Cloudmon/downtimes_2015_04_07.avro
 	/var/lib/argo-connectors/EGI/EGI_Critical/downtimes_2015_04_07.avro

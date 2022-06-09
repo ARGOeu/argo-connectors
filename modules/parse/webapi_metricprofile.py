@@ -1,16 +1,15 @@
 import json
-from argo_egi_connectors.utils import module_class_name
-from argo_egi_connectors.io.http import ConnectorHttpError
-from argo_egi_connectors.exceptions import ConnectorParseError
-from argo_egi_connectors.parse.base import ParseHelpers
+from argo_connectors.utils import module_class_name
+from argo_connectors.io.http import ConnectorHttpError
+from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.parse.base import ParseHelpers
 
 
 class ParseMetricProfiles(ParseHelpers):
-    def __init__(self, logger, data, target_profiles, namespace):
+    def __init__(self, logger, data, target_profiles):
         self.logger = logger
         self.data = data
         self.target_profiles = target_profiles
-        self.namespace = namespace
 
     def get_data(self):
         try:
@@ -25,10 +24,7 @@ class ParseMetricProfiles(ParseHelpers):
             for profile in target_profiles:
                 for service in profile['services']:
                     for metric in service['metrics']:
-                        if self.namespace:
-                            profile_name = '{0}.{1}'.format(self.namespace, profile['name'])
-                        else:
-                            profile_name = profile['name']
+                        profile_name = profile['name']
                         profile_list.append({
                             'profile': profile_name,
                             'metric': metric,

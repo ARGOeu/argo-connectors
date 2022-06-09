@@ -1,8 +1,8 @@
 import unittest
 import json
 
-from argo_egi_connectors.log import Logger
-from argo_egi_connectors.mesh.storage_element_path import attach_sepath_topodata
+from argo_connectors.log import Logger
+from argo_connectors.mesh.storage_element_path import attach_sepath_topodata
 
 from bonsai import LDAPEntry
 

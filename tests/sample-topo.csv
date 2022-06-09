@@ -2,3 +2,4 @@ Service Unique ID,URL,SERVICE_TYPE,Service Description (Alphanumeric and basic p
 tenant_1,https://files.dev.tenant.eu,nextcloud,tenant project Data sharing service,NextCloud,Country,name.surname@country.com,Yes,Development
 tenant_2,https://files.tenant.eu,nextcloud,tenant project Data sharing service,NextCloud,Country,name.surname@country.com,Yes,Development
 tenant_3,https://sso.tenant.eu,aai,tenant project SSO service,AAI,Greece,name.surname@country.com,Yes,Production
+neanias_4,http://ia2-vialactea.oats.inaf.it:8080/vlkb/availability,WebService,NEANIAS project SPACE-VIS ViaLactea service,NEANIAS-Space,Italy,name.surname@garr.it,Yes,Production

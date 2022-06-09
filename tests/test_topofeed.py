@@ -1,10 +1,11 @@
 import unittest
 
-from argo_egi_connectors.log import Logger
-from argo_egi_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
-from argo_egi_connectors.parse.flat_topology import ParseFlatEndpoints
-from argo_egi_connectors.exceptions import ConnectorParseError
-from argo_egi_connectors.mesh.contacts import attach_contacts_topodata
+from argo_connectors.log import Logger
+from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
+from argo_connectors.parse.flat_topology import ParseFlatEndpoints
+from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
+from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.mesh.contacts import attach_contacts_topodata
 
 logger = Logger('test_topofeed.py')
 CUSTOMER_NAME = 'CUSTOMERFOO'
@@ -125,46 +126,40 @@ class MeshSitesAndContacts(unittest.TestCase):
                 'type': 'NGI'
             },
         ]
-        self.sample_sites_contacts = [
-            {
-                'contacts': [
-                    {
-                        'certdn': 'certdn1-dirac-durham',
-                        'email': 'name1.surname1@durham.ac.uk',
-                        'forename': 'Name1',
-                        'role': 'Site Administrator',
-                        'surname': 'Surname1'
-                    },
-                    {
-                        'certdn': 'certdn2-dirac-durham',
-                        'email': 'name2.surname2@durham.ac.uk',
-                        'forename': 'Name2',
-                        'role': 'Site Operations Manager',
-                        'surname': 'Surname2'
-                    }
-                ],
-                'name': 'dirac-durham'
-            },
-            {
-                'contacts': [
-                    {
-                        'certdn': 'certdn1-ru-sarfti',
-                        'email': 'name1.surname1@gmail.com',
-                        'forename': 'Name1',
-                        'role': 'Site Administrator',
-                        'surname': 'Surname1'
-                    },
-                    {
-                        'certdn': 'certdn2-ru-sarfti',
-                        'email': 'name2.surname2@gmail.com',
-                        'forename': 'Name2',
-                        'role': 'Site Administrator',
-                        'surname': 'Surname2'
-                    },
-                ],
-                'name': 'RU-SARFTI'
-            },
-        ]
+        self.sample_sites_contacts = {
+            'dirac-durham': [
+                {
+                    'certdn': 'certdn1-dirac-durham',
+                    'email': 'name1.surname1@durham.ac.uk',
+                    'forename': 'Name1',
+                    'role': 'Site Administrator',
+                    'surname': 'Surname1'
+                },
+                {
+                    'certdn': 'certdn2-dirac-durham',
+                    'email': 'name2.surname2@durham.ac.uk',
+                    'forename': 'Name2',
+                    'role': 'Site Operations Manager',
+                    'surname': 'Surname2'
+                }
+            ],
+            'RU-SARFTI': [
+                {
+                    'certdn': 'certdn1-ru-sarfti',
+                    'email': 'name1.surname1@gmail.com',
+                    'forename': 'Name1',
+                    'role': 'Site Administrator',
+                    'surname': 'Surname1'
+                },
+                {
+                    'certdn': 'certdn2-ru-sarfti',
+                    'email': 'name2.surname2@gmail.com',
+                    'forename': 'Name2',
+                    'role': 'Site Administrator',
+                    'surname': 'Surname2'
+                }
+            ]
+        }
 
     def test_SitesAndContacts(self):
         attach_contacts_topodata(logger, self.sample_sites_contacts, self.sample_sites_data)
@@ -218,17 +213,10 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
                 'type': 'PROJECT'
             },
         ]
-        self.sample_servicegroup_contacts = [
-            {
-                'contacts': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
-                'name': 'NGI_ARMGRID_SERVICES'
-            },
-            {
-                'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
-                'name': 'NGI_CYGRID_SERVICES'
-            },
-
-        ]
+        self.sample_servicegroup_contacts = {
+            'NGI_ARMGRID_SERVICES': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
+            'NGI_CYGRID_SERVICES': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
+        }
 
     def test_ServiceGroupsAndContacts(self):
         attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
@@ -278,16 +266,10 @@ class MeshServiceEndpointsAndContacts(unittest.TestCase):
                 'type': 'SERVICEGROUPS'
             }
         ]
-        self.sample_serviceendpoints_contacts = [
-            {
-                'contacts': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
-                'name': 'fqdn1.com+service1'
-            },
-            {
-                'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
-                'name': 'fqdn2.com+service2'
-            }
-        ]
+        self.sample_serviceendpoints_contacts = {
+            'fqdn1.com+service1': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
+            'fqdn2.com+service2': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com']
+        }
 
     def test_ServiceEndpointsAndContacts(self):
         attach_contacts_topodata(logger, self.sample_serviceendpoints_contacts,
@@ -335,9 +317,10 @@ class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
         logger.customer = CUSTOMER_NAME
 
         self.topology = ParseFlatEndpoints(logger, self.content, CUSTOMER_NAME,
-                                           uidservtype=True,
+                                           uidservendp=True,
                                            fetchtype='ServiceGroups',
                                            scope=CUSTOMER_NAME, is_csv=True)
+        self.maxDiff = None
 
     def test_CsvTopology(self):
         group_groups = self.topology.get_groupgroups()
@@ -352,6 +335,12 @@ class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
                 {
                     'group': 'CUSTOMERFOO',
                     'subgroup': 'AAI',
+                    'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                    'type': 'PROJECT'
+                },
+                {
+                    'group': 'CUSTOMERFOO',
+                    'subgroup': 'NEANIAS-Space',
                     'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
                     'type': 'PROJECT'
                 }
@@ -387,15 +376,25 @@ class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
                             'info_URL': 'https://sso.tenant.eu', 'monitored': '1',
                             'scope': 'CUSTOMERFOO'},
                     'type': 'SERVICEGROUPS'
+                },
+                {
+                    'group': 'NEANIAS-Space',
+                    'hostname': 'ia2-vialactea.oats.inaf.it_neanias_4',
+                    'service': 'WebService',
+                    'tags': {'hostname': 'ia2-vialactea.oats.inaf.it',
+                             'info_ID': 'neanias_4', 'info_URL':
+                             'http://ia2-vialactea.oats.inaf.it:8080/vlkb/availability',
+                             'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                    'type': 'SERVICEGROUPS'
                 }
             ]
         )
 
     def test_FailedCsvTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
-            self.failed_topology = ParseFlatEndpoints(logger, 'RUBBISH_DATA',
+            self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA',
                                                     CUSTOMER_NAME,
-                                                    uidservtype=True,
+                                                    uidservendp=True,
                                                     fetchtype='ServiceGroups',
                                                     scope=CUSTOMER_NAME,
                                                     is_csv=True)
@@ -410,7 +409,7 @@ class ParseServiceEndpointsAndServiceGroupsJson(unittest.TestCase):
         logger.customer = CUSTOMER_NAME
 
         self.topology = ParseFlatEndpoints(logger, self.content, CUSTOMER_NAME,
-                                           uidservtype=True,
+                                           uidservendp=True,
                                            fetchtype='ServiceGroups',
                                            scope=CUSTOMER_NAME, is_csv=False)
 
@@ -468,8 +467,8 @@ class ParseServiceEndpointsAndServiceGroupsJson(unittest.TestCase):
 
     def test_FailedJsonTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
-            self.failed_topology = ParseFlatEndpoints(logger, 'RUBBISH_DATA', CUSTOMER_NAME,
-                                                    uidservtype=True,
+            self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA', CUSTOMER_NAME,
+                                                    uidservendp=True,
                                                     fetchtype='ServiceGroups',
                                                     scope=CUSTOMER_NAME,
                                                     is_csv=False)
@@ -485,7 +484,6 @@ class ParseServiceEndpointsBiomed(unittest.TestCase):
         logger.customer = CUSTOMER_NAME
         parse_service_endpoints = ParseServiceEndpoints(logger, self.content, CUSTOMER_NAME)
         self.group_endpoints = parse_service_endpoints.get_group_endpoints()
-
 
     def test_BiomedEndpoints(self):
         self.assertEqual(self.group_endpoints,
@@ -547,6 +545,338 @@ class ParseSitesBiomed(unittest.TestCase):
                 }
             ]
         )
+
+
+class ParseEoscProvider(unittest.TestCase):
+    def setUp(self):
+        with open('tests/sample-resourcefeed_eoscprovider_eudat.json', encoding='utf-8') as feed_file:
+            resources = feed_file.read()
+        with open('tests/sample-providerfeed_eoscprovider_eudat.json', encoding='utf-8') as feed_file:
+            providers = feed_file.read()
+        with open('tests/sample-resourcefeed_extensions.json', encoding='utf-8') as feed_file:
+            resource_extensions = feed_file.read()
+        logger.customer = CUSTOMER_NAME
+        eosc_topo = ParseTopo(logger, providers, resources, True, CUSTOMER_NAME)
+        self.group_groups = eosc_topo.get_group_groups()
+        self.group_endpoints = eosc_topo.get_group_endpoints()
+        self.id_groupname = buildmap_id2groupname(self.group_endpoints)
+        fakemap_idgroupnames = {
+            'grnet.grnet-test': 'grnet-test',
+            'openaire.validator': 'OpenAIRE Validator',
+            'openaire.zenodo': 'Zenodo',
+            'openaire.amnesia': 'AMNESIA',
+            'grnet.hpc__national_hpc_infrastructure': 'HPC | National HPC Infrastructure'
+        }
+        eosc_topo_extensions = ParseExtensions(logger, resource_extensions, fakemap_idgroupnames, True, CUSTOMER_NAME)
+        self.extensions = eosc_topo_extensions.get_extensions()
+        self.maxDiff = None
+
+    def test_groupGroups(self):
+        self.assertEqual(self.group_groups, [
+            {
+                'group': 'eudat',
+                'subgroup': 'eudat.b2access',
+                'tags': {
+                    'info_projectname': 'EUDAT',
+                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                },
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'eudat',
+                'subgroup': 'eudat.b2note',
+                'tags': {
+                    'info_projectname': 'EUDAT',
+                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                },
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'eudat',
+                'subgroup': 'eudat.b2share',
+                'tags': {
+                    'info_projectname': 'EUDAT',
+                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                },
+                'type': 'PROJECT'},
+            {
+                'group': 'eudat',
+                'subgroup': 'eudat.b2drop',
+                'tags': {
+                    'info_projectname': 'EUDAT',
+                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                },
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'eudat',
+                'subgroup': 'eudat.b2safe',
+                'tags': {
+                    'info_projectname': 'EUDAT',
+                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                },
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'eudat',
+                'subgroup': 'eudat.b2find',
+                'tags': {
+                    'info_projectname': 'EUDAT',
+                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                },
+                'type': 'PROJECT'
+            }
+        ])
+
+    def test_meshContactsProviders(self):
+        sample_resources_contacts = {
+            'www.eudat.eu+eudat.b2access': ['helpdesk@eudat.eu']
+        }
+
+        attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
+        self.assertEqual(self.group_endpoints[0],
+            {
+                'group': 'eudat.b2access',
+                'hostname': 'www.eudat.eu_eudat.b2access',
+                'notifications': {
+                    'contacts': ['helpdesk@eudat.eu'], 'enabled': True
+                },
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'www.eudat.eu',
+                    'info_ID': 'eudat.b2access',
+                    'info_groupname': 'B2ACCESS',
+                    'info_URL': 'https://www.eudat.eu/services/b2access',
+                    'service_tags': 'single sign-on, federated identity management, federated AAI proxy'
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        )
+
+    def test_groupEndoints(self):
+        self.assertEqual(self.group_endpoints,[
+            {
+                'group': 'eudat.b2access',
+                'hostname': 'www.eudat.eu_eudat.b2access',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'www.eudat.eu',
+                    'info_ID': 'eudat.b2access',
+                    'info_groupname': 'B2ACCESS',
+                    'info_URL': 'https://www.eudat.eu/services/b2access',
+                    'service_tags': 'single sign-on, federated identity management, federated '
+                                'AAI proxy'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'eudat.b2note',
+                'hostname': 'b2note.eudat.eu_eudat.b2note',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'b2note.eudat.eu',
+                    'info_ID': 'eudat.b2note',
+                    'info_groupname': 'B2NOTE',
+                    'info_URL': 'https://b2note.eudat.eu',
+                    'service_tags': 'annotation'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'eudat.b2share',
+                'hostname': 'www.eudat.eu_eudat.b2share',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'www.eudat.eu',
+                    'info_ID': 'eudat.b2share',
+                    'info_groupname': 'B2SHARE',
+                    'info_URL': 'https://www.eudat.eu/services/b2share',
+                    'service_tags': 'data repository, data sharing, data publishing, FAIR'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'eudat.b2drop',
+                'hostname': 'www.eudat.eu_eudat.b2drop',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'www.eudat.eu',
+                    'info_ID': 'eudat.b2drop',
+                    'info_groupname': 'B2DROP',
+                    'info_URL': 'https://www.eudat.eu/services/b2drop',
+                    'service_tags': 'sync and share'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'eudat.b2safe',
+                'hostname': 'www.eudat.eu_eudat.b2safe',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'www.eudat.eu',
+                    'info_ID': 'eudat.b2safe',
+                    'info_groupname': 'B2SAFE',
+                    'info_URL': 'https://www.eudat.eu/services/b2safe',
+                    'service_tags': 'replication, Policy-based data management, persistent identifiers, data archiving'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'eudat.b2find',
+                'hostname': 'www.eudat.eu_eudat.b2find',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'www.eudat.eu',
+                    'info_ID': 'eudat.b2find',
+                    'info_groupname': 'B2FIND',
+                    'info_URL': 'https://www.eudat.eu/services/b2find',
+                    'service_tags': 'metadata, search, harvesting, interdisciplinary, discovery'
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        ])
+
+    def test_idGroupname(self):
+        self.assertEqual(self.id_groupname, {
+            'eudat.b2access': 'B2ACCESS',
+            'eudat.b2drop': 'B2DROP',
+            'eudat.b2find': 'B2FIND',
+            'eudat.b2note': 'B2NOTE',
+            'eudat.b2safe': 'B2SAFE',
+            'eudat.b2share': 'B2SHARE'
+        })
+
+    def test_FailedEoscProviderTopology(self):
+        logger.customer = CUSTOMER_NAME
+        with self.assertRaises(ConnectorParseError) as cm:
+            eosc_topo = ParseTopo(logger, 'FAILED_DATA', 'FAILED_DATA', True, CUSTOMER_NAME)
+            self.group_groups = eosc_topo.get_group_groups()
+            self.group_endpoints = eosc_topo.get_group_endpoints()
+        excep = cm.exception
+        self.assertTrue('JSON feed' in excep.msg)
+        self.assertTrue('JSONDecodeError' in excep.msg)
+
+    def test_serviceExtensions(self):
+        self.assertEqual(self.extensions, [
+            {
+                'group': 'grnet.grnet-test',
+                'hostname': 'srce.hr_367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
+                'service': 'eu.eosc.generic.https',
+                'tags': {
+                    'hostname': 'srce.hr',
+                    'info_ID': '367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
+                    'info_URL': 'https://srce.hr',
+                    'info_groupname': 'grnet-test',
+                    'info_monitored_by': 'eosc'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'grnet.grnet-test',
+                'hostname': 'grnet.gr_367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
+                'service': 'eu.eosc.generic.https',
+                'tags': {
+                    'hostname': 'grnet.gr',
+                    'info_ID': '367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
+                    'info_URL': 'https://grnet.gr',
+                    'info_groupname': 'grnet-test',
+                    'info_monitored_by': 'eosc'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'grnet.grnet-test',
+                'hostname': 'kathimerini.gr_367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
+                'service': 'eu.eosc.generic.https',
+                'tags': {
+                    'hostname': 'kathimerini.gr',
+                    'info_ID': '367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
+                    'info_URL': 'https://kathimerini.gr',
+                    'info_groupname': 'grnet-test',
+                    'info_monitored_by': 'eosc'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'openaire.validator',
+                'hostname': 'argo.grnet.gr_4429aede-129a-4a2d-9788-198a96912bc1',
+                'service': 'eu.eosc.portal',
+                'tags': {
+                    'hostname': 'argo.grnet.gr',
+                    'info_ID': '4429aede-129a-4a2d-9788-198a96912bc1',
+                    'info_URL': 'argo.grnet.gr',
+                    'info_groupname': 'OpenAIRE Validator',
+                    'info_monitored_by': 'asdf'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'openaire.zenodo',
+                'hostname': 'some.endpoint.zenodo.com_5ce1854d-a4e0-4ec3-adc9-3e09d42945a5',
+                'service': 'eu.eosc.ckan',
+                'tags': {
+                    'hostname': 'some.endpoint.zenodo.com',
+                    'info_ID': '5ce1854d-a4e0-4ec3-adc9-3e09d42945a5',
+                    'info_URL': 'some.endpoint.zenodo.com',
+                    'info_groupname': 'Zenodo',
+                    'info_monitored_by': 'string'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'openaire.amnesia',
+                'hostname': 'argo.grnet.gr_0920c959-ea0c-412b-a282-dd97e7c594fc',
+                'service': 'eu.eosc.portal',
+                'tags': {
+                    'hostname': 'argo.grnet.gr',
+                    'info_ID': '0920c959-ea0c-412b-a282-dd97e7c594fc',
+                    'info_URL': 'argo.grnet.gr',
+                    'info_groupname': 'AMNESIA',
+                    'info_monitored_by': 'asdf'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'grnet.hpc__national_hpc_infrastructure',
+                'hostname': 'hpc.grnet.gr_18afc30d-2f78-4417-8b11-315ea1611ad7',
+                'service': 'eu.eosc.portal',
+                'tags': {
+                    'hostname': 'hpc.grnet.gr',
+                    'info_ID': '18afc30d-2f78-4417-8b11-315ea1611ad7',
+                    'info_URL': 'https://hpc.grnet.gr/',
+                    'info_groupname': 'HPC | National HPC Infrastructure',
+                    'info_monitored_by': 'monitored_by-eosc'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'grnet.hpc__national_hpc_infrastructure',
+                'hostname': 'hpc.grnet.gr_18afc30d-2f78-4417-8b11-315ea1611ad7_d59ff23a-1ed8-39a3-949f-b1b1b82547d0',
+                'service': 'eu.eosc.portal',
+                'tags': {
+                    'hostname': 'hpc.grnet.gr',
+                    'info_ID': '18afc30d-2f78-4417-8b11-315ea1611ad7_d59ff23a-1ed8-39a3-949f-b1b1b82547d0',
+                    'info_URL': 'https://hpc.grnet.gr/some/path',
+                    'info_groupname': 'HPC | National HPC Infrastructure',
+                    'info_monitored_by': 'monitored_by-eosc'
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'grnet.hpc__national_hpc_infrastructure',
+                'hostname': 'hpc.grnet.gr_18afc30d-2f78-4417-8b11-315ea1611ad7_d002662b-7924-3906-b845-c3c2ebf33e5a',
+                'service': 'eu.eosc.portal',
+                'tags': {
+                    'hostname': 'hpc.grnet.gr',
+                    'info_ID': '18afc30d-2f78-4417-8b11-315ea1611ad7_d002662b-7924-3906-b845-c3c2ebf33e5a',
+                    'info_URL': 'https://hpc.grnet.gr/some/path/another',
+                    'info_groupname': 'HPC | National HPC Infrastructure',
+                    'info_monitored_by': 'monitored_by-eosc'
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        ])
+
 
 if __name__ == '__main__':
     unittest.main()

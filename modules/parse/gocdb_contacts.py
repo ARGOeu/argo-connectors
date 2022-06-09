@@ -1,10 +1,10 @@
 import xml.dom.minidom
 from xml.parsers.expat import ExpatError
 
-from argo_egi_connectors.parse.base import ParseHelpers
-from argo_egi_connectors.parse.gocdb_topology import ParseServiceEndpoints
-from argo_egi_connectors.utils import filename_date, module_class_name
-from argo_egi_connectors.exceptions import ConnectorParseError
+from argo_connectors.parse.base import ParseHelpers
+from argo_connectors.parse.gocdb_topology import ParseServiceEndpoints
+from argo_connectors.utils import filename_date, module_class_name
+from argo_connectors.exceptions import ConnectorParseError
 
 
 class ParseContacts(ParseHelpers):
@@ -25,7 +25,7 @@ class ParseContacts(ParseHelpers):
         interested = ('EMAIL', 'FORENAME', 'SURNAME', 'CERTDN', 'ROLE_NAME')
 
         try:
-            data = list()
+            data = dict()
             xml_data = self.parse_xml(self.data)
             entities = xml_data.getElementsByTagName(root_node)
             for entity in entities:
@@ -44,10 +44,7 @@ class ParseContacts(ParseHelpers):
                             })
                         if entity_node.nodeName == topo_node:
                             entity_name = entity_node.childNodes[0].nodeValue
-                data.append({
-                    'name': entity_name,
-                    'contacts': emails
-                })
+                data[entity_name] = emails
 
             return data
 
@@ -57,7 +54,7 @@ class ParseContacts(ParseHelpers):
 
     def parse_sites_with_contacts(self, data):
         try:
-            sites_contacts = list()
+            sites_contacts = dict()
             xml_data = self.parse_xml(data)
             elements = xml_data.getElementsByTagName('SITE')
             for element in elements:
@@ -72,15 +69,9 @@ class ParseContacts(ParseHelpers):
                         lcontacts = list()
                         for single_contact in contact.split(';'):
                             lcontacts.append(single_contact)
-                        sites_contacts.append({
-                            'name': sitename,
-                            'contacts': lcontacts
-                        })
+                        sites_contacts[sitename] = lcontacts
                     else:
-                        sites_contacts.append({
-                            'name': sitename,
-                            'contacts': [contact]
-                        })
+                        sites_contacts[sitename] = [contact]
             return sites_contacts
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
@@ -92,7 +83,7 @@ class ParseContacts(ParseHelpers):
 
     def parse_servicegroup_contacts(self, data):
         try:
-            endpoints_contacts = list()
+            endpoints_contacts = dict()
             xml_data = self.parse_xml(data)
             elements = xml_data.getElementsByTagName('SERVICE_GROUP')
             for element in elements:
@@ -103,10 +94,7 @@ class ParseContacts(ParseHelpers):
                     if child.nodeName == 'CONTACT_EMAIL' and child.childNodes:
                         contact = child.childNodes[0].nodeValue
                 if contact and name:
-                    endpoints_contacts.append({
-                        'name': name,
-                        'contacts': [contact]
-                    })
+                    endpoints_contacts[name] = [contact]
             return endpoints_contacts
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
@@ -115,7 +103,7 @@ class ParseContacts(ParseHelpers):
 
     def parse_serviceendpoint_contacts(self, data):
         try:
-            endpoints_contacts = list()
+            endpoints_contacts = dict()
             xml_data = self.parse_xml(data)
             elements = xml_data.getElementsByTagName('SERVICE_ENDPOINT')
             for element in elements:
@@ -132,15 +120,9 @@ class ParseContacts(ParseHelpers):
                         lcontacts = list()
                         for single_contact in contact.split(';'):
                             lcontacts.append(single_contact)
-                        endpoints_contacts.append({
-                            'name': '{}+{}'.format(fqdn, servtype),
-                            'contacts': lcontacts
-                        })
+                        endpoints_contacts['{}+{}'.format(fqdn, servtype)] = lcontacts
                     else:
-                        endpoints_contacts.append({
-                            'name': '{}+{}'.format(fqdn, servtype),
-                            'contacts': [contact]
-                        })
+                        endpoints_contacts['{}+{}'.format(fqdn, servtype)] = [contact]
             return endpoints_contacts
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
@@ -244,7 +226,6 @@ class ParseServiceGroupWithContacts(ParseContacts):
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, ExpatError) as exc:
             raise ConnectorParseError
-
 
     def get_contacts(self):
         return self._parse_data()

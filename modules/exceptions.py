@@ -1,8 +1,12 @@
-class ConnectorParseError(Exception):
+class ConnectorError(Exception):
+    def __init__(self, msg=None):
+        self.msg = msg
+
+class ConnectorParseError(ConnectorError):
     def __init__(self, msg=None):
         self.msg = msg
 
 
-class ConnectorHttpError(Exception):
+class ConnectorHttpError(ConnectorError):
     def __init__(self, msg=None):
         self.msg = msg

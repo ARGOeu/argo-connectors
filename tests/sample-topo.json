@@ -7,7 +7,7 @@
         "URL": "https://open-telekom-cloud.com/en"
    },
    {
-       "CONTACT_EMAIL": ["infn-eosc@lists.infn.it"],
+        "CONTACT_EMAIL": ["infn-eosc@lists.infn.it"],
         "SERVICE_TYPE": "eu.eosc.portal.services.url",
         "SITENAME-SERVICEGROUP": "PaaS Orchestrator ",
         "Service Unique ID": 243,

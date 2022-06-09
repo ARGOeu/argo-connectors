@@ -1,0 +1,80 @@
+{
+  "total": 215,
+  "from": 0,
+  "to": 210,
+  "results": [
+    {
+      "id": "eudat",
+      "name": "EUDAT",
+      "abbreviation": "EUDAT",
+      "website": "https://eudat.eu/",
+      "legalEntity": true,
+      "legalStatus": "provider_legal_status-private_company",
+      "description": "The EUDAT Collaborative Data Infrastructure (or EUDAT CDI) is one of the largest infrastructures of integrated data services and resources supporting research in Europe. It is sustained by a network of more than 20 European research organisations, data and computing centres that on September 2016 have signed an agreement to maintain the EUDAT CDI for the next 10 years and in 2018 have supported the establishment of the limited liability company, EUDAT Ltd. This infrastructure and its services have been developed in close collaboration with over 50 research communities spanning across many different scientific disciplines and involved at all stage of the design process. EUDAT’s vision is Data is shared and preserved across borders and disciplines. Achieving this vision means enabling data stewardship within and between European research communities through a Collaborative Data Infrastructure (CDI), a common model and service infrastructure for managing data spanning all European research data centres and community data repositories. European researchers and practitioners from any research discipline can preserve, find, access, and process data in a trusted environment, as part of the EUDAT Collaborative Data Infrastructure. EUDAT offers heterogeneous research data management services and storage resources, supporting multiple research communities as well as individuals, through a geographically distributed, resilient network distributed across 15 European nations and data is stored alongside some of Europe’s most powerful supercomputers.",
+      "logo": "https://eudat.eu/sites/default/files/EUDAT-logo2011.jpg",
+      "multimedia": [
+        "https://youtu.be/2a45VR0kEgM"
+      ],
+      "scientificDomains": [
+        {
+          "scientificDomain": "scientific_domain-generic",
+          "scientificSubdomain": "scientific_subdomain-generic-generic"
+        }
+      ],
+      "tags": [
+        "Data Infrastructure",
+        " European Data Initiative"
+      ],
+      "location": {
+        "streetNameAndNumber": "Keilaranta 14",
+        "postalCode": "02150",
+        "city": "Espoo",
+        "region": null,
+        "country": "FI"
+      },
+      "mainContact": null,
+      "publicContacts": [
+        {
+          "firstName": null,
+          "lastName": null,
+          "email": "eudat-cdi-secretariat@eudat.eu",
+          "phone": null,
+          "position": null
+        }
+      ],
+      "lifeCycleStatus": "provider_life_cycle_status-operational",
+      "certifications": [],
+      "hostingLegalEntity": null,
+      "participatingCountries": [
+        "OT"
+      ],
+      "affiliations": [
+        "https://eudat.eu/eudat-cdi/members"
+      ],
+      "networks": [
+        "provider_network-eudat"
+      ],
+      "structureTypes": [
+        "provider_structure_type-distributed"
+      ],
+      "esfriDomains": [
+        "provider_esfri_domain-data_computing_and_digital_research_infrastructures"
+      ],
+      "esfriType": "provider_esfri_type-other",
+      "merilScientificDomains": [
+        {
+          "merilScientificDomain": "provider_meril_scientific_domain-information_science_and_technology",
+          "merilScientificSubdomain": "provider_meril_scientific_subdomain-information_science_and_technology-complex_data_facilities"
+        }
+      ],
+      "areasOfActivity": [
+        "provider_area_of_activity-technological_development"
+      ],
+      "societalGrandChallenges": [
+        "provider_societal_grand_challenge-other"
+      ],
+      "nationalRoadmaps": [],
+      "users": null
+    }
+  ]
+}

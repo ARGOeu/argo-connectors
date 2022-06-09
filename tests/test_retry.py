@@ -5,9 +5,9 @@ import asyncio
 from aiohttp import client_exceptions
 from aiohttp import http_exceptions
 
-from argo_egi_connectors.io.http import SessionWithRetry
-from argo_egi_connectors.log import Logger
-from argo_egi_connectors.exceptions import ConnectorHttpError
+from argo_connectors.io.http import SessionWithRetry
+from argo_connectors.log import Logger
+from argo_connectors.exceptions import ConnectorHttpError
 
 logger = Logger('test_topofeed.py')
 CUSTOMER_NAME = 'CUSTOMERFOO'
@@ -96,7 +96,7 @@ class ConnectorsHttpRetry(unittest.TestCase):
             'webapihost': 'api.devel.argo.grnet.gr'
         }
         async def setsession():
-            with mock.patch('argo_egi_connectors.io.http.build_ssl_settings'):
+            with mock.patch('argo_connectors.io.http.build_ssl_settings'):
                 self.session = SessionWithRetry(logger, 'test_retry.py', self.globopts, verbose_ret=True)
         self.loop.run_until_complete(setsession())
 

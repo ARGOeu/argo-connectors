@@ -36,16 +36,11 @@ def attach_contacts_topodata(logger, contacts, topodata):
         for entity in topodata:
             # group_groups topotype
             if 'subgroup' in entity:
-                found_contacts = list(
-                    filter(lambda contact:
-                        contact['name'] == entity['subgroup'],
-                        contacts)
-                )
-                if found_contacts:
+                if entity['subgroup'] in contacts:
                     emails = list()
-                    for contact in found_contacts[0]['contacts']:
+                    for contact in contacts[entity['subgroup']]:
                         if isinstance(contact, str):
-                            filtered_emails = filter_dups_noemails(found_contacts[0]['contacts'])
+                            filtered_emails = filter_dups_noemails(contacts[entity['subgroup']])
                             if filtered_emails:
                                 entity.update(notifications={
                                     'contacts': filtered_emails,
@@ -64,21 +59,22 @@ def attach_contacts_topodata(logger, contacts, topodata):
 
             # group_endpoints topotype
             else:
-                for contact in contacts:
-                    fqdn, servtype = contact['name'].split('+')
-                    emails = filter_dups_noemails(contact['contacts'])
-                    found_endpoints = list(
-                        filter(lambda endpoint:
-                            endpoint['hostname'] == fqdn \
-                            and endpoint['service'] == servtype,
-                            topodata)
-                    )
-                    if emails:
-                        for endpoint in found_endpoints:
-                            endpoint.update(notifications={
-                                'contacts': emails,
-                                'enabled': True
-                            })
+                contact_key = None
+
+                lookup_key = entity['hostname'].replace('_', '+', 1)
+                if lookup_key in contacts:
+                    contact_key = lookup_key
+                else:
+                    lookup_key = '{}+{}'.format(entity['hostname'], entity['service'])
+                    if lookup_key in contacts:
+                        contact_key = lookup_key
+
+                if contact_key:
+                    contact = contacts[contact_key]
+                    entity.update(notifications={
+                        'contacts': contact,
+                        'enabled': True
+                    })
 
             updated_topodata.append(entity)
 

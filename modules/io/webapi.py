@@ -2,8 +2,9 @@ import datetime
 import os
 import json
 
-from argo_egi_connectors.utils import module_class_name
-from argo_egi_connectors.io.http import SessionWithRetry
+from argo_connectors.utils import module_class_name
+from argo_connectors.io.http import SessionWithRetry
+from argo_connectors.exceptions import ConnectorHttpError
 
 
 class WebAPI(object):
@@ -11,8 +12,12 @@ class WebAPI(object):
         'downtimes-gocdb-connector.py': 'downtimes',
         'topology-gocdb-connector.py': 'topology',
         'topology-csv-connector.py': 'topology',
+        'topology-provider-connector.py': 'topology',
         'topology-json-connector.py': 'topology',
-        'weights-vapor-connector.py': 'weights'
+        'weights-vapor-connector.py': 'weights',
+        'service-types-gocdb-connector.py': 'topology',
+        'service-types-csv-connector.py': 'topology',
+        'service-types-json-connector.py': 'topology',
     }
 
     def __init__(self, connector, host, token, logger, retry,
@@ -75,7 +80,9 @@ class WebAPI(object):
                                                                 data=json.dumps(data_send),
                                                                 headers=self.headers)
         if status != 201:
-            if connector.startswith('topology') or connector.startswith('downtimes'):
+            if (connector.startswith('topology')
+                or connector.startswith('downtimes')
+                or connector.startswith('service-types')):
                 jsonret = json.loads(content)
                 msg = None
                 statusmsg = jsonret.get('status', False)
@@ -178,12 +185,19 @@ class WebAPI(object):
         if self.connector.startswith('weights'):
             data_send = self._format_weights(data)
 
-        status = await self._send(api, data_send, self.connector)
+        try:
+            status = await self._send(api, data_send, self.connector)
 
-        # delete resource on WEB-API and resend
-        if status == 409 and topo_component or downtimes_component:
-            await self._delete_and_resend(api, data_send, topo_component, downtimes_component)
-        elif status == 409:
-            await self._update(api, data_send)
+            # delete resource on WEB-API and resend
+            if status == 409 and topo_component or downtimes_component:
+                await self._delete_and_resend(api, data_send, topo_component, downtimes_component)
+            elif status == 409:
+                await self._update(api, data_send)
 
-        await self.session.close()
+            self.logger.info('Data succesfully sent to WEB-API')
+
+        except ConnectorHttpError:
+            self.logger.error('Failed sent of data to WEB-API')
+
+        finally:
+            await self.session.close()

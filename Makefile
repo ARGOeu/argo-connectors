@@ -1,4 +1,4 @@
-PKGNAME=argo-egi-connectors
+PKGNAME=argo-connectors
 SPECFILE=${PKGNAME}.spec
 
 PKGVERSION=$(shell grep -s '^Version:' $(SPECFILE) | sed -e 's/Version: *//')

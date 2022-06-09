@@ -35,7 +35,7 @@ class Global(object):
         self.optional = dict()
 
         self.logger = Logger(str(self.__class__))
-        self._filename = '/etc/argo-egi-connectors/global.conf' if not confpath else confpath
+        self._filename = '/etc/argo-connectors/global.conf' if not confpath else confpath
         self._checkpath = kwargs['checkpath'] if 'checkpath' in kwargs.keys() else False
 
         self.optional.update(self._lowercase_dict(self.conf_auth))
@@ -45,31 +45,43 @@ class Global(object):
                                                self.conf_auth, self.conf_conn,
                                                self.conf_state,
                                                self.conf_webapi)
-        self.secopts = {'topology-gocdb-connector.py':
-                        self._merge_dict(self.shared_secopts,
-                                         self.conf_topo_schemas,
-                                         self.conf_topo_output),
-                        'topology-json-connector.py':
-                        self._merge_dict(self.shared_secopts,
-                                         self.conf_topo_schemas,
-                                         self.conf_topo_output),
-                        'downtimes-gocdb-connector.py':
-                        self._merge_dict(self.shared_secopts,
-                                         self.conf_downtimes_schemas,
-                                         self.conf_downtimes_output),
-                        'weights-vapor-connector.py':
-                        self._merge_dict(self.shared_secopts,
-                                         self.conf_weights_schemas,
-                                         self.conf_weights_output),
-                        'topology-csv-connector.py':
-                        self._merge_dict(self.shared_secopts,
-                                         self.conf_topo_schemas,
-                                         self.conf_topo_output),
-                        'metricprofile-webapi-connector.py':
-                        self._merge_dict(self.shared_secopts,
-                                         self.conf_metricprofile_schemas,
-                                         self.conf_metricprofile_output)
-                        }
+        self.secopts = {
+            'topology-gocdb-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_topo_schemas,
+                                self.conf_topo_output),
+            'topology-json-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_topo_schemas,
+                                self.conf_topo_output),
+            'topology-provider-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_topo_schemas,
+                                self.conf_topo_output),
+            'downtimes-gocdb-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_downtimes_schemas,
+                                self.conf_downtimes_output),
+            'weights-vapor-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_weights_schemas,
+                                self.conf_weights_output),
+            'topology-csv-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_topo_schemas,
+                                self.conf_topo_output),
+            'metricprofile-webapi-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_metricprofile_schemas,
+                                self.conf_metricprofile_output),
+            'service-types-gocdb-connector.py':
+            self._merge_dict(self.shared_secopts),
+            'service-types-csv-connector.py':
+            self._merge_dict(self.shared_secopts),
+            'service-types-json-connector.py':
+            self._merge_dict(self.shared_secopts),
+
+        }
 
         if caller:
             self.caller_secopts = self.secopts[os.path.basename(caller)]
@@ -194,10 +206,14 @@ class CustomerConf(object):
     _defjobattrs = {'topology-gocdb-connector.py': [''],
                     'topology-json-connector.py': [''],
                     'topology-csv-connector.py': [''],
+                    'topology-provider-connector.py': [''],
                     'metricprofile-webapi-connector.py': ['MetricProfileNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
                     'weights-vapor-connector.py': ['WeightsFeed',
-                                                   'TopoFetchType']
+                                                   'TopoFetchType'],
+                    'service-types-gocdb-connector.py': ['ServiceTypesFeed'],
+                    'service-types-csv-connector.py': ['ServiceTypesFeed'],
+                    'service-types-json-connector.py': ['ServiceTypesFeed']
                     }
     _jobs, _jobattrs = {}, None
     _cust_optional = ['AuthenticationUsePlainHttpAuth',
@@ -206,13 +222,13 @@ class CustomerConf(object):
                       'BDIIQueryBase', 'BDIIQueryFilterSRM',
                       'BDIIQueryAttributesSRM', 'BDIIQueryFilterSEPATH',
                       'BDIIQueryAttributesSEPATH', 'WebAPIToken',
-                      'WeightsEmpty', 'DowntimesEmpty']
+                      'WeightsEmpty', 'DowntimesEmpty', 'ServiceTypesFeed']
     tenantdir = ''
     deftopofeed = 'https://goc.egi.eu/gocdbpi/'
 
     def __init__(self, caller, confpath, **kwargs):
         self.logger = Logger(str(self.__class__))
-        self._filename = '/etc/argo-egi-connectors/customer.conf' if not confpath else confpath
+        self._filename = '/etc/argo-connectors/customer.conf' if not confpath else confpath
         if not kwargs:
             self._jobattrs = self._defjobattrs[os.path.basename(caller)]
         else:
@@ -246,8 +262,10 @@ class CustomerConf(object):
                     toposcope = config.get(section, 'TopoScope', fallback=None)
                     topofeedsites = config.get(section, 'TopoFeedSites', fallback=None)
                     topofeedendpoints = config.get(section, 'TopoFeedServiceEndpoints', fallback=None)
+                    topofeedendpointsextensions = config.get(section, 'TopoFeedServiceEndpointsExtensions', fallback=None)
                     topofeedservicegroups = config.get(section, 'TopoFeedServiceGroups', fallback=None)
                     topofeedpaging = config.get(section, 'TopoFeedPaging', fallback='GOCDB')
+                    servicetypesfeed = config.get(section, 'ServiceTypesFeed', fallback=None)
 
                     if not custdir.endswith('/'):
                         custdir = '{}/'.format(custdir)
@@ -275,8 +293,11 @@ class CustomerConf(object):
                                              'TopoFeedSites': topofeedsites,
                                              'TopoFeedServiceGroups': topofeedservicegroups,
                                              'TopoFeedEndpoints': topofeedendpoints,
+                                             'TopoFeedEndpointsExtensions': topofeedendpointsextensions,
                                              'TopoUIDServiceEnpoints': topouidservendpoints,
-                                             'TopoType': topotype}})
+                                             'TopoType': topotype,
+                                             'ServiceTypesFeed': servicetypesfeed
+                                             }})
                 if optopts:
                     auth, webapi, empty_data, bdii = {}, {}, {}, {}
                     for k, v in optopts.items():
@@ -492,6 +513,9 @@ class CustomerConf(object):
     def get_topofeedendpoints(self):
         return self._get_cust_options('TopoFeedEndpoints')
 
+    def get_topofeedendpointsextensions(self):
+        return self._get_cust_options('TopoFeedEndpointsExtensions')
+
     def get_topofeedservicegroups(self):
         return self._get_cust_options('TopoFeedServiceGroups')
 
@@ -607,3 +631,10 @@ class CustomerConf(object):
             pass
 
         return namespace
+
+    def get_servicesfeed(self):
+        feed = self._get_cust_options('ServiceTypesFeed')
+        if feed:
+            return feed
+        else:
+            return self._get_cust_options('TopoFeed')

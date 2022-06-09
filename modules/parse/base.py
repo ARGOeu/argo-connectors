@@ -3,8 +3,8 @@ import xml.dom.minidom
 from xml.parsers.expat import ExpatError
 from io import StringIO
 
-from argo_egi_connectors.utils import module_class_name
-from argo_egi_connectors.exceptions import ConnectorParseError
+from argo_connectors.utils import module_class_name
+from argo_connectors.exceptions import ConnectorParseError
 
 import json
 import csv
@@ -128,4 +128,3 @@ class ParseHelpers(object):
             msg = '{} Customer:{} : Error parsing CSV feed - empty data'.format(module_class_name(self), self.logger.customer)
             raise ConnectorParseError(msg)
         return results
-

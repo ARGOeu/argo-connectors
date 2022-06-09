@@ -1,5 +1,5 @@
 [DEFAULT]
-SchemaDir = /etc/argo-egi-connectors/schemas/
+SchemaDir = /etc/argo-connectors/schemas/
 
 [General]
 WriteAvro = True

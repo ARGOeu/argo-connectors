@@ -1,7 +1,7 @@
 from distutils.core import setup
 import glob
 
-NAME = 'argo-egi-connectors'
+NAME = 'argo-connectors'
 
 
 def get_ver():
@@ -27,18 +27,23 @@ setup(name=NAME,
           "Intended Audience :: Developers",
       ],
       url='http://argoeu.github.io/guides/sync/',
-      package_dir={'argo_egi_connectors.io': 'modules/io',
-                   'argo_egi_connectors.parse': 'modules/parse',
-                   'argo_egi_connectors.mesh': 'modules/mesh',
-                   'argo_egi_connectors': 'modules/'},
-      packages=['argo_egi_connectors', 'argo_egi_connectors.io',
-                'argo_egi_connectors.parse', 'argo_egi_connectors.mesh'],
-      data_files=[('/etc/argo-egi-connectors', glob.glob('etc/*.conf.template')),
-                  ('/usr/libexec/argo-egi-connectors', ['bin/downtimes-gocdb-connector.py',
-                                                        'bin/metricprofile-webapi-connector.py',
-                                                        'bin/topology-gocdb-connector.py',
-                                                        'bin/topology-json-connector.py',
-                                                        'bin/weights-vapor-connector.py',
-                                                        'bin/topology-csv-connector.py',
-                                                        'bin/replay-avro-data.py']),
-                  ('/etc/argo-egi-connectors/schemas', glob.glob('etc/schemas/*.avsc'))])
+      package_dir={'argo_connectors.io': 'modules/io',
+                   'argo_connectors.parse': 'modules/parse',
+                   'argo_connectors.mesh': 'modules/mesh',
+                   'argo_connectors.tasks': 'modules/tasks',
+                   'argo_connectors': 'modules/'},
+      packages=['argo_connectors', 'argo_connectors.io',
+                'argo_connectors.parse', 'argo_connectors.mesh',
+                'argo_connectors.tasks'],
+      data_files=[('/etc/argo-connectors', glob.glob('etc/*.conf.template')),
+                  ('/usr/libexec/argo-connectors', ['exec/downtimes-gocdb-connector.py',
+                                                    'exec/metricprofile-webapi-connector.py',
+                                                    'exec/topology-provider-connector.py',
+                                                    'exec/topology-gocdb-connector.py',
+                                                    'exec/service-types-gocdb-connector.py',
+                                                    'exec/service-types-json-connector.py',
+                                                    'exec/service-types-csv-connector.py',
+                                                    'exec/topology-json-connector.py',
+                                                    'exec/weights-vapor-connector.py',
+                                                    'exec/topology-csv-connector.py']),
+                  ('/etc/argo-connectors/schemas', glob.glob('etc/schemas/*.avsc'))])

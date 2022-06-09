@@ -6,10 +6,15 @@ AuthenticationUsePlainHttpAuth = False
 AuthenticationHttpUser = xxxx
 AuthenticationHttpPass = xxxx
 WebAPIToken = xxxx
-TopoFeed = https://goc.egi.eu/gocdbpi/
+ServiceTypesFeed = https://goc.egi.eu/gocdbpi/private/?method=get_service_types
+TopoFeed = https://goc.egi.eu/
+TopoFeedPaging = True
+TopoFeedServiceEndpoints = https://goc.egi.eu/gocdbpi/private/?method=get_service_endpoint&scope=
+TopoFeedServiceEndpointsExtensions = https://beta.providers.eosc-portal.eu/api/service-extensions/all?catalogue_id=eosc
+TopoFeedServiceGroups = https://goc.egi.eu/gocdbpi/private/?method=get_service_group&scope=
+TopoFeedSites = https://goc.egi.eu/gocdbpi/private/?method=get_site&scope=
 TopoFetchType = Sites, ServiceGroups
 TopoType = GOCDB
-TopoFeedPaging = True
 WeightsEmpty = False
 DowntimesEmpty = False
 BDII = True

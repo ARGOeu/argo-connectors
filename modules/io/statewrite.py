@@ -2,7 +2,7 @@ import datetime
 import os
 import aiofiles
 
-from argo_egi_connectors.utils import datestamp
+from argo_connectors.utils import datestamp
 
 
 daysback = 1
@@ -18,6 +18,8 @@ async def state_write(caller, statedir, state, savedays, date=None):
         filenamebase = 'weights-ok'
     elif 'downtimes' in caller:
         filenamebase = 'downtimes-ok'
+    elif 'service-types' in caller:
+        filenamebase = 'services-ok'
 
     if date:
         datebackstamp = date
