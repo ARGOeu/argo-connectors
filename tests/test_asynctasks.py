@@ -7,10 +7,11 @@ import datetime
 import mock
 
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
-from argo_connectors.tasks.gocdb_servicetypes import TaskGocdbServiceTypes
-from argo_connectors.tasks.provider_topology import TaskProviderTopology
-from argo_connectors.tasks.gocdb_topology import TaskGocdbTopology
+from argo_connectors.tasks.flat_downtimes import TaskCsvDowntimes
 from argo_connectors.tasks.flat_servicetypes import TaskFlatServiceTypes
+from argo_connectors.tasks.gocdb_servicetypes import TaskGocdbServiceTypes
+from argo_connectors.tasks.gocdb_topology import TaskGocdbTopology
+from argo_connectors.tasks.provider_topology import TaskProviderTopology
 from argo_connectors.parse.base import ParseHelpers
 
 
@@ -201,6 +202,79 @@ class ServiceTypesGocdb(unittest.TestCase):
         self.assertTrue(self.services_gocdb.logger.error.called)
         self.assertTrue(self.services_gocdb.logger.error.call_args[0][0], repr(ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.services_gocdb.send_webapi.called)
+
+class DowntimesCsv(unittest.TestCase):
+    def setUp(self):
+        logger = mock.Mock()
+        logger.customer = CUSTOMER_NAME
+        self.loop = asyncio.get_event_loop()
+        mocked_globopts = dict(generalpublishwebapi='True',
+                               generalwriteavro='True',
+                               outputdowntimes='downtimes_DATE.avro',
+                               avroschemasdowntimes='downtimes.avsc')
+        globopts = mocked_globopts
+        webapiopts = mock.Mock()
+        authopts = mock.Mock()
+        confcust = mock.Mock()
+        confcust.send_empty.return_value = False
+        confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
+        confcust.get_custdir.return_value = '/some/path'
+        custname = CUSTOMER_NAME
+        feed = 'https://downtimes-csv.com/api/fetch'
+        timestamp = datetime.datetime.now().strftime('%Y_%m_%d')
+        current_date = datetime.datetime.now()
+        self.downtimes_flat = TaskCsvDowntimes(
+            self.loop,
+            logger,
+            'test_asynctasks_downtimesflat',
+            globopts,
+            webapiopts,
+            confcust,
+            custname,
+            feed,
+            current_date,
+            True,
+            current_date,
+            timestamp
+        )
+        self.maxDiff = None
+
+    @mock.patch('argo_connectors.tasks.flat_downtimes.write_avro')
+    @mock.patch('argo_connectors.tasks.flat_downtimes.write_state')
+    @async_test
+    async def test_StepsSuccessRun(self, mock_writestate, mock_writeavro):
+        self.downtimes_flat.fetch_data = mock.AsyncMock()
+        self.downtimes_flat.fetch_data.side_effect = ['data_downtimes']
+        self.downtimes_flat.send_webapi = mock.AsyncMock()
+        self.downtimes_flat.parse_source = mock.MagicMock()
+        await self.downtimes_flat.run()
+        self.assertTrue(self.downtimes_flat.fetch_data.called)
+        self.assertTrue(self.downtimes_flat.parse_source.called)
+        self.downtimes_flat.parse_source.assert_called_with('data_downtimes')
+        self.assertEqual(mock_writestate.call_args[0][0], 'test_asynctasks_downtimesflat')
+        self.assertEqual(mock_writestate.call_args[0][3], self.downtimes_flat.timestamp)
+        self.assertTrue(mock_writestate.call_args[0][4])
+        self.assertTrue(mock_writeavro.called, True)
+        self.assertEqual(mock_writeavro.call_args[0][4], datetime.datetime.now().strftime('%Y_%m_%d'))
+        self.assertTrue(self.downtimes_flat.send_webapi.called)
+        self.assertTrue(self.downtimes_flat.logger.info.called)
+
+    @mock.patch('argo_connectors.tasks.flat_downtimes.write_state')
+    @async_test
+    async def test_StepsFailedRun(self, mock_writestate):
+        self.downtimes_flat.fetch_data = mock.AsyncMock()
+        self.downtimes_flat.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.downtimes_flat.send_webapi = mock.AsyncMock()
+        self.downtimes_flat.parse_source = mock.MagicMock()
+        await self.downtimes_flat.run()
+        self.assertTrue(self.downtimes_flat.fetch_data.called)
+        self.assertFalse(self.downtimes_flat.parse_source.called)
+        self.assertEqual(mock_writestate.call_args[0][0], 'test_asynctasks_downtimesflat')
+        self.assertEqual(mock_writestate.call_args[0][3], self.downtimes_flat.timestamp)
+        self.assertFalse(mock_writestate.call_args[0][4])
+        self.assertTrue(self.downtimes_flat.logger.error.called)
+        self.assertTrue(self.downtimes_flat.logger.error.call_args[0][0], repr(ConnectorHttpError('fetch_data failed')))
+        self.assertFalse(self.downtimes_flat.send_webapi.called)
 
 
 class ServiceTypesFlat(unittest.TestCase):

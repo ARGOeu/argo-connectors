@@ -10,6 +10,7 @@ from argo_connectors.parse.base import ParseHelpers
 
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
+
 class ParseGocdb(unittest.TestCase):
     def setUp(self):
         with open('tests/sample-service_types_gocdb.xml', encoding='utf-8') as feed_file:

@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.0] - 2022-07-28
+
+### Added
+
+* ARGO-3695 [NEANIAS] Use ARGO for downtimes
+
 ## [2.1.0] - 2022-06-07
 
 ### Added

@@ -9,6 +9,7 @@ from argo_connectors.exceptions import ConnectorHttpError
 
 class WebAPI(object):
     methods = {
+        'downtimes-csv-connector.py': 'downtimes',
         'downtimes-gocdb-connector.py': 'downtimes',
         'topology-gocdb-connector.py': 'topology',
         'topology-csv-connector.py': 'topology',

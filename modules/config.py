@@ -58,6 +58,10 @@ class Global(object):
             self._merge_dict(self.shared_secopts,
                                 self.conf_topo_schemas,
                                 self.conf_topo_output),
+            'downtimes-csv-connector.py':
+            self._merge_dict(self.shared_secopts,
+                                self.conf_downtimes_schemas,
+                                self.conf_downtimes_output),
             'downtimes-gocdb-connector.py':
             self._merge_dict(self.shared_secopts,
                                 self.conf_downtimes_schemas,
@@ -209,6 +213,7 @@ class CustomerConf(object):
                     'topology-provider-connector.py': [''],
                     'metricprofile-webapi-connector.py': ['MetricProfileNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
+                    'downtimes-csv-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
                     'weights-vapor-connector.py': ['WeightsFeed',
                                                    'TopoFetchType'],
                     'service-types-gocdb-connector.py': ['ServiceTypesFeed'],
@@ -266,6 +271,7 @@ class CustomerConf(object):
                     topofeedservicegroups = config.get(section, 'TopoFeedServiceGroups', fallback=None)
                     topofeedpaging = config.get(section, 'TopoFeedPaging', fallback='GOCDB')
                     servicetypesfeed = config.get(section, 'ServiceTypesFeed', fallback=None)
+                    downtimesfeed = config.get(section, 'DowntimesFeed', fallback=None)
 
                     if not custdir.endswith('/'):
                         custdir = '{}/'.format(custdir)
@@ -286,17 +292,18 @@ class CustomerConf(object):
 
                 self._cust.update({section: {'Jobs': custjobs, 'OutputDir':
                                              custdir, 'Name': custname,
-                                             'TopoFetchType': topofetchtype,
-                                             'TopoFeedPaging': topofeedpaging,
-                                             'TopoScope': toposcope,
+                                             'DowntimesFeed': downtimesfeed,
+                                             'ServiceTypesFeed': servicetypesfeed,
                                              'TopoFeed': topofeed,
-                                             'TopoFeedSites': topofeedsites,
-                                             'TopoFeedServiceGroups': topofeedservicegroups,
                                              'TopoFeedEndpoints': topofeedendpoints,
                                              'TopoFeedEndpointsExtensions': topofeedendpointsextensions,
-                                             'TopoUIDServiceEnpoints': topouidservendpoints,
+                                             'TopoFeedPaging': topofeedpaging,
+                                             'TopoFeedServiceGroups': topofeedservicegroups,
+                                             'TopoFeedSites': topofeedsites,
+                                             'TopoFetchType': topofetchtype,
+                                             'TopoScope': toposcope,
                                              'TopoType': topotype,
-                                             'ServiceTypesFeed': servicetypesfeed
+                                             'TopoUIDServiceEnpoints': topouidservendpoints
                                              }})
                 if optopts:
                     auth, webapi, empty_data, bdii = {}, {}, {}, {}
@@ -503,6 +510,9 @@ class CustomerConf(object):
                 if option.lower() == opt.lower():
                     target_option = options[option]
         return target_option
+
+    def get_downfeed(self):
+        return self._get_cust_options('DowntimesFeed')
 
     def get_topofeed(self):
         return self._get_cust_options('TopoFeed')

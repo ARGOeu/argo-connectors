@@ -1,0 +1,42 @@
+unique_id,url,start_time,end_time,service_type,Severity,Description
+neanias_5,https://atmo-flud.neanias.eu/,2/21/2022 8:00,2/22/2022 19:00,Webservice,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_7,https://atmo-stress.neanias.eu/,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_9,https://caesar.neanias.eu:443,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_10,http://caesar-api.neanias.eu/,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_14,https://bathyprocessing.neanias.eu/hub/login,2/21/2022 8:00,2/22/2022 19:00,JupyterHub,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_15,https://uw-map.neanias.eu/,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_16,https://uw-map.neanias.eu/tos,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_17,https://uw-map.neanias.eu/privacy,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_18,https://uw-mos.neanias.eu/api/try,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_20,https://ai-gateway.neanias.eu/hub/login,2/21/2022 8:00,2/22/2022 19:00,JupyterHub,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_21,https://accounting.neanias.eu/api/api/accounting-service/version-info/current,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_25,https://logging.neanias.eu/api/status,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_26,https://minio.ml-models.neanias.eu/minio/health/live,2/21/2022 8:00,2/22/2022 19:00,MinIO,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_27,https://notification.neanias.eu/api/notification/version-info/current,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_28,https://pms.neanias.eu/,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_30,https://vis-gateway.neanias.eu/hub/login,2/21/2022 8:00,2/22/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+,,,,,,
+neanias_5,https://atmo-flud.neanias.eu/,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_7,https://atmo-stress.neanias.eu/,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_9,https://caesar.neanias.eu:443,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_10,http://caesar-api.neanias.eu/,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_14,https://bathyprocessing.neanias.eu/hub/login,3/1/2022 8:00,3/4/2022 19:00,JupyterHub,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_15,https://uw-map.neanias.eu/,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_16,https://uw-map.neanias.eu/tos,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_17,https://uw-map.neanias.eu/privacy,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_18,https://uw-mos.neanias.eu/api/try,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_20,https://ai-gateway.neanias.eu/hub/login,3/1/2022 8:00,3/4/2022 19:00,JupyterHub,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_21,https://accounting.neanias.eu/api/api/accounting-service/version-info/current,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_25,https://logging.neanias.eu/api/status,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_26,https://minio.ml-models.neanias.eu/minio/health/live,3/1/2022 8:00,3/4/2022 19:00,MinIO,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_27,https://notification.neanias.eu/api/notification/version-info/current,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_28,https://pms.neanias.eu/,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_30,https://vis-gateway.neanias.eu/hub/login,3/1/2022 8:00,3/4/2022 19:00,WebService,OUTAGE,GARR Cloud garr-ct1 region maintenance
+neanias_2,https://files.neanias.eu,2/28/2022 13:00,2/28/2022 15:00,nextcloud,OUTAGE,Data sharing service maintenance
+neanias_1,https://files.dev.neanias.eu,2/28/2022 9:30,2/28/2022 11:00,nextcloud,OUTAGE,Data sharing service maintenance
+neanias_1,https://files.dev.neanias.eu,2/7/2022 8:00,2/17/2022 19:00,nextcloud,OUTAGE,GARR Cloud garr-pa1 region maintenance
+neanias_2,https://files.neanias.eu,2/7/2022 8:00,2/17/2022 19:00,nextcloud,OUTAGE,GARR Cloud garr-pa1 region maintenance
+neanias_4,https://atmo-4cast.neanias.eu/api/forecaststatus/1,2/7/2022 8:00,2/17/2022 19:00,WebService,OUTAGE,GARR Cloud garr-pa1 region maintenance
+neanias_6,http://atmo-seism.neanias.eu/hub/login,2/7/2022 8:00,2/17/2022 19:00,JupyterHub,OUTAGE,GARR Cloud garr-pa1 region maintenance
+neanias_11,http://vlkb.neanias.eu:8080/vlkb/tap/availability,2/7/2022 8:00,2/17/2022 19:00,WebService,OUTAGE,GARR Cloud garr-pa1 region maintenance
+neanias_29,https://vd-maps.neanias.eu,2/7/2022 8:00,2/17/2022 19:00,WebService,OUTAGE,GARR Cloud garr-pa1 region maintenance
