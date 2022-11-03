@@ -103,6 +103,9 @@ class TopologyProvider(unittest.TestCase):
         confcust = mock.Mock()
         confcust.get_topofeedservicegroups.return_value = 'http://topo.feed.providers.com'
         confcust.get_topofeedendpoints.return_value = 'http://topo.feed.resources.com'
+        confcust.get_oidctoken.return_value = 'oidctoken'
+        confcust.get_oidcclientid.return_value = 'clientid'
+        confcust.get_oidctokenapi.return_value = 'oidctokenapi'
         topofeedpaging = False
         uidservendp = False
         fixed_date = datetime.datetime.now().strftime('%Y_%m_%d')
@@ -123,16 +126,18 @@ class TopologyProvider(unittest.TestCase):
     @mock.patch.object(ParseHelpers, 'parse_json')
     @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
     @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
     @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_get')
     @async_test
-    async def test_failedNextCursor(self, mock_httpget, mock_buildsslsettings,
+    async def test_failedNextCursor(self, mock_httpget, mock_httppost, mock_buildsslsettings,
                                   mock_buildconnretry, mock_parsejson):
         mock_httpget.return_value = 'garbled JSON data'
+        mock_httppost.return_value = 'garbled JSON data'
         mock_buildsslsettings.return_value = 'SSL settings'
         mock_parsejson.side_effect = [
             ConnectorParseError('failed PROVIDER find_next_paging_cursor_count'),
             ConnectorParseError('failed PROVIDER find_next_paging_cursor_count'),
-            ConnectorParseError('failed PROVIDER find_next_paging_cursor_count')
+            ConnectorParseError('failed PROVIDER find_next_paging_cursor_count'),
         ]
         mock_buildconnretry.return_value = (1, 2)
         with self.assertRaises(ConnectorError) as cm:
@@ -140,6 +145,24 @@ class TopologyProvider(unittest.TestCase):
         excep = cm.exception
         self.assertTrue('ConnectorParseError' in excep.msg)
         self.assertTrue('failed PROVIDER' in excep.msg)
+
+    @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
+    @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
+    @mock.patch.object(TaskProviderTopology, 'fetch_data')
+    @async_test
+    async def test_failedAccessToken(self, mock_fetchdata, mock_httppost,
+                                     mock_buildsslsettings,
+                                     mock_buildconnretry):
+        mock_fetchdata.return_value = 'OK JSON data'
+        mock_httppost.return_value = 'garbled JSON data'
+        mock_buildsslsettings.return_value = 'SSL settings'
+        mock_buildconnretry.return_value = (1, 2)
+        with self.assertRaises(ConnectorError) as cm:
+            await self.topo_provider.run()
+        excep = cm.exception
+        self.assertTrue('ConnectorParseError' in excep.msg)
+        self.assertTrue('JSONDecodeError' in excep.msg)
 
 
 class ServiceTypesGocdb(unittest.TestCase):

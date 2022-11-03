@@ -4,6 +4,7 @@ from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import filename_date, module_class_name, construct_fqdn
 
 import uuid
+import json
 
 
 SERVICE_NAME_WEBPAGE='eu.eosc.portal.services.url'
@@ -22,6 +23,46 @@ def build_urlpath_id(http_endpoint):
         return uuid.uuid3(uuid.NAMESPACE_URL, path)
     else:
         return None
+
+
+class ParseResourcesExtras(ParseHelpers):
+    def __init__(self, logger, data=None, keys=[], custname=None, ret_json=False):
+        super(ParseResourcesExtras, self).__init__(logger)
+        self.data = data
+        self._keys = keys
+        self.custname = custname
+        self._ret_json = ret_json
+        self._resources = list()
+        self._parse_data()
+
+    def _parse_data(self):
+        try:
+            if type(self.data) == str:
+                json_data = self.parse_json(self.data)
+            else:
+                json_data = self.data
+            for resource in json_data['results']:
+                extras = resource.get('resourceExtras', None)
+                if extras:
+                    for key in self._keys:
+                        key_true = extras.get(key, False)
+                        if key_true:
+                            service = resource['service']
+                            service['tags'].append(key)
+                            self._resources.append(service)
+            if self._ret_json:
+                self.data = self._resources
+            else:
+                self.data = json.dumps(
+                    {'results': self._resources}
+                )
+
+        except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
+            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Extras Resources feed - %s' % (self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            raise ConnectorParseError(msg)
+
+        except ConnectorParseError as exc:
+            raise exc
 
 
 class ParseResources(ParseHelpers):
@@ -163,6 +204,7 @@ class ParseTopo(object):
 
     def get_group_groups(self):
         gg = list()
+        providers_added = dict()
         for provider in self.providers.data:
             resource_from_provider = list(filter(
                 lambda resource: resource['provider'] == provider['id'],
@@ -170,6 +212,9 @@ class ParseTopo(object):
             ))
             for resource in resource_from_provider:
                 gge = dict()
+                if (providers_added.get(provider['id'], False) and
+                    providers_added[provider['id']] == resource['id']):
+                    continue
                 gge['type'] = 'PROJECT'
                 gge['group'] = provider['id']
                 gge['subgroup'] = resource['id']
@@ -177,8 +222,9 @@ class ParseTopo(object):
                     provider_tags = [tag.strip() for tag in provider['provider_tag']]
                     gge['tags'] = dict(provider_tags=', '.join(provider_tags), info_projectname=provider['abbr'])
                 else:
-                    gge['tags'] = dict(info_projectname=provider['abbr'])
+                    gge['tags'] = dict(info_projectname=provider['abbr'].strip())
                 gg.append(gge)
+                providers_added.update({provider['id'].strip(): resource['id'].strip()})
 
         return gg
 
@@ -196,15 +242,15 @@ class ParseTopo(object):
             if resource.get('resource_tag', False):
                 resource_tags = [tag.strip() for tag in resource['resource_tag']]
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
-                                   info_URL=resource['webpage'],
-                                   info_ID=resource['id'],
-                                   info_groupname=resource['name'])
+                                   info_URL=resource['webpage'].strip(),
+                                   info_ID=resource['id'].strip(),
+                                   info_groupname=resource['name'].strip())
             else:
-                gee['tags'] = dict(info_URL=resource['webpage'],
-                                   info_ID=resource['id'],
-                                   info_groupname=resource['name'])
+                gee['tags'] = dict(info_URL=resource['webpage'].strip(),
+                                   info_ID=resource['id'].strip(),
+                                   info_groupname=resource['name'].strip())
             if self.uidservendp:
-                gee['tags'].update(dict(hostname=construct_fqdn(resource['webpage'])))
+                gee['tags'].update(dict(hostname=construct_fqdn(resource['webpage'].strip())))
             ge.append(gee)
 
         return ge

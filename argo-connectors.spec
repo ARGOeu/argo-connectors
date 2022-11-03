@@ -2,13 +2,13 @@
 %global __python /usr/bin/python3
 
 Name:    argo-connectors
-Version: 2.2.0
+Version: 2.2.1
 Release: 1%{?dist}
 Group:   EGI/SA4
 License: ASL 2.0
 Summary: Components fetch and transform data that represents input for ARGO Compute Engine
 Url:     https://github.com/ARGOeu/argo-connectors/
-Vendor:  SRCE <dvrcic@srce.hr>, SRCE <kzailac@srce.hr>
+Vendor:  SRCE <dvrcic@srce.hr>
 
 Obsoletes: argo-egi-connectors
 Prefix:    %{_prefix}

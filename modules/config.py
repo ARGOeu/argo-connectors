@@ -247,7 +247,11 @@ class CustomerConf(object):
         if not os.path.exists(self._filename):
             self.logger.error('Could not find %s' % self._filename)
             raise SystemExit(1)
-        config.read(self._filename)
+        try:
+            config.read(self._filename)
+        except (configparser.DuplicateOptionError) as e:
+            self.logger.error(e.message)
+            raise SystemExit(1)
 
         lower_custopt = [oo.lower() for oo in self._cust_optional]
 
@@ -268,7 +272,11 @@ class CustomerConf(object):
                     topofeedsites = config.get(section, 'TopoFeedSites', fallback=None)
                     topofeedendpoints = config.get(section, 'TopoFeedServiceEndpoints', fallback=None)
                     topofeedendpointsextensions = config.get(section, 'TopoFeedServiceEndpointsExtensions', fallback=None)
+                    topofeedendpointsextras = config.get(section, 'TopoFeedServiceEndpointsExtras', fallback=None)
                     topofeedservicegroups = config.get(section, 'TopoFeedServiceGroups', fallback=None)
+                    oidctoken = config.get(section, 'OIDCRefreshToken', fallback=None)
+                    oidctokenapi = config.get(section, 'OIDCTokenEndpoint' , fallback=None)
+                    oidcclientid = config.get(section, 'OIDCClientId' , fallback=None)
                     topofeedpaging = config.get(section, 'TopoFeedPaging', fallback='GOCDB')
                     servicetypesfeed = config.get(section, 'ServiceTypesFeed', fallback=None)
                     downtimesfeed = config.get(section, 'DowntimesFeed', fallback=None)
@@ -286,7 +294,7 @@ class CustomerConf(object):
                             else:
                                 raise e
 
-                except configparser.NoOptionError as e:
+                except (configparser.NoOptionError) as e:
                     self.logger.error(e.message)
                     raise SystemExit(1)
 
@@ -297,13 +305,17 @@ class CustomerConf(object):
                                              'TopoFeed': topofeed,
                                              'TopoFeedEndpoints': topofeedendpoints,
                                              'TopoFeedEndpointsExtensions': topofeedendpointsextensions,
+                                             'TopoFeedEndpointsExtras': topofeedendpointsextras,
                                              'TopoFeedPaging': topofeedpaging,
                                              'TopoFeedServiceGroups': topofeedservicegroups,
                                              'TopoFeedSites': topofeedsites,
                                              'TopoFetchType': topofetchtype,
                                              'TopoScope': toposcope,
                                              'TopoType': topotype,
-                                             'TopoUIDServiceEnpoints': topouidservendpoints
+                                             'TopoUIDServiceEnpoints': topouidservendpoints,
+                                             'OIDCTokenEndpoint': oidctokenapi,
+                                             'OIDCRefreshToken': oidctoken,
+                                             'OIDCClientId': oidcclientid
                                              }})
                 if optopts:
                     auth, webapi, empty_data, bdii = {}, {}, {}, {}
@@ -525,6 +537,18 @@ class CustomerConf(object):
 
     def get_topofeedendpointsextensions(self):
         return self._get_cust_options('TopoFeedEndpointsExtensions')
+
+    def get_oidctoken(self):
+        return self._get_cust_options('OIDCRefreshToken')
+
+    def get_oidctokenapi(self):
+        return self._get_cust_options('OIDCTokenEndpoint')
+
+    def get_oidcclientid(self):
+        return self._get_cust_options('OIDCClientId')
+
+    def get_topofeedendpointsextras(self):
+        return self._get_cust_options('TopoFeedEndpointsExtras')
 
     def get_topofeedservicegroups(self):
         return self._get_cust_options('TopoFeedServiceGroups')

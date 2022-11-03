@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.2.1] - 2022-11-03
+
+### Added
+
+* ARGO-4011 Fetch Horizontal services from PROVIDERS portal
+
+### Fixed
+
+* ARGO-4057 Downtimes GOCDB connector does not take into account AuthN options
+* ARGO-4099 Do not try to parse EXTENSIONS for GOCDB sub services
+
 ## [2.2.0] - 2022-07-28
 
 ### Added

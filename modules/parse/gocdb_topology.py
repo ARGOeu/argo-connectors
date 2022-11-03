@@ -110,7 +110,12 @@ class ParseServiceEndpoints(ParseHelpers):
                 self._service_endpoints[service_id]['sortId'] = self._service_endpoints[service_id]['hostname'] + '-' + self._service_endpoints[service_id]['type'] + '-' + self._service_endpoints[service_id]['site']
                 self._service_endpoints[service_id]['url'] = self.parse_xmltext(service.getElementsByTagName('URL')[0].childNodes)
                 if self.pass_extensions:
-                    extensions = self.parse_extensions(service.getElementsByTagName('EXTENSIONS')[0].childNodes)
+                    extension_node = None
+                    extnodes = service.getElementsByTagName('EXTENSIONS')
+                    for node in extnodes:
+                        if node.parentNode.nodeName == 'SERVICE_ENDPOINT':
+                            extension_node = node
+                    extensions = self.parse_extensions(extension_node.childNodes)
                     self._service_endpoints[service_id]['extensions'] = extensions
                 self._service_endpoints[service_id]['endpoint_urls'] = self.parse_url_endpoints(service.getElementsByTagName('ENDPOINTS')[0].childNodes)
 

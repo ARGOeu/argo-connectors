@@ -95,4 +95,53 @@
     </SCOPES>
     <EXTENSIONS/>
   </SERVICE_ENDPOINT>
+  <SERVICE_ENDPOINT PRIMARY_KEY="9502G0">
+    <PRIMARY_KEY>9502G0</PRIMARY_KEY>
+    <HOSTNAME>aai.egi.eu</HOSTNAME>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Service&amp;id=9502</GOCDB_PORTAL_URL>
+    <BETA>N</BETA>
+    <SERVICE_TYPE>egi.aai.oidc</SERVICE_TYPE>
+    <CORE/>
+    <IN_PRODUCTION>Y</IN_PRODUCTION>
+    <NODE_MONITORED>Y</NODE_MONITORED>
+    <NOTIFICATIONS>Y</NOTIFICATIONS>
+    <SITENAME>GRIDOPS-CheckIn</SITENAME>
+    <COUNTRY_NAME>Greece</COUNTRY_NAME>
+    <COUNTRY_CODE>GR</COUNTRY_CODE>
+    <ROC_NAME>EGI.eu</ROC_NAME>
+    <URL>https://aai.egi.eu/auth/realms/egi</URL>
+    <ENDPOINTS>
+      <ENDPOINT>
+        <ID>6879</ID>
+        <NAME>OIDC provider configuration</NAME>
+        <EXTENSIONS/>
+        <URL>https://aai.egi.eu/auth/realms/egi/.well-known/openid-configuration</URL>
+        <INTERFACENAME>egi.aai.oidc.cfg</INTERFACENAME>
+        <ENDPOINT_MONITORED>Y</ENDPOINT_MONITORED>
+      </ENDPOINT>
+      <ENDPOINT>
+        <ID>6880</ID>
+        <NAME>OIDC authorisation endpoint</NAME>
+        <EXTENSIONS/>
+        <URL>https://aai.egi.eu/auth/realms/egi/protocol/openid-connect/auth</URL>
+        <INTERFACENAME>egi.aai.oidc.authz</INTERFACENAME>
+        <ENDPOINT_MONITORED>Y</ENDPOINT_MONITORED>
+      </ENDPOINT>
+    </ENDPOINTS>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+    </SCOPES>
+    <EXTENSIONS>
+      <EXTENSION>
+        <LOCAL_ID>1735</LOCAL_ID>
+        <KEY>ARGO_OIDC_PROVIDER_CONFIGURATION</KEY>
+        <VALUE>/auth/realms/egi/.well-known/openid-configuration</VALUE>
+        </EXTENSION>
+        <EXTENSION>
+        <LOCAL_ID>1736</LOCAL_ID>
+        <KEY>ARGO_OIDC_AUTHORISATION_ENDPOINT</KEY>
+        <VALUE>/auth/realms/egi/protocol/openid-connect/auth</VALUE>
+      </EXTENSION>
+    </EXTENSIONS>
+  </SERVICE_ENDPOINT>
 </results>
