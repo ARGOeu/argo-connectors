@@ -1,6 +1,8 @@
 import unittest
 import json
 
+import mock
+
 from argo_connectors.log import Logger
 from argo_connectors.mesh.storage_element_path import attach_sepath_topodata
 

@@ -14,6 +14,7 @@ TopoFeedServiceEndpointsExtensions = https://beta.providers.eosc-portal.eu/api/s
 TopoFeedServiceGroups = https://goc.egi.eu/gocdbpi/private/?method=get_service_group&scope=
 TopoFeedSites = https://goc.egi.eu/gocdbpi/private/?method=get_site&scope=
 TopoFetchType = Sites, ServiceGroups
+HonorNotificationFlag = True
 TopoType = GOCDB
 WeightsEmpty = False
 DowntimesEmpty = False

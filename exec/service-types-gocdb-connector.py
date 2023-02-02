@@ -34,6 +34,7 @@ def main():
     global logger, globopts
     parser = argparse.ArgumentParser(description='Fetch service types from GOCDB')
     parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf', help='path to customer configuration file', type=str, required=False)
+    parser.add_argument('--initial', dest='initsync', help='initial sync of service types', action='store_true', default=False, required=False)
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
@@ -71,7 +72,7 @@ def main():
     try:
         task = TaskGocdbServiceTypes(
             loop, logger, sys.argv[0], globopts, auth_opts, webapi_opts,
-            confcust, custname, feed, fixed_date
+            confcust, custname, feed, fixed_date, args.initsync
         )
         loop.run_until_complete(task.run())
 

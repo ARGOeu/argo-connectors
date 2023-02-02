@@ -4,28 +4,6 @@
   "to": 6,
   "results": [
     {
-      "id": "367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2",
-      "serviceId": "grnet.grnet-test",
-      "monitoredBy": "eosc",
-      "monitoringGroups": [
-        {
-          "serviceType": "eu.eosc.generic.https",
-          "endpoint": "https://srce.hr",
-          "metrics": null
-        },
-        {
-          "serviceType": "eu.eosc.generic.https",
-          "endpoint": "https://grnet.gr",
-          "metrics": null
-        },
-        {
-          "serviceType": "eu.eosc.generic.https",
-          "endpoint": "https://kathimerini.gr",
-          "metrics": null
-        }
-      ]
-    },
-    {
       "id": "4429aede-129a-4a2d-9788-198a96912bc1",
       "serviceId": "openaire.validator",
       "monitoredBy": "asdf",
@@ -38,63 +16,28 @@
       ]
     },
     {
-      "id": "5ce1854d-a4e0-4ec3-adc9-3e09d42945a5",
-      "serviceId": "openaire.zenodo",
-      "monitoredBy": "string",
-      "monitoringGroups": [
-        {
-          "serviceType": "eu.eosc.ckan",
-          "endpoint": "some.endpoint.zenodo.com",
-          "metrics": null
-        }
-      ]
-    },
-    {
-      "id": "0920c959-ea0c-412b-a282-dd97e7c594fc",
-      "serviceId": "openaire.amnesia",
-      "monitoredBy": "asdf",
-      "monitoringGroups": [
-        {
-          "serviceType": "eu.eosc.portal",
-          "endpoint": "argo.grnet.gr",
-          "metrics": null
-        }
-      ]
-    },
-    {
-      "id": "18afc30d-2f78-4417-8b11-315ea1611ad7",
-      "serviceId": "grnet.hpc__national_hpc_infrastructure",
+      "id": "c302082a-b0e3-4735-9e1f-b93053e4aa27",
+      "serviceId": "srce.poem",
       "monitoredBy": "monitored_by-eosc",
       "monitoringGroups": [
         {
-          "serviceType": "eu.eosc.portal",
-          "endpoint": "https://hpc.grnet.gr/",
-          "metrics": null
-        },
-        {
-          "serviceType": "eu.eosc.portal",
-          "endpoint": "https://hpc.grnet.gr/some/path",
-          "metrics": null
-        },
-        {
-          "serviceType": "eu.eosc.portal",
-          "endpoint": "https://hpc.grnet.gr/some/path/another",
+          "serviceType": "eu.eosc.argo.poem",
+          "endpoint": "https://eosc.poem.devel.argo.grnet.gr",
           "metrics": null
         }
       ]
     },
     {
-      "id": "3b66ac60-014b-4c9e-8c79-98878479887d",
-      "serviceId": "mantesat_test.mantesat_1st_service",
-      "monitoredBy": "monitored_by-egi",
+      "id": "c302082a-b0e3-4735-9e1f-b93053e4aa28",
+      "serviceId": "srce.poem",
+      "monitoredBy": "monitored_by-eosc",
       "monitoringGroups": [
         {
-          "serviceType": "eu.eosc.ckan",
-          "endpoint": "https://www.naftemporiki.gr",
+          "serviceType": "eu.eosc.argo.poem",
+          "endpoint": "https://eosc.poem.devel.argo.grnet.gr/different/url/path",
           "metrics": null
         }
       ]
     }
   ]
 }
-

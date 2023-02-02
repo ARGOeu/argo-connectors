@@ -1,0 +1,655 @@
+{
+  "total": 1069,
+  "from": 0,
+  "to": 1069,
+  "results": [
+    {
+        "metadata": {
+            "registeredBy": "Katarina Zailac",
+            "registeredAt": "1669628500497",
+            "modifiedBy": "Katarina Zailac",
+            "modifiedAt": "1669628500497",
+            "terms": null,
+            "published": false
+        },
+        "active": false,
+        "suspended": false,
+        "identifiers": null,
+        "migrationStatus": null,
+        "loggingInfo": [
+            {
+                "date": "1669628500497",
+                "userEmail": "Katarina.Zailac@srce.hr",
+                "userFullName": "Katarina Zailac",
+                "userRole": "user",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "registered"
+            }
+        ],
+        "latestAuditInfo": null,
+        "latestOnboardingInfo": {
+            "date": "1669628500497",
+            "userEmail": "Katarina.Zailac@srce.hr",
+            "userFullName": "Katarina Zailac",
+            "userRole": "user",
+            "type": "onboard",
+            "comment": null,
+            "actionType": "registered"
+        },
+        "latestUpdateInfo": null,
+        "status": "pending resource",
+        "resourceExtras": null,
+        "service": {
+            "id": "srce.3dbionotes",
+            "abbreviation": "3DBionotes",
+            "name": "3DBionotes-WS-TEST",
+            "resourceOrganisation": "srce",
+            "resourceProviders": [],
+            "webpage": "https://3dbionotes.cnb.csic.es/",
+            "description": "3DBIONOTES-WS a web application designed to automatically annotate biochemical and biomedical information onto structural models.",
+            "tagline": "3DBIONOTES",
+            "logo": "https://marketplace.eosc-portal.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBaWxCIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--23176f7da38e223af4b07f9abc02fb3406215a23/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdCem9MWm05eWJXRjBTU0lJYW5CbkJqb0dSVlE2QzNKbGMybDZaVWtpRERFNE1IZ3hNakFHT3daVSIsImV4cCI6bnVsbCwicHVyIjoidmFyaWF0aW9uIn19--3bf1975c347e547d36188a9071127e8983b2e1fc/eosc.cnb-csic.3dbionotes-ws_web_application_to_annotate_biochemical_and_biomedical_information_onto_structural_models.jpg",
+            "multimedia": [],
+            "useCases": [],
+            "scientificDomains": [
+                {
+                "scientificDomain": "scientific_domain-natural_sciences",
+                "scientificSubdomain": "scientific_subdomain-natural_sciences-biological_sciences"
+                }
+            ],
+            "categories": [
+                {
+                "category": "category-processing_and_analysis-data_analysis",
+                "subcategory": "subcategory-processing_and_analysis-data_analysis-image_data_analysis"
+                }
+            ],
+            "targetUsers": [
+                "target_user-researchers"
+            ],
+            "accessTypes": [
+                "access_type-remote"
+            ],
+            "accessModes": [],
+            "tags": [],
+            "geographicalAvailabilities": [
+                "WW"
+            ],
+            "languageAvailabilities": [
+                "en"
+            ],
+            "resourceGeographicLocations": [],
+            "mainContact": {
+                "firstName": "Emir",
+                "lastName": "Imamagić",
+                "email": "Emir.Imamagic@srce.hr",
+                "phone": "+38516165809",
+                "position": "Head of Advanced Computing Department",
+                "organisation": null
+            },
+            "publicContacts": [
+                {
+                "firstName": null,
+                "lastName": null,
+                "email": "kzailac@srce.hr",
+                "phone": "",
+                "position": null,
+                "organisation": null
+                }
+            ],
+            "helpdeskEmail": "eimamagi@srce.hr",
+            "securityContactEmail": "eimamagi@srce.hr",
+            "trl": "trl-9",
+            "lifeCycleStatus": null,
+            "certifications": [],
+            "standards": [],
+            "openSourceTechnologies": [],
+            "version": null,
+            "lastUpdate": null,
+            "changeLog": [],
+            "requiredResources": [],
+            "relatedResources": [],
+            "relatedPlatforms": [],
+            "catalogueId": "eosc",
+            "fundingBody": [],
+            "fundingPrograms": [],
+            "grantProjectNames": [],
+            "helpdeskPage": null,
+            "userManual": null,
+            "termsOfUse": null,
+            "privacyPolicy": null,
+            "accessPolicy": null,
+            "resourceLevel": null,
+            "trainingInformation": null,
+            "statusMonitoring": null,
+            "maintenance": null,
+            "orderType": "order_type-fully_open_access",
+            "order": null,
+            "paymentModel": null,
+            "pricing": null
+        },
+        "id": "srce.3dbionotes"
+    },
+    {
+        "metadata": {
+            "registeredBy": "Katarina Zailac",
+            "registeredAt": "1664287190689",
+            "modifiedBy": "Katarina Zailac",
+            "modifiedAt": "1664287190689",
+            "terms": null,
+            "published": false
+        },
+        "active": true,
+        "suspended": false,
+        "identifiers": null,
+        "migrationStatus": null,
+        "loggingInfo": [
+            {
+                "date": "1664287190689",
+                "userEmail": "Katarina.Zailac@srce.hr",
+                "userFullName": "Katarina Zailac",
+                "userRole": "provider",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "registered"
+            },
+            {
+                "date": "1664287190691",
+                "userEmail": "Katarina.Zailac@srce.hr",
+                "userFullName": "Katarina Zailac",
+                "userRole": "provider",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "approved"
+            }
+        ],
+        "latestAuditInfo": null,
+        "latestOnboardingInfo": {
+        "date": "1664287190691",
+        "userEmail": "Katarina.Zailac@srce.hr",
+        "userFullName": "Katarina Zailac",
+        "userRole": "provider",
+        "type": "onboard",
+        "comment": null,
+        "actionType": "approved"
+        },
+        "latestUpdateInfo": null,
+        "status": "approved resource",
+        "resourceExtras": null,
+        "service": {
+            "id": "srce.poem",
+            "abbreviation": "POEM",
+            "name": "POEM",
+            "resourceOrganisation": "srce",
+            "resourceProviders": [],
+            "webpage": "https://poem.devel.argo.grnet.gr",
+            "description": "ARGO POEM service is multi-tenant aware web application used for management of tenants and corresponding resources needed to bootstrap their monitoring. It's register of services, repositories, packages and related probes, metric configurations and metric profiles that instruct ARGO monitoring instances what kind of probes/tests to execute for given tenant. Additionally it manages grouping of results and defines configuration of reports that ARGO compute engine will generate for each tenant. All of that in multi-tenant manner where single instance of web application can cater for multiple tenants and their monitoring needs.",
+            "tagline": "POEM",
+            "logo": "https://argoeu.github.io/argo-monitoring/img/argo_icon.svg",
+            "multimedia": [],
+            "useCases": [],
+            "scientificDomains": [
+                {
+                "scientificDomain": "scientific_domain-generic",
+                "scientificSubdomain": "scientific_subdomain-generic-generic"
+                }
+            ],
+            "categories": [
+                {
+                "category": "category-sharing_and_discovery-applications",
+                "subcategory": "subcategory-sharing_and_discovery-applications-other"
+                }
+            ],
+            "targetUsers": [
+                "target_user-other"
+            ],
+            "accessTypes": [],
+            "accessModes": [],
+            "tags": [],
+            "geographicalAvailabilities": [
+                "EO"
+            ],
+            "languageAvailabilities": [
+                "en"
+            ],
+            "resourceGeographicLocations": [],
+            "mainContact": {
+                "firstName": "Emir",
+                "lastName": "Imamagić",
+                "email": "Emir.Imamagic@srce.hr",
+                "phone": "",
+                "position": "Head of Advanced Computing Department",
+                "organisation": null
+            },
+            "publicContacts": [
+                {
+                "firstName": null,
+                "lastName": null,
+                "email": "Emir.Imamagic@srce.hr",
+                "phone": "",
+                "position": null,
+                "organisation": null
+                }
+            ],
+            "helpdeskEmail": "Emir.Imamagic@srce.hr",
+            "securityContactEmail": "Emir.Imamagic@srce.hr",
+            "trl": "trl-9",
+            "lifeCycleStatus": null,
+            "certifications": [],
+            "standards": [],
+            "openSourceTechnologies": [],
+            "version": null,
+            "lastUpdate": null,
+            "changeLog": [],
+            "requiredResources": [],
+            "relatedResources": [],
+            "relatedPlatforms": [],
+            "catalogueId": "eosc",
+            "fundingBody": [],
+            "fundingPrograms": [],
+            "grantProjectNames": [],
+            "helpdeskPage": null,
+            "userManual": null,
+            "termsOfUse": null,
+            "privacyPolicy": null,
+            "accessPolicy": null,
+            "resourceLevel": null,
+            "trainingInformation": null,
+            "statusMonitoring": null,
+            "maintenance": null,
+            "orderType": "order_type-open_access",
+            "order": null,
+            "paymentModel": null,
+            "pricing": null
+        },
+        "id": "srce.poem"
+    },
+    {
+        "metadata": {
+            "registeredBy": "Katarina Zailac",
+            "registeredAt": "1664191394498",
+            "modifiedBy": "Katarina Zailac",
+            "modifiedAt": "1664191394498",
+            "terms": null,
+            "published": false
+        },
+        "active": true,
+        "suspended": false,
+        "identifiers": null,
+        "migrationStatus": null,
+        "loggingInfo": [
+            {
+                "date": "1664191394500",
+                "userEmail": "Katarina.Zailac@srce.hr",
+                "userFullName": "Katarina Zailac",
+                "userRole": "provider",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "registered"
+            },
+            {
+                "date": "1664191731758",
+                "userEmail": "kkoum@admin.grnet.gr",
+                "userFullName": "Kostas Koumantaros",
+                "userRole": "admin",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "approved"
+            }
+        ],
+        "latestAuditInfo": null,
+        "latestOnboardingInfo": {
+            "date": "1664191731758",
+            "userEmail": "kkoum@admin.grnet.gr",
+            "userFullName": "Kostas Koumantaros",
+            "userRole": "admin",
+            "type": "onboard",
+            "comment": null,
+            "actionType": "approved"
+        },
+        "latestUpdateInfo": null,
+        "status": "approved resource",
+        "resourceExtras": null,
+        "service": {
+            "id": "srce.srceweb",
+            "abbreviation": "srceweb",
+            "name": "SRCE Web",
+            "resourceOrganisation": "srce",
+            "resourceProviders": [],
+            "webpage": "https://www.srce.unizg.hr/",
+            "description": "As the major national infrastructural ICT institution in the area of research and higher education in Croatia, SRCE is providing a modern, sustainable and reliable e-infrastructure for research and education community. This includes computing and cloud services, high performance computing, advanced networking, communication systems and services, middleware, data and information systems and infrastructure. At the same time SRCE acts as the computing and information centre of the largest Croatian university – the University of Zagreb, and is responsible for the coordination of the development and usage of e-infrastructure at the University.",
+            "tagline": "University Computing Centre - SRCE",
+            "logo": "https://www.srce.unizg.hr/files/srce/logo-en-potpis-crni.png",
+            "multimedia": [],
+            "useCases": [],
+            "scientificDomains": [
+                {
+                "scientificDomain": "scientific_domain-other",
+                "scientificSubdomain": "scientific_subdomain-other-other"
+                }
+            ],
+            "categories": [
+                {
+                "category": "category-other-other",
+                "subcategory": "subcategory-other-other-other"
+                }
+            ],
+            "targetUsers": [
+                "target_user-students"
+            ],
+            "accessTypes": [],
+            "accessModes": [],
+            "tags": [],
+            "geographicalAvailabilities": [
+                "EO"
+            ],
+            "languageAvailabilities": [
+                "en"
+            ],
+            "resourceGeographicLocations": [],
+            "mainContact": {
+                "firstName": "Emir",
+                "lastName": "Imamagić",
+                "email": "Emir.Imamagic@srce.hr",
+                "phone": "",
+                "position": "Head of Advanced Computing Department",
+                "organisation": null
+            },
+            "publicContacts": [
+                {
+                    "firstName": null,
+                    "lastName": null,
+                    "email": "Emir.Imamagic@srce.hr",
+                    "phone": "",
+                    "position": null,
+                    "organisation": null
+                }
+            ],
+            "helpdeskEmail": "Emir.Imamagic@srce.hr",
+            "securityContactEmail": "Emir.Imamagic@srce.hr",
+            "trl": "trl-8",
+            "lifeCycleStatus": null,
+            "certifications": [],
+            "standards": [],
+            "openSourceTechnologies": [],
+            "version": null,
+            "lastUpdate": null,
+            "changeLog": [],
+            "requiredResources": [],
+            "relatedResources": [],
+            "relatedPlatforms": [],
+            "catalogueId": "eosc",
+            "fundingBody": [],
+            "fundingPrograms": [],
+            "grantProjectNames": [],
+            "helpdeskPage": null,
+            "userManual": null,
+            "termsOfUse": null,
+            "privacyPolicy": null,
+            "accessPolicy": null,
+            "resourceLevel": null,
+            "trainingInformation": null,
+            "statusMonitoring": null,
+            "maintenance": null,
+            "orderType": "order_type-fully_open_access",
+            "order": null,
+            "paymentModel": null,
+            "pricing": null
+        },
+        "id": "srce.srceweb"
+    },
+    {
+        "metadata": {
+            "registeredBy": "Katarina Zailac",
+            "registeredAt": "1665653473937",
+            "modifiedBy": "Katarina Zailac",
+            "modifiedAt": "1665653473937",
+            "terms": null,
+            "published": false
+        },
+        "active": true,
+        "suspended": false,
+        "identifiers": null,
+        "migrationStatus": null,
+        "loggingInfo": [
+            {
+                "date": "1665653473937",
+                "userEmail": "Katarina.Zailac@srce.hr",
+                "userFullName": "Katarina Zailac",
+                "userRole": "provider",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "registered"
+            },
+            {
+                "date": "1665653473939",
+                "userEmail": "Katarina.Zailac@srce.hr",
+                "userFullName": "Katarina Zailac",
+                "userRole": "provider",
+                "type": "onboard",
+                "comment": null,
+                "actionType": "approved"
+            }
+        ],
+        "latestAuditInfo": null,
+        "latestOnboardingInfo": {
+            "date": "1665653473939",
+            "userEmail": "Katarina.Zailac@srce.hr",
+            "userFullName": "Katarina Zailac",
+            "userRole": "provider",
+            "type": "onboard",
+            "comment": null,
+            "actionType": "approved"
+        },
+        "latestUpdateInfo": null,
+        "status": "approved resource",
+        "resourceExtras": null,
+        "service": {
+            "id": "srce.webodv",
+            "abbreviation": "WebODV",
+            "name": "WebODV - Online extraction, analysis and visualization of SeaDataNet and Argo data",
+            "resourceOrganisation": "srce",
+            "resourceProviders": [],
+            "webpage": "http://webodv-egi-ace.cloud.ba.infn.it/",
+            "description": "ODV (Ocean Data View, Schlitzer (2002)) is a widely used software package for the analysis, exploration and visualization of oceanographic and other environmental data with almost 100,000 registrations since the 1990’s and more than 10,000 active users. ODV has been developed largely in the framework of SeaDataNet (the pan-European infrastructure of marine data centers) in which it has become one of the pillars for working with marine in situ data, as well as quality control of the data. One strength of ODV is the flexible and efficient handling of diverse and large data collections often consisting of millions of stations on standard computer hardware. By design, ODV is a stand-alone application that has to be installed on local computers and operates on locally stored datasets. This concept is optimal for cases where datasets are not widely shared and do not change often. Also, because software and data both reside on the end-user’s computer, ODV can be used during expeditions and in remote regions, when internet connections are slow or non-existing. However, the stand-alone configuration is not ideal when users want to work with large community datasets that are updated frequently. The disadvantages are that users have to download the typically large datasets to their local computers and that the local copies of the datasets quickly become outdated because changes in the dataset master copy are not automatically transmitted to the local copy. Users would have to download the modified master dataset again to synchronize with the latest version. Additionally, users are often only interested in specific parts of a large dataset, thus a subsetting service prior to downloading the data would be highly appreciated.",
+            "tagline": "webODV",
+            "logo": "https://webodv-egi-ace.cloud.ba.infn.it/images/SDN-LogoColor-Transparent-PNG-small.png",
+            "multimedia": [],
+            "useCases": [],
+            "scientificDomains": [
+                {
+                "scientificDomain": "scientific_domain-natural_sciences",
+                "scientificSubdomain": "scientific_subdomain-natural_sciences-earth_and_related_environmental_sciences"
+                }
+            ],
+            "categories": [
+                {
+                "category": "category-sharing_and_discovery-applications",
+                "subcategory": "subcategory-sharing_and_discovery-applications-other"
+                }
+            ],
+            "targetUsers": [
+                "target_user-research_communities"
+            ],
+            "accessTypes": [],
+            "accessModes": [],
+            "tags": [],
+            "geographicalAvailabilities": [
+                "WW"
+            ],
+            "languageAvailabilities": [
+                "en"
+            ],
+            "resourceGeographicLocations": [],
+            "mainContact": {
+                "firstName": "Emir",
+                "lastName": "Imamagić",
+                "email": "Emir.Imamagic@srce.hr",
+                "phone": "",
+                "position": "Head of Advanced Computing Department",
+                "organisation": null
+            },
+            "publicContacts": [
+                {
+                "firstName": null,
+                "lastName": null,
+                "email": "Emir.Imamagic@srce.hr",
+                "phone": "",
+                "position": null,
+                "organisation": null
+                }
+            ],
+            "helpdeskEmail": "Emir.Imamagic@srce.hr",
+            "securityContactEmail": "Emir.Imamagic@srce.hr",
+            "trl": "trl-7",
+            "lifeCycleStatus": null,
+            "certifications": [],
+            "standards": [],
+            "openSourceTechnologies": [],
+            "version": null,
+            "lastUpdate": null,
+            "changeLog": [],
+            "requiredResources": [],
+            "relatedResources": [],
+            "relatedPlatforms": [],
+            "catalogueId": "eosc",
+            "fundingBody": [],
+            "fundingPrograms": [],
+            "grantProjectNames": [],
+            "helpdeskPage": null,
+            "userManual": null,
+            "termsOfUse": null,
+            "privacyPolicy": null,
+            "accessPolicy": null,
+            "resourceLevel": null,
+            "trainingInformation": null,
+            "statusMonitoring": null,
+            "maintenance": null,
+            "orderType": "order_type-open_access",
+            "order": null,
+            "paymentModel": null,
+            "pricing": null
+        },
+        "id": "srce.webodv"
+    },
+    {
+        "metadata": {
+            "registeredBy": null,
+            "registeredAt": "0",
+            "modifiedBy": "Jxxxx Sxxxxxx",
+            "modifiedAt": "1603055742867",
+            "terms": null,
+            "published": false
+        },
+        "active": true,
+        "suspended": false,
+        "identifiers": null,
+        "migrationStatus": null,
+        "loggingInfo": null,
+        "latestAuditInfo": null,
+        "latestOnboardingInfo": null,
+        "latestUpdateInfo": null,
+        "status": "approved resource",
+        "resourceExtras": {
+            "eoscIFGuidelines": [],
+            "horizontalService": true,
+            "researchCategories": null
+        },
+        "service": {
+            "id": "openaire.validator",
+            "abbreviation": "OpenAIRE Validator",
+            "name": "OpenAIRE Validator",
+            "resourceOrganisation": "openaire",
+            "resourceProviders": [
+                "openaire"
+            ],
+            "webpage": "https://www.openaire.eu/validator",
+            "description": "The OpenAIRE Validator service is used by contentproviders who wish to register to OpenAIRE and allows them to verify that they are compliantwith the OpenAIRE guidelines. The service also checks the quality of implementation of the OAI-PMH protocol. Content providers can use the service after logging into the OpenAIRE Content Provider Dashboard. If validation succeeds the provider can be registered to join the OpenAIRE infrastructure. The providers content will beregularly aggregated tocontribute to the OpenAIRE Graph.OpenAIRE allows for registration of institutional and thematic repositories registered inOpenDOAR, research data repositories registered inre3data, individual e-Journals, CRIS, aggregators and publishers. The Validator service is realised with a configurable software that allows users with administration rightsto customize the validation rules to be applied. This feature makes it easier to adapt the service when the OpenAIRE guidelines are updated and also to offer similar services, possibly with different rules and configurations, to third-parties.Increased interoperability. Better visibility. National, regional aggregators: compliance to local guidelines. OpenAIRE Content providers: Compliance to OpenAIRE guidelines.OpenAIRE deployment: 890 data providers have used the service before they register to OpenAIRE. They use it for continuous validations or updates to new versions of the guidelines. An average of 400 monthly visitors/validations. The Validation service has been deployed also for National and Regional Aggregators like La Referencia (Latin America, 11 countries), Fecyt (Spain), Mincyt (Argentina).",
+            "tagline": "OpenAIRE Validation Service",
+            "logo": "https://www.openaire.eu/images/service_images/Validator.png",
+            "multimedia": [],
+            "useCases": [],
+            "scientificDomains": [
+                {
+                "scientificDomain": "scientific_domain-generic",
+                "scientificSubdomain": "scientific_subdomain-generic-generic"
+                }
+            ],
+            "categories": [
+                {
+                "category": "category-training_and_support-consultancy_and_support",
+                "subcategory": "subcategory-training_and_support-consultancy_and_support-audit_and_assessment"
+                }
+            ],
+            "targetUsers": [
+                "target_user-providers"
+            ],
+            "accessTypes": [
+                "access_type-virtual"
+            ],
+            "accessModes": [],
+            "tags": [
+                "OAI-PMH protocol"
+            ],
+            "geographicalAvailabilities": [
+                "WW"
+            ],
+            "languageAvailabilities": [
+                "en"
+            ],
+            "resourceGeographicLocations": [],
+            "mainContact": {
+                "firstName": "-",
+                "lastName": "-",
+                "email": "info@openaire.eu",
+                "phone": null,
+                "position": null,
+                "organisation": null
+            },
+            "publicContacts": [
+                {
+                "firstName": null,
+                "lastName": null,
+                "email": "info@openaire.eu",
+                "phone": null,
+                "position": null,
+                "organisation": null
+                }
+            ],
+            "helpdeskEmail": "info@openaire.eu",
+            "securityContactEmail": "info@openaire.eu",
+            "trl": "trl-9",
+            "lifeCycleStatus": "life_cycle_status-production",
+            "certifications": [],
+            "standards": [],
+            "openSourceTechnologies": [],
+            "version": "v2.1",
+            "lastUpdate": 1538092800000,
+            "changeLog": [],
+            "requiredResources": [],
+            "relatedResources": [],
+            "relatedPlatforms": [],
+            "catalogueId": "eosc",
+            "fundingBody": [
+                "funding_body-ec"
+            ],
+            "fundingPrograms": [],
+            "grantProjectNames": [],
+            "helpdeskPage": "https://www.openaire.eu/support/helpdesk",
+            "userManual": "https://www.openaire.eu/validator-registration-guide",
+            "termsOfUse": "https://providers.eosc-portal.eu/home",
+            "privacyPolicy": "https://providers.eosc-portal.eu/home",
+            "accessPolicy": null,
+            "resourceLevel": null,
+            "trainingInformation": "https://www.openaire.eu/category/content-providers",
+            "statusMonitoring": null,
+            "maintenance": null,
+            "orderType": "order_type-open_access",
+            "order": "https://www.openaire.eu/validator",
+            "paymentModel": null,
+            "pricing": null
+        },
+        "id": "openaire.validator"
+    }
+  ]
+}

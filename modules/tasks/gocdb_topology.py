@@ -12,7 +12,6 @@ from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServic
 from argo_connectors.parse.gocdb_contacts import ParseSiteContacts, ParseServiceEndpointContacts, ParseServiceGroupRoles, ParseSitesWithContacts, ParseServiceGroupWithContacts
 
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
-from argo_connectors.io.avrowrite import AvroWriter
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.ldap import LDAPSessionWithRetry
 from argo_connectors.io.statewrite import state_write
@@ -20,7 +19,7 @@ from argo_connectors.io.webapi import WebAPI
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 from argo_connectors.mesh.srm_port import attach_srmport_topodata
 from argo_connectors.mesh.storage_element_path import attach_sepath_topodata
-from argo_connectors.tasks.common import write_state, write_topo_avro as write_avro
+from argo_connectors.tasks.common import write_state, write_topo_json as write_json
 from argo_connectors.parse.base import ParseHelpers
 
 
@@ -72,7 +71,7 @@ class find_next_paging_cursor_count(ParseHelpers, Callable):
         except ConnectorParseError as exc:
             self.logger.error(repr(exc))
             self.logger.error("Tried to parse (512 chars): %.512s" % ''.join(self.res.replace('\r\n', '').replace('\n', '')))
-            raise exc
+            raise ConnectorParseError(exc)
 
     def _parse(self):
         cursor, count = None, None
@@ -91,48 +90,59 @@ class find_next_paging_cursor_count(ParseHelpers, Callable):
 
 
 class TaskParseTopology(object):
-    def __init__(self, logger, custname, uidservendp, pass_extensions):
+    def __init__(self, logger, custname, uidservendp, pass_extensions,
+                 notiflag):
         self.logger = logger
         self.custname = custname
         self.uidservendp = uidservendp
         self.pass_extensions = pass_extensions
+        self.notification_flag = notiflag
 
     def parse_source_servicegroups(self, res):
         group_groups = ParseServiceGroups(self.logger, res, self.custname,
                                           self.uidservendp,
-                                          self.pass_extensions).get_group_groups()
+                                          self.pass_extensions,
+                                          self.notification_flag).get_group_groups()
         group_endpoints = ParseServiceGroups(self.logger, res, self.custname,
                                              self.uidservendp,
-                                             self.pass_extensions).get_group_endpoints()
+                                             self.pass_extensions,
+                                             self.notification_flag).get_group_endpoints()
 
         return group_groups, group_endpoints
 
     def parse_source_endpoints(self, res):
         group_endpoints = ParseServiceEndpoints(self.logger, res, self.custname, self.uidservendp,
-                                                self.pass_extensions).get_group_endpoints()
+                                                self.pass_extensions,
+                                                self.notification_flag).get_group_endpoints()
 
         return group_endpoints
 
     def parse_source_sites(self, res):
         group_groups = ParseSites(self.logger, res, self.custname,
                                   self.uidservendp,
-                                  self.pass_extensions).get_group_groups()
+                                  self.pass_extensions,
+                                  self.notification_flag).get_group_groups()
 
         return group_groups
 
 
 # basic function wrappers used because to avoid class TaskParseTopology pickle
 # in ProcessPoolExecutor
-def parse_endpoints(logger, custname, uidservendp, pass_extensions, data):
-    task = TaskParseTopology(logger, custname, uidservendp, pass_extensions)
+def parse_endpoints(logger, custname, uidservendp, pass_extensions,
+                    notification_flag, data):
+    task = TaskParseTopology(logger, custname, uidservendp, pass_extensions,
+                             notification_flag)
     return task.parse_source_endpoints(data)
 
-def parse_sites(logger, custname, uidservendp, pass_extensions, data):
-    task = TaskParseTopology(logger, custname, uidservendp, pass_extensions)
+def parse_sites(logger, custname, uidservendp, pass_extensions,
+                notification_flag, data):
+    task = TaskParseTopology(logger, custname, uidservendp, pass_extensions, notification_flag)
     return task.parse_source_sites(data)
 
-def parse_servicegroups(logger, custname, uidservendp, pass_extensions, data):
-    task = TaskParseTopology(logger, custname, uidservendp, pass_extensions)
+def parse_servicegroups(logger, custname, uidservendp, pass_extensions,
+                        notification_flag, data):
+    task = TaskParseTopology(logger, custname, uidservendp, pass_extensions,
+                             notification_flag)
     return task.parse_source_servicegroups(data)
 
 
@@ -166,8 +176,9 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
                  SERVICEGROUP_CONTACTS, SERVICE_ENDPOINTS_PI,
                  SERVICE_GROUPS_PI, SITES_PI, globopts, auth_opts, webapi_opts,
                  bdii_opts, confcust, custname, topofeed, topofetchtype,
-                 fixed_date, uidservendp, pass_extensions, topofeedpaging):
-        TaskParseTopology.__init__(self, logger, custname, uidservendp, pass_extensions)
+                 fixed_date, uidservendp, pass_extensions, topofeedpaging, notiflag):
+        TaskParseTopology.__init__(self, logger, custname, uidservendp,
+                                   pass_extensions, notiflag)
         super(TaskGocdbTopology, self).__init__(logger)
         self.loop = loop
         self.logger = logger
@@ -189,6 +200,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.uidservendp = uidservendp
         self.pass_extensions = pass_extensions
         self.topofeedpaging = topofeedpaging
+        self.notification_flag = notiflag
 
     async def fetch_ldap_data(self, host, port, base, filter, attributes):
         ldap_session = LDAPSessionWithRetry(self.logger, int(self.globopts['ConnectionRetry'.lower()]),
@@ -309,15 +321,18 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         exe_parse_source_endpoints = partial(parse_endpoints, self.logger,
                                              self.custname, self.uidservendp,
                                              self.pass_extensions,
+                                             self.notification_flag,
                                              fetched_endpoints)
         exe_parse_source_servicegroups = partial(parse_servicegroups,
                                                  self.logger, self.custname,
                                                  self.uidservendp,
                                                  self.pass_extensions,
+                                                 self.notification_flag,
                                                  fetched_servicegroups)
         exe_parse_source_sites = partial(parse_sites, self.logger,
                                          self.custname, self.uidservendp,
-                                         self.pass_extensions, fetched_sites)
+                                         self.pass_extensions,
+                                         self.notification_flag, fetched_sites)
 
         # parse topology depend on configured components fetch. we can fetch
         # only sites, only servicegroups or both.
@@ -375,23 +390,27 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
             self.loop.run_in_executor(executor,
                                       partial(attach_contacts_topodata, self.logger,
                                               parsed_site_contacts,
-                                              group_groups)),
+                                              group_groups, self.notification_flag)),
             self.loop.run_in_executor(executor,
                                       partial(attach_contacts_topodata, self.logger,
                                               parsed_serviceendpoint_contacts,
-                                              group_endpoints))
+                                              group_endpoints, self.notification_flag))
         ]
 
         executor = ProcessPoolExecutor(max_workers=2)
         group_groups, group_endpoints = await asyncio.gather(*attach_contacts_workers, loop=self.loop)
 
         if parsed_servicegroups_contacts:
-            attach_contacts_topodata(self.logger, parsed_servicegroups_contacts, group_groups)
+            attach_contacts_topodata(self.logger,
+                                     parsed_servicegroups_contacts,
+                                     group_groups, self.notification_flag)
         elif fetched_servicegroups:
             # GOCDB has not SERVICEGROUP_CONTACTS, try to grab contacts from fetched
             # servicegroups topology entities
             parsed_servicegroups_contacts = self.parse_servicegroups_contacts(fetched_servicegroups)
-            attach_contacts_topodata(self.logger, parsed_servicegroups_contacts, group_groups)
+            attach_contacts_topodata(self.logger,
+                                     parsed_servicegroups_contacts,
+                                     group_groups, self.notification_flag)
 
         await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
@@ -405,7 +424,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
                 self.send_webapi(group_endpoints,'endpoints')
             )
 
-        if eval(self.globopts['GeneralWriteAvro'.lower()]):
-            write_avro(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
+        if eval(self.globopts['GeneralWriteJson'.lower()]):
+            write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
         self.logger.info('Customer:' + self.custname + ' Type:%s ' % (','.join(self.topofetchtype)) + 'Fetched Endpoints:%d' % (numge) + ' Groups:%d' % (numgg))

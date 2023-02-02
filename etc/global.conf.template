@@ -1,5 +1,4 @@
 [DEFAULT]
-SchemaDir = /etc/argo-connectors/schemas/
 
 [General]
 WriteAvro = True
@@ -29,16 +28,9 @@ SleepRetry = 60
 SaveDir = /var/lib/argo-connectors/states/
 Days = 3
 
-[AvroSchemas]
-Downtimes = %(SchemaDir)s/downtimes.avsc
-MetricProfile = %(SchemaDir)s/metric_profiles.avsc
-TopologyGroupOfEndpoints = %(SchemaDir)s/group_endpoints.avsc
-TopologyGroupOfGroups = %(SchemaDir)s/group_groups.avsc
-Weights = %(SchemaDir)s/weight_sites.avsc
-
 [Output]
-Downtimes = downtimes_DATE.avro
-MetricProfile = poem_sync_DATE.avro
-TopologyGroupOfEndpoints = group_endpoints_DATE.avro
-TopologyGroupOfGroups = group_groups_DATE.avro
-Weights = weights_DATE.avro
+Downtimes = downtimes_DATE.json
+MetricProfile = poem_sync_DATE.json
+TopologyGroupOfEndpoints = group_endpoints_DATE.json
+TopologyGroupOfGroups = group_groups_DATE.json
+Weights = weights_DATE.json

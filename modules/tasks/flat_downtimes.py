@@ -6,7 +6,7 @@ from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.flat_downtimes import ParseDowntimes
-from argo_connectors.tasks.common import write_state, write_downtimes_avro as write_avro
+from argo_connectors.tasks.common import write_state, write_downtimes_json as write_json
 
 
 class TaskCsvDowntimes(object):
@@ -67,10 +67,11 @@ class TaskCsvDowntimes(object):
             if dts or write_empty:
                 cust = list(self.confcust.get_customers())[0]
                 self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
-                            (self.confcust.get_custname(cust), self.targetdate, len(dts)))
+                                 (self.confcust.get_custname(cust), self.targetdate, len(dts)))
 
-            if eval(self.globopts['GeneralWriteAvro'.lower()]):
-                write_avro(self.logger, self.globopts, self.confcust, dts, self.timestamp)
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts,
+                           self.confcust, dts, self.timestamp)
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

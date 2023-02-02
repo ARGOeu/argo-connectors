@@ -16,7 +16,8 @@ class ParseProvidersContacts(ParseHelpers):
             json_data = self.parse_json(self.data)
         else:
             json_data = self.data
-        for provider in json_data['results']:
+        for feeddata in json_data['results']:
+            provider = feeddata['provider']
             key = provider['abbreviation']
             contacts = [contact['email'] for contact in provider['publicContacts']]
             if contacts:
@@ -42,7 +43,10 @@ class ParseResourcesContacts(ParseHelpers):
             json_data = self.parse_json(self.data)
         else:
             json_data = self.data
-        for resource in json_data['results']:
+        for feeddata in json_data['results']:
+            resource = feeddata['service']
+            if not resource.get('webpage', False):
+                continue
             key = '{}+{}'.format(construct_fqdn(resource['webpage']),
                                  resource['id'])
             contacts = [contact['email'] for contact in resource['publicContacts']]

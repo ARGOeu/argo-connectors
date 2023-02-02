@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.vapor import ParseWeights
-from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state, write_weights_avro as write_avro
+from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state, write_weights_json as write_json
 
 
 class TaskVaporWeights(object):
@@ -23,7 +23,8 @@ class TaskVaporWeights(object):
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)
-        session = SessionWithRetry(self.logger, os.path.basename(self.connector_name), self.globopts)
+        session = SessionWithRetry(self.logger, os.path.basename(
+            self.connector_name), self.globopts)
         res = await session.http_get('{}://{}{}'.format(feed_parts.scheme,
                                                         feed_parts.netloc,
                                                         feed_parts.path))
@@ -32,9 +33,11 @@ class TaskVaporWeights(object):
     def get_webapi_opts(self, cust, job):
         webapi_custopts = self.confcust.get_webapiopts(cust)
         webapi_opts = self.cglob.merge_opts(webapi_custopts, 'webapi')
-        webapi_complete, missopt = self.cglob.is_complete(webapi_opts, 'webapi')
+        webapi_complete, missopt = self.cglob.is_complete(
+            webapi_opts, 'webapi')
         if not webapi_complete:
-            self.logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (self.logger.customer, job, 'webapi', ' '.join(missopt)))
+            self.logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (
+                self.logger.customer, job, 'webapi', ' '.join(missopt)))
         return webapi_opts
 
     def parse_source(self, res):
@@ -69,8 +72,8 @@ class TaskVaporWeights(object):
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await self.send_webapi(weights, webapi_opts, job)
 
-            if eval(self.globopts['GeneralWriteAvro'.lower()]):
-                write_avro(self.logger, self.globopts, cust, job,
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts, cust, job,
                            self.confcust, self.fixed_date, weights)
 
             await write_state(self.connector_name, self.globopts, cust, job, self.confcust, self.fixed_date, True)
@@ -80,7 +83,7 @@ class TaskVaporWeights(object):
             for cust in custs:
                 jobs = [job for job, lcust in self.jobcust if cust == lcust]
                 self.logger.info('Customer:%s Jobs:%s Sites:%d' %
-                                    (self.confcust.get_custname(cust), jobs[0]
-                                    if len(jobs) == 1 else
-                                    '({0})'.format(','.join(jobs)),
-                                    len(weights)))
+                                 (self.confcust.get_custname(cust), jobs[0]
+                                     if len(jobs) == 1 else
+                                     '({0})'.format(','.join(jobs)),
+                                     len(weights)))

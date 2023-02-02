@@ -3,7 +3,7 @@ import unittest
 from argo_connectors.log import Logger
 from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
 from argo_connectors.parse.flat_topology import ParseFlatEndpoints
-from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, ParseResourcesExtras, buildmap_id2groupname
+from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 
@@ -166,10 +166,14 @@ class MeshSitesAndContacts(unittest.TestCase):
     def setUp(self):
         logger.customer = CUSTOMER_NAME
         self.maxDiff = None
+        self.notification_flag = True
         self.sample_sites_data = [
             {
                 'group': 'iris.ac.uk',
                 'subgroup': 'dirac-durham',
+                'notifications': {
+                    'enabled': False
+                },
                 'tags': {
                     'certification': 'Certified', 'infrastructure':
                     'Production', 'scope': 'iris.ac.uk'
@@ -179,6 +183,9 @@ class MeshSitesAndContacts(unittest.TestCase):
             {
                 'group': 'Russia',
                 'subgroup': 'RU-SARFTI',
+                'notifications': {
+                    'enabled': True
+                },
                 'tags': {
                     'certification': 'Certified', 'infrastructure':
                     'Production', 'scope': 'EGI'
@@ -222,7 +229,38 @@ class MeshSitesAndContacts(unittest.TestCase):
         }
 
     def test_SitesAndContacts(self):
-        attach_contacts_topodata(logger, self.sample_sites_contacts, self.sample_sites_data)
+        attach_contacts_topodata(logger, self.sample_sites_contacts,
+                                 self.sample_sites_data,
+                                 self.notification_flag)
+        self.assertEqual(self.sample_sites_data[0],
+            {
+                'group': 'iris.ac.uk',
+                'notifications': {'contacts': ['name1.surname1@durham.ac.uk',
+                                               'name2.surname2@durham.ac.uk'],
+                                  'enabled': False},
+                'subgroup': 'dirac-durham',
+                'tags': {'certification': 'Certified', 'infrastructure':
+                         'Production', 'scope': 'iris.ac.uk'},
+                'type': 'NGI'
+            }
+        )
+        self.assertEqual(self.sample_sites_data[1],
+            {
+                'group': 'Russia',
+                'notifications': {'contacts': ['name1.surname1@gmail.com',
+                                               'name2.surname2@gmail.com'],
+                                  'enabled': True},
+                'subgroup': 'RU-SARFTI',
+                'tags': {'certification': 'Certified', 'infrastructure':
+                         'Production', 'scope': 'EGI'},
+                'type': 'NGI'
+            }
+        )
+
+    def test_SitesAndContactsNoHonorNotificationFlag(self):
+        attach_contacts_topodata(logger, self.sample_sites_contacts,
+                                 self.sample_sites_data,
+                                 False)
         self.assertEqual(self.sample_sites_data[0],
             {
                 'group': 'iris.ac.uk',
@@ -253,10 +291,14 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
     def setUp(self):
         logger.customer = CUSTOMER_NAME
         self.maxDiff = None
+        self.notification_flag = True
         self.sample_servicegroups_data = [
             {
                 'group': 'EGI',
                 'subgroup': 'NGI_ARMGRID_SERVICES',
+                'notifications': {
+                    'enabled': True
+                },
                 'tags': {
                     'monitored': '1',
                     'scope': 'EGI'
@@ -266,6 +308,9 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
             {
                 'group': 'EGI',
                 'subgroup': 'NGI_CYGRID_SERVICES',
+                'notifications': {
+                    'enabled': False
+                },
                 'tags': {
                     'monitored': '1',
                     'scope': 'EGI'
@@ -280,7 +325,7 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
 
     def test_ServiceGroupsAndContacts(self):
         attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
-                                 self.sample_servicegroups_data)
+                                 self.sample_servicegroups_data, self.notification_flag)
         self.assertEqual(self.sample_servicegroups_data[0],
             {
                 'group': 'EGI',
@@ -297,16 +342,39 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
             }
         )
 
+    def test_ServiceGroupsAndContactsNoHonorNotificationFlag(self):
+        attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
+                                 self.sample_servicegroups_data, False)
+        self.assertEqual(self.sample_servicegroups_data[1],
+            {
+                'group': 'EGI',
+                'subgroup': 'NGI_CYGRID_SERVICES',
+                'notifications': {
+                    'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
+                    'enabled': True
+                },
+                'tags': {
+                    'monitored': '1',
+                    'scope': 'EGI'
+                },
+                'type': 'PROJECT'
+            }
+        )
+
 
 class MeshServiceEndpointsAndContacts(unittest.TestCase):
     def setUp(self):
         logger.customer = CUSTOMER_NAME
         self.maxDiff = None
+        self.notfication_flag = True
         self.sample_serviceendpoints_data = [
             {
                 'group': 'GROUP1',
                 'hostname': 'fqdn1.com',
                 'service': 'service1',
+                'notifications': {
+                    'enabled': True
+                },
                 'tags': {
                     'monitored': '1',
                     'production': '0',
@@ -318,6 +386,9 @@ class MeshServiceEndpointsAndContacts(unittest.TestCase):
                 'group': 'GROUP2',
                 'hostname': 'fqdn2.com',
                 'service': 'service2',
+                'notifications': {
+                    'enabled': True
+                },
                 'tags': {
                     'monitored': '1',
                     'production': '0',
@@ -333,7 +404,7 @@ class MeshServiceEndpointsAndContacts(unittest.TestCase):
 
     def test_ServiceEndpointsAndContacts(self):
         attach_contacts_topodata(logger, self.sample_serviceendpoints_contacts,
-                                 self.sample_serviceendpoints_data)
+                                 self.sample_serviceendpoints_data, self.notfication_flag)
         self.assertEqual(self.sample_serviceendpoints_data[0],
             {
                 'group': 'GROUP1',
@@ -581,7 +652,9 @@ class ParseSitesBiomed(unittest.TestCase):
         with open('tests/sample-sites_biomed.xml') as feed_file:
             self.content = feed_file.read()
         logger.customer = CUSTOMER_NAME
-        parse_sites = ParseSites(logger, self.content, CUSTOMER_NAME)
+        self.notification_flag = False
+        parse_sites = ParseSites(logger, self.content, CUSTOMER_NAME, False,
+                                 False, self.notification_flag)
         self.group_groups = parse_sites.get_group_groups()
 
     def test_BiomedSites(self):
@@ -607,11 +680,71 @@ class ParseSitesBiomed(unittest.TestCase):
         )
 
 
+class ParseSitesTest(unittest.TestCase):
+    def setUp(self):
+        with open('tests/sample-site.xml') as feed_file:
+            self.content = feed_file.read()
+        logger.customer = CUSTOMER_NAME
+        self.notification_flag = True
+        parse_sites = ParseSites(logger, self.content, CUSTOMER_NAME, False,
+                                 False, self.notification_flag)
+        self.group_groups = parse_sites.get_group_groups()
+        self.maxDiff = None
+
+    def test_EgiSites(self):
+        self.assertEqual(self.group_groups,
+            [
+                {
+                    'group': 'NGI_CZ',
+                    'subgroup': 'prague_cesnet_lcg2_cert',
+                    'notifications': {
+                        'contacts': [],
+                        'enabled': False
+                    },
+                    'tags': {
+                        'certification': 'Closed',
+                        'infrastructure': 'Production',
+                        'scope': 'EGI'
+                    },
+                    'type': 'NGI'
+                },
+                {
+                    'group': 'NGI_SK',
+                    'subgroup': 'TU-Kosice',
+                    'notifications': {
+                        'contacts': [],
+                        'enabled': True
+                    },
+                    'tags': {
+                        'certification': 'Certified',
+                        'infrastructure': 'Production',
+                        'scope': 'EGI'
+                    },
+                    'type': 'NGI'
+                },
+                {
+                    'group': 'NGI_SK',
+                    'subgroup': 'IISAS-Bratislava',
+                    'notifications': {
+                        'contacts': [],
+                        'enabled': True
+                    },
+                    'tags': {
+                        'certification': 'Certified',
+                        'infrastructure': 'Production',
+                        'scope': 'EGI'
+                    },
+                    'type': 'NGI'
+                }
+            ]
+        )
+
+
 class ParseEoscProvider(unittest.TestCase):
     def setUp(self):
-        with open('tests/sample-resourcefeed_eoscprovider_eudat.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
             resources = feed_file.read()
-        with open('tests/sample-providerfeed_eoscprovider_eudat.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
             providers = feed_file.read()
         with open('tests/sample-resourcefeed_extensions.json', encoding='utf-8') as feed_file:
             resource_extensions = feed_file.read()
@@ -621,11 +754,12 @@ class ParseEoscProvider(unittest.TestCase):
         self.group_endpoints = eosc_topo.get_group_endpoints()
         self.id_groupname = buildmap_id2groupname(self.group_endpoints)
         fakemap_idgroupnames = {
-            'grnet.grnet-test': 'grnet-test',
             'openaire.validator': 'OpenAIRE Validator',
-            'openaire.zenodo': 'Zenodo',
-            'openaire.amnesia': 'AMNESIA',
-            'grnet.hpc__national_hpc_infrastructure': 'HPC | National HPC Infrastructure'
+            'srce.3dbionotes': '3DBionotes-WS-TEST',
+            'srce.poem': 'POEM',
+            'srce.srceweb': 'SRCE Web',
+            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
+                            'SeaDataNet and Argo data'
         }
         eosc_topo_extensions = ParseExtensions(logger, resource_extensions, fakemap_idgroupnames, True, CUSTOMER_NAME)
         self.extensions = eosc_topo_extensions.get_extensions()
@@ -634,55 +768,43 @@ class ParseEoscProvider(unittest.TestCase):
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
             {
-                'group': 'eudat',
-                'subgroup': 'eudat.b2access',
+                'group': 'srce',
+                'subgroup': 'srce.3dbionotes',
                 'tags': {
-                    'info_projectname': 'EUDAT',
-                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                    'info_projectname': 'SRCE'
                 },
                 'type': 'PROJECT'
             },
             {
-                'group': 'eudat',
-                'subgroup': 'eudat.b2note',
+                'group': 'srce',
+                'subgroup': 'srce.poem',
                 'tags': {
-                    'info_projectname': 'EUDAT',
-                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                    'info_projectname': 'SRCE'
                 },
                 'type': 'PROJECT'
             },
             {
-                'group': 'eudat',
-                'subgroup': 'eudat.b2share',
+                'group': 'srce',
+                'subgroup': 'srce.srceweb',
                 'tags': {
-                    'info_projectname': 'EUDAT',
-                    'provider_tags': 'Data Infrastructure, European Data Initiative'
-                },
-                'type': 'PROJECT'},
-            {
-                'group': 'eudat',
-                'subgroup': 'eudat.b2drop',
-                'tags': {
-                    'info_projectname': 'EUDAT',
-                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                    'info_projectname': 'SRCE'
                 },
                 'type': 'PROJECT'
             },
             {
-                'group': 'eudat',
-                'subgroup': 'eudat.b2safe',
+                'group': 'srce',
+                'subgroup': 'srce.webodv',
                 'tags': {
-                    'info_projectname': 'EUDAT',
-                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                    'info_projectname': 'SRCE'
                 },
                 'type': 'PROJECT'
             },
             {
-                'group': 'eudat',
-                'subgroup': 'eudat.b2find',
+                'group': 'openaire',
+                'subgroup': 'openaire.validator',
                 'tags': {
-                    'info_projectname': 'EUDAT',
-                    'provider_tags': 'Data Infrastructure, European Data Initiative'
+                    'info_projectname': 'OpenAIRE',
+                    'provider_tags': 'Open Science'
                 },
                 'type': 'PROJECT'
             }
@@ -690,120 +812,102 @@ class ParseEoscProvider(unittest.TestCase):
 
     def test_meshContactsProviders(self):
         sample_resources_contacts = {
-            'www.eudat.eu+eudat.b2access': ['helpdesk@eudat.eu']
+            '3dbionotes.cnb.csic.es+srce.3dbionotes': ['Emir.Imamagic@srce.hr']
         }
 
         attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
         self.assertEqual(self.group_endpoints[0],
             {
-                'group': 'eudat.b2access',
-                'hostname': 'www.eudat.eu_eudat.b2access',
+                'group': 'srce.3dbionotes',
+                'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
                 'notifications': {
-                    'contacts': ['helpdesk@eudat.eu'], 'enabled': True
+                    'contacts': ['Emir.Imamagic@srce.hr'],
+                    'enabled': True
                 },
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'www.eudat.eu',
-                    'info_ID': 'eudat.b2access',
-                    'info_groupname': 'B2ACCESS',
-                    'info_URL': 'https://www.eudat.eu/services/b2access',
-                    'service_tags': 'single sign-on, federated identity management, federated AAI proxy'
+                    'hostname': '3dbionotes.cnb.csic.es',
+                    'info_ID': 'srce.3dbionotes',
+                    'info_URL': 'https://3dbionotes.cnb.csic.es/',
+                    'info_groupname': '3DBionotes-WS-TEST'
                 },
                 'type': 'SERVICEGROUPS'
             }
         )
 
-    def test_groupEndoints(self):
-        self.assertEqual(self.group_endpoints,[
+    def test_groupEndpoints(self):
+        self.assertEqual(self.group_endpoints, [
             {
-                'group': 'eudat.b2access',
-                'hostname': 'www.eudat.eu_eudat.b2access',
+                'group': 'srce.3dbionotes',
+                'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'www.eudat.eu',
-                    'info_ID': 'eudat.b2access',
-                    'info_groupname': 'B2ACCESS',
-                    'info_URL': 'https://www.eudat.eu/services/b2access',
-                    'service_tags': 'single sign-on, federated identity management, federated '
-                                'AAI proxy'
+                    'hostname': '3dbionotes.cnb.csic.es',
+                    'info_ID': 'srce.3dbionotes',
+                    'info_URL': 'https://3dbionotes.cnb.csic.es/',
+                    'info_groupname': '3DBionotes-WS-TEST'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'eudat.b2note',
-                'hostname': 'b2note.eudat.eu_eudat.b2note',
+                'group': 'srce.poem',
+                'hostname': 'poem.devel.argo.grnet.gr_srce.poem',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'b2note.eudat.eu',
-                    'info_ID': 'eudat.b2note',
-                    'info_groupname': 'B2NOTE',
-                    'info_URL': 'https://b2note.eudat.eu',
-                    'service_tags': 'annotation'
+                    'hostname': 'poem.devel.argo.grnet.gr',
+                    'info_ID': 'srce.poem',
+                    'info_URL': 'https://poem.devel.argo.grnet.gr',
+                    'info_groupname': 'POEM'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'eudat.b2share',
-                'hostname': 'www.eudat.eu_eudat.b2share',
+                'group': 'srce.srceweb',
+                'hostname': 'www.srce.unizg.hr_srce.srceweb',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'www.eudat.eu',
-                    'info_ID': 'eudat.b2share',
-                    'info_groupname': 'B2SHARE',
-                    'info_URL': 'https://www.eudat.eu/services/b2share',
-                    'service_tags': 'data repository, data sharing, data publishing, FAIR'
+                    'hostname': 'www.srce.unizg.hr',
+                    'info_ID': 'srce.srceweb',
+                    'info_URL': 'https://www.srce.unizg.hr/',
+                    'info_groupname': 'SRCE Web'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'eudat.b2drop',
-                'hostname': 'www.eudat.eu_eudat.b2drop',
+                'group': 'srce.webodv',
+                'hostname': 'webodv-egi-ace.cloud.ba.infn.it_srce.webodv',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'www.eudat.eu',
-                    'info_ID': 'eudat.b2drop',
-                    'info_groupname': 'B2DROP',
-                    'info_URL': 'https://www.eudat.eu/services/b2drop',
-                    'service_tags': 'sync and share'
+                    'hostname': 'webodv-egi-ace.cloud.ba.infn.it',
+                    'info_ID': 'srce.webodv',
+                    'info_URL': 'http://webodv-egi-ace.cloud.ba.infn.it/',
+                    'info_groupname': 'WebODV - Online extraction, analysis and '
+                                        'visualization of SeaDataNet and Argo data'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'eudat.b2safe',
-                'hostname': 'www.eudat.eu_eudat.b2safe',
+                'group': 'openaire.validator',
+                'hostname': 'www.openaire.eu_openaire.validator',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'www.eudat.eu',
-                    'info_ID': 'eudat.b2safe',
-                    'info_groupname': 'B2SAFE',
-                    'info_URL': 'https://www.eudat.eu/services/b2safe',
-                    'service_tags': 'replication, Policy-based data management, persistent identifiers, data archiving'
+                    'hostname': 'www.openaire.eu',
+                    'info_ID': 'openaire.validator',
+                    'info_URL': 'https://www.openaire.eu/validator',
+                    'info_groupname': 'OpenAIRE Validator',
+                    'service_tags': 'OAI-PMH protocol, horizontalService'
                 },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'eudat.b2find',
-                'hostname': 'www.eudat.eu_eudat.b2find',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.eudat.eu',
-                    'info_ID': 'eudat.b2find',
-                    'info_groupname': 'B2FIND',
-                    'info_URL': 'https://www.eudat.eu/services/b2find',
-                    'service_tags': 'metadata, search, harvesting, interdisciplinary, discovery'
-                },
-                'type': 'SERVICEGROUPS'
-            }
+                'type': 'SERVICEGROUPS'}
         ])
 
     def test_idGroupname(self):
         self.assertEqual(self.id_groupname, {
-            'eudat.b2access': 'B2ACCESS',
-            'eudat.b2drop': 'B2DROP',
-            'eudat.b2find': 'B2FIND',
-            'eudat.b2note': 'B2NOTE',
-            'eudat.b2safe': 'B2SAFE',
-            'eudat.b2share': 'B2SHARE'
+            'openaire.validator': 'OpenAIRE Validator',
+            'srce.3dbionotes': '3DBionotes-WS-TEST',
+            'srce.poem': 'POEM',
+            'srce.srceweb': 'SRCE Web',
+            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
+                            'SeaDataNet and Argo data'
         })
 
     def test_FailedEoscProviderTopology(self):
@@ -819,45 +923,6 @@ class ParseEoscProvider(unittest.TestCase):
     def test_serviceExtensions(self):
         self.assertEqual(self.extensions, [
             {
-                'group': 'grnet.grnet-test',
-                'hostname': 'srce.hr_367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
-                'service': 'eu.eosc.generic.https',
-                'tags': {
-                    'hostname': 'srce.hr',
-                    'info_ID': '367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
-                    'info_URL': 'https://srce.hr',
-                    'info_groupname': 'grnet-test',
-                    'info_monitored_by': 'eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'grnet.grnet-test',
-                'hostname': 'grnet.gr_367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
-                'service': 'eu.eosc.generic.https',
-                'tags': {
-                    'hostname': 'grnet.gr',
-                    'info_ID': '367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
-                    'info_URL': 'https://grnet.gr',
-                    'info_groupname': 'grnet-test',
-                    'info_monitored_by': 'eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'grnet.grnet-test',
-                'hostname': 'kathimerini.gr_367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
-                'service': 'eu.eosc.generic.https',
-                'tags': {
-                    'hostname': 'kathimerini.gr',
-                    'info_ID': '367752f8-a1e8-45d0-9e2d-fcae3c2fc0e2',
-                    'info_URL': 'https://kathimerini.gr',
-                    'info_groupname': 'grnet-test',
-                    'info_monitored_by': 'eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
                 'group': 'openaire.validator',
                 'hostname': 'argo.grnet.gr_4429aede-129a-4a2d-9788-198a96912bc1',
                 'service': 'eu.eosc.portal',
@@ -871,215 +936,32 @@ class ParseEoscProvider(unittest.TestCase):
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'openaire.zenodo',
-                'hostname': 'some.endpoint.zenodo.com_5ce1854d-a4e0-4ec3-adc9-3e09d42945a5',
-                'service': 'eu.eosc.ckan',
+                'group': 'srce.poem',
+                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa27',
+                'service': 'eu.eosc.argo.poem',
                 'tags': {
-                    'hostname': 'some.endpoint.zenodo.com',
-                    'info_ID': '5ce1854d-a4e0-4ec3-adc9-3e09d42945a5',
-                    'info_URL': 'some.endpoint.zenodo.com',
-                    'info_groupname': 'Zenodo',
-                    'info_monitored_by': 'string'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'openaire.amnesia',
-                'hostname': 'argo.grnet.gr_0920c959-ea0c-412b-a282-dd97e7c594fc',
-                'service': 'eu.eosc.portal',
-                'tags': {
-                    'hostname': 'argo.grnet.gr',
-                    'info_ID': '0920c959-ea0c-412b-a282-dd97e7c594fc',
-                    'info_URL': 'argo.grnet.gr',
-                    'info_groupname': 'AMNESIA',
-                    'info_monitored_by': 'asdf'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'grnet.hpc__national_hpc_infrastructure',
-                'hostname': 'hpc.grnet.gr_18afc30d-2f78-4417-8b11-315ea1611ad7',
-                'service': 'eu.eosc.portal',
-                'tags': {
-                    'hostname': 'hpc.grnet.gr',
-                    'info_ID': '18afc30d-2f78-4417-8b11-315ea1611ad7',
-                    'info_URL': 'https://hpc.grnet.gr/',
-                    'info_groupname': 'HPC | National HPC Infrastructure',
+                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
+                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa27',
+                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr',
+                    'info_groupname': 'POEM',
                     'info_monitored_by': 'monitored_by-eosc'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'grnet.hpc__national_hpc_infrastructure',
-                'hostname': 'hpc.grnet.gr_18afc30d-2f78-4417-8b11-315ea1611ad7_d59ff23a-1ed8-39a3-949f-b1b1b82547d0',
-                'service': 'eu.eosc.portal',
+                'group': 'srce.poem',
+                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
+                'service': 'eu.eosc.argo.poem',
                 'tags': {
-                    'hostname': 'hpc.grnet.gr',
-                    'info_ID': '18afc30d-2f78-4417-8b11-315ea1611ad7_d59ff23a-1ed8-39a3-949f-b1b1b82547d0',
-                    'info_URL': 'https://hpc.grnet.gr/some/path',
-                    'info_groupname': 'HPC | National HPC Infrastructure',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'grnet.hpc__national_hpc_infrastructure',
-                'hostname': 'hpc.grnet.gr_18afc30d-2f78-4417-8b11-315ea1611ad7_d002662b-7924-3906-b845-c3c2ebf33e5a',
-                'service': 'eu.eosc.portal',
-                'tags': {
-                    'hostname': 'hpc.grnet.gr',
-                    'info_ID': '18afc30d-2f78-4417-8b11-315ea1611ad7_d002662b-7924-3906-b845-c3c2ebf33e5a',
-                    'info_URL': 'https://hpc.grnet.gr/some/path/another',
-                    'info_groupname': 'HPC | National HPC Infrastructure',
+                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
+                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
+                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr/different/url/path',
+                    'info_groupname': 'POEM',
                     'info_monitored_by': 'monitored_by-eosc'
                 },
                 'type': 'SERVICEGROUPS'
             }
         ])
-
-
-class ParseEoscProviderExtras(unittest.TestCase):
-    def setUp(self):
-        with open('tests/sample-resourcefeed_extras.json', encoding='utf-8') as feed_file:
-            resources = feed_file.read()
-        with open('tests/sample-providerfeed_extras.json', encoding='utf-8') as feed_file:
-            providers = feed_file.read()
-        resources = ParseResourcesExtras(logger, resources, ['horizontalService'], CUSTOMER_NAME).data
-        logger.customer = CUSTOMER_NAME
-        eosc_topo = ParseTopo(logger, providers, resources, True, CUSTOMER_NAME)
-        self.group_groups = eosc_topo.get_group_groups()
-        self.group_endpoints = eosc_topo.get_group_endpoints()
-
-        self.maxDiff = None
-
-    def test_groupGroups(self):
-        self.assertEqual(self.group_groups, [
-            {
-                'group': 'provider_0310_1',
-                'subgroup': 'provider_0310_1.resource_provider_0310_1_upate',
-                'tags': {
-                    'info_projectname': 'Provider 03.10 1'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'aginfra',
-                'subgroup': 'aginfra.chart_visualization',
-                'tags': {
-                    'info_projectname': 'AGINFRA+', 'provider_tags': 'Agri-food'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'aginfra',
-                'subgroup': 'aginfra.agris_elastic_index',
-                'tags': {
-                    'info_projectname': 'AGINFRA+',
-                    'provider_tags': 'Agri-food'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': '3200-beta2',
-                'subgroup': '3200-beta2._test_412',
-                'tags': {
-                    'info_projectname': '3.20.0-beta.2 update',
-                    'provider_tags': 'tag'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'geant',
-                'subgroup': 'geant.eosc_profile v4.0.0 test for eoscen-218 and eoscen-220',
-                'tags': {
-                    'info_projectname': 'GÉANT',
-                    'provider_tags': 'e-infrastructure, Pan-European GÉANT network, '
-                                    'Networks, Trust and Identity'
-                },
-                'type': 'PROJECT'
-            }
-        ])
-
-    def test_groupEndpoints(self):
-        self.assertEqual(self.group_endpoints, [
-            {
-                'group': 'provider_0310_1.resource_provider_0310_1_upate',
-                'hostname': 'www.cyfronet.pl_provider_0310_1.resource_provider_0310_1_upate',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.cyfronet.pl',
-                    'info_ID': 'provider_0310_1.resource_provider_0310_1_upate',
-                    'info_URL': 'https://www.cyfronet.pl/zalacznik/8437',
-                    'info_groupname': 'resource Provider 03.10 1 upate',
-                    'service_tags': 'ee, horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'aginfra.chart_visualization',
-                'hostname': 'support.d4science.org_aginfra.chart_visualization',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'support.d4science.org',
-                    'info_ID': 'aginfra.chart_visualization',
-                    'info_URL': 'https://support.d4science.org/projects/aginfraplus_wiki/wiki/CHART_VIS',
-                    'info_groupname': 'AGINFRA+ Chart Visualization',
-                    'service_tags': 'visualization, chart, graph, line, mind map, '
-                                    'scatter plot, spline, bar, pie, donought, horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'aginfra.agris_elastic_index',
-                'hostname': 'support.d4science.org_aginfra.agris_elastic_index',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'support.d4science.org',
-                    'info_ID': 'aginfra.agris_elastic_index',
-                    'info_URL': 'https://support.d4science.org/projects/aginfraplus_wiki/wiki/AGRIS_Elastic_Index',
-                    'info_groupname': 'AGINFRA+ AGRIS Elastic Index',
-                    'service_tags': 'Publication Discovery, Metadata, Search, horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': '3200-beta2._test_412',
-                'hostname': 'www.cyfronet.pl_3200-beta2._test_412',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.cyfronet.pl',
-                    'info_ID': '3200-beta2._test_412',
-                    'info_URL': 'https://www.cyfronet.pl/zalacznik/8437',
-                    'info_groupname': 'test 4.12',
-                    'service_tags': 'horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'geant.eosc_profile v4.0.0 test for eoscen-218 and eoscen-220',
-                'hostname': 'wiki.geant.org_geant.eosc_profile v4.0.0 test for eoscen-218 '
-                        'and eoscen-220',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'wiki.geant.org',
-                    'info_ID': 'geant.eosc_profile v4.0.0 test for eoscen-218 and '
-                                'eoscen-220',
-                    'info_URL': 'https://wiki.geant.org/display/SYS/GEANT+Service+Catalogue+v3.00%3Ev4.00+compliance',
-                    'info_groupname': 'EOSC Profile v4.0.0 Test for EOSCEN-218 and '
-                                      'EOSCEN-220',
-                    'service_tags': 'horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        ])
-
-    def test_FailedEoscResourcesExtrasTopology(self):
-        logger.customer = CUSTOMER_NAME
-        with self.assertRaises(ConnectorParseError) as cm:
-            resources = ParseResourcesExtras(logger, 'FAILED_DATA', ['horizontalService'], CUSTOMER_NAME).data
-        excep = cm.exception
-        self.assertTrue('JSON feed' in excep.msg)
-        self.assertTrue('JSONDecodeError' in excep.msg)
 
 
 if __name__ == '__main__':

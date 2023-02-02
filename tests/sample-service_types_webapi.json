@@ -1,0 +1,109 @@
+{
+ "status": {
+  "message": "Success",
+  "code": "200"
+ },
+ "data": [
+  {
+   "date": "2022-12-18",
+   "name": "AMGA",
+   "description": "[Central service] gLite metadata catalogue. This service only needs to be installed on the request of a VO. ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "APEL",
+   "description": "[Site service] This is a \"dummy\" Service Type to enable the monitoring tests for APEL accounting. All EGEE sites must have one instance of this Service Type, associated with a CE. ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "ARC-CE",
+   "description": "[Site service] The Compute Element within the ARC middleware stack. ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CE",
+   "description": "[Site service] The LCG Compute Element. Currently the standard CE within the gLite middleware stack. Soon to be replaced by the CREAM CE. ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CREAM-CE",
+   "description": "[Site service] The CREAM Compute Element is the new CE within the gLite middleware stack. ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CUSTOM.RequestTracker",
+   "description": "Generic request tracker",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CUSTOM.UserPortal",
+   "description": "Generic user portal ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CUSTOM.ch.cern.frontier.FroNTier",
+   "description": "FroNTier N-Tier data distribution system. http://frontier.cern.ch/",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CUSTOM.pl.plgrid.BAT.agent",
+   "description": "Service for collecting accounting data from NGI_PL grid ",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "CUSTOM.pl.plgrid.BazaarSAT",
+   "description": "Bazaar Site Admin Toolkit from NGI_PL grid",
+   "tags": [
+    "topology"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "Service.Type.One",
+   "description": "Service type created from POEM",
+   "tags": [
+    "poem"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "Service.Type.Two",
+   "description": "Service type created from POEM",
+   "tags": [
+    "poem"
+   ]
+  },
+  {
+   "date": "2022-12-18",
+   "name": "Service.Type.Three",
+   "description": "Service type created from POEM earlier without tag"
+  }
+ ]
+}

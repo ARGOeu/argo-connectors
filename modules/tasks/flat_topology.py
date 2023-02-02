@@ -8,7 +8,7 @@ from argo_connectors.parse.flat_topology import ParseFlatEndpoints
 from argo_connectors.parse.flat_contacts import ParseContacts
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.mesh.contacts import attach_contacts_topodata
-from argo_connectors.tasks.common import write_state, write_topo_avro as write_avro
+from argo_connectors.tasks.common import write_state, write_topo_json as write_json
 
 
 class TaskFlatTopology(object):
@@ -96,7 +96,7 @@ class TaskFlatTopology(object):
                 self.send_webapi(group_endpoints,'endpoints')
             )
 
-        if eval(self.globopts['GeneralWriteAvro'.lower()]):
-            write_avro(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
+        if eval(self.globopts['GeneralWriteJson'.lower()]):
+            write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
         self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))

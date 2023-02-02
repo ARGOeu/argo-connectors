@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.2.2] - 2023-02-01
+
+### Fixed
+
+* ARGO-4158 Topology connector doesn't honor notification flag for EGI
+
+### Changed
+
+* ARGO-4127 Switch to private API methods of PROVIDERS portal
+* ARGO-4136 Replace avro writer with plain JSONs
+
+### Added
+
+* ARGO-4101 Connectors should sort service types before POST
+* ARGO-4102 Connectors POST service types with tags=connectors field set
+* ARGO-4142 Connectors should update only service types with tags=topology
+
 ## [2.2.1] - 2022-11-03
 
 ### Added

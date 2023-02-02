@@ -2,7 +2,7 @@ import os
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.io.http import SessionWithRetry
-from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state, write_metricprofile_avro as write_avro
+from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state, write_metricprofile_json as write_json
 from argo_connectors.parse.webapi_metricprofile import ParseMetricProfiles
 
 API_PATH = '/api/v2/metric_profiles'
@@ -52,8 +52,8 @@ class TaskWebApiMetricProfile(object):
 
                 await write_state(self.connector_name, self.globopts, self.cust, job, self.confcust, self.fixed_date, True)
 
-                if eval(self.globopts['GeneralWriteAvro'.lower()]):
-                    write_avro(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
+                if eval(self.globopts['GeneralWriteJson'.lower()]):
+                    write_json(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
 
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
 

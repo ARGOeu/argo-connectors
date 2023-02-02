@@ -25,13 +25,12 @@ def build_urlpath_id(http_endpoint):
         return None
 
 
-class ParseResourcesExtras(ParseHelpers):
-    def __init__(self, logger, data=None, keys=[], custname=None, ret_json=False):
-        super(ParseResourcesExtras, self).__init__(logger)
+class ParseResources(ParseHelpers):
+    def __init__(self, logger, data=None, keys=[], custname=None):
+        super(ParseResources, self).__init__(logger)
         self.data = data
         self._keys = keys
         self.custname = custname
-        self._ret_json = ret_json
         self._resources = list()
         self._parse_data()
 
@@ -41,52 +40,24 @@ class ParseResourcesExtras(ParseHelpers):
                 json_data = self.parse_json(self.data)
             else:
                 json_data = self.data
-            for resource in json_data['results']:
-                extras = resource.get('resourceExtras', None)
+            for feeddata in json_data['results']:
+                resource = feeddata['service']
+                tags = resource['tags']
+                extras = feeddata.get('resourceExtras', None)
                 if extras:
                     for key in self._keys:
                         key_true = extras.get(key, False)
                         if key_true:
-                            service = resource['service']
-                            service['tags'].append(key)
-                            self._resources.append(service)
-            if self._ret_json:
-                self.data = self._resources
-            else:
-                self.data = json.dumps(
-                    {'results': self._resources}
-                )
-
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
-            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Extras Resources feed - %s' % (self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
-            raise ConnectorParseError(msg)
-
-        except ConnectorParseError as exc:
-            raise exc
-
-
-class ParseResources(ParseHelpers):
-    def __init__(self, logger, data=None, custname=None):
-        super(ParseResources, self).__init__(logger)
-        self.data = data
-        self.custname = custname
-        self._resources = list()
-        self._parse_data()
-
-    def _parse_data(self):
-        try:
-            if type(self.data) == str:
-                json_data = self.parse_json(self.data)
-            else:
-                json_data = self.data
-            for resource in json_data['results']:
+                            tags.append(key)
+                if not resource.get('name', False):
+                    continue
                 self._resources.append({
                     'id': resource['id'],
                     'hardcoded_service': SERVICE_NAME_WEBPAGE,
                     'name': resource['name'],
                     'provider': resource['resourceOrganisation'],
                     'webpage': resource['webpage'],
-                    'resource_tag': resource['tags'],
+                    'resource_tag': tags,
                     'description': resource['description']
                 })
             self.data = self._resources
@@ -106,6 +77,7 @@ class ParseProviders(ParseHelpers):
         self.custname = custname
         self._providers = list()
         self._parse_data()
+        self.unique_names = set()
 
     def _parse_data(self):
         try:
@@ -113,7 +85,10 @@ class ParseProviders(ParseHelpers):
                 json_data = self.parse_json(self.data)
             else:
                 json_data = self.data
-            for provider in json_data['results']:
+            for feeddata in json_data['results']:
+                provider = feeddata['provider']
+                if not provider.get('website', False):
+                    continue
                 self._providers.append({
                     'id': provider['id'],
                     'website': provider['website'],
@@ -129,6 +104,12 @@ class ParseProviders(ParseHelpers):
 
         except ConnectorParseError as exc:
             raise exc
+
+    def get_unique(self, key='id'):
+        uniques = set()
+        for entry in self.data:
+            uniques.add(entry[key])
+        return list(uniques)
 
 
 class ParseExtensions(ParseHelpers):
@@ -199,7 +180,7 @@ class ParseTopo(object):
     def __init__(self, logger, providers, resources, uidservendp, custname):
         self.uidservendp = uidservendp
         self.providers = ParseProviders(logger, providers, custname)
-        self.resources = ParseResources(logger, resources, custname)
+        self.resources = ParseResources(logger, resources, ['horizontalService'], custname)
         self.maxDiff = None
 
     def get_group_groups(self):
@@ -230,7 +211,10 @@ class ParseTopo(object):
 
     def get_group_endpoints(self):
         ge = list()
+        unique_providers = self.providers.get_unique()
         for resource in self.resources.data:
+            if resource['provider'] not in unique_providers:
+                continue
             gee = dict()
             gee['type'] = 'SERVICEGROUPS'
             gee['service'] = resource['hardcoded_service']
@@ -241,6 +225,8 @@ class ParseTopo(object):
                 gee['hostname'] = construct_fqdn(resource['webpage'])
             if resource.get('resource_tag', False):
                 resource_tags = [tag.strip() for tag in resource['resource_tag']]
+                if not resource.get('webpage', False):
+                    continue
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
                                    info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),

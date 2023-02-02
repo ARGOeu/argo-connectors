@@ -226,9 +226,9 @@ class ParseCsvServiceEndpointsWithContacts(unittest.TestCase):
 
 class ParseEoscContacts(unittest.TestCase):
     def setUp(self):
-        with open('tests/sample-resourcefeed_eoscprovider_eudat.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
             self.resources = feed_file.read()
-        with open('tests/sample-providerfeed_eoscprovider_eudat.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
             self.providers = feed_file.read()
         logger.customer = CUSTOMER_NAME
         self.maxDiff = None
@@ -241,12 +241,11 @@ class ParseEoscContacts(unittest.TestCase):
     def test_formatResourcesContacts(self):
         self.assertEqual(self.resources_contacts,
             {
-                'www.eudat.eu+eudat.b2access': ['helpdesk@eudat.eu'],
-                'b2note.eudat.eu+eudat.b2note': ['helpdesk@eudat.eu'],
-                'www.eudat.eu+eudat.b2share': ['helpdesk@eudat.eu'],
-                'www.eudat.eu+eudat.b2drop': ['helpdesk@eudat.eu'],
-                'www.eudat.eu+eudat.b2safe': ['helpdesk@eudat.eu'],
-                'www.eudat.eu+eudat.b2find': ['eudat-cdi-secretariat@postit.csc.fi']
+                '3dbionotes.cnb.csic.es+srce.3dbionotes': ['kzailac@srce.hr'],
+                'poem.devel.argo.grnet.gr+srce.poem': ['Emir.Imamagic@srce.hr'],
+                'webodv-egi-ace.cloud.ba.infn.it+srce.webodv': ['Emir.Imamagic@srce.hr'],
+                'www.openaire.eu+openaire.validator': ['info@openaire.eu'],
+                'www.srce.unizg.hr+srce.srceweb': ['Emir.Imamagic@srce.hr']
             }
         )
 
@@ -254,8 +253,10 @@ class ParseEoscContacts(unittest.TestCase):
         self.assertEqual(self.providers_contacts,
             [
                 {
-                    'contacts': ['eudat-cdi-secretariat@eudat.eu'],
-                    'name': 'EUDAT'
+                    'contacts': ['office@srce.hr'], 'name': 'SRCE'
+                },
+                {
+                    'contacts': ['info@openaire.eu'], 'name': 'OpenAIRE'
                 }
             ]
         )

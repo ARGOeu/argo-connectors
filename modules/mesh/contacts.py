@@ -25,7 +25,7 @@ def filter_dups_noemails(contact_list):
     return only_emails
 
 
-def attach_contacts_topodata(logger, contacts, topodata):
+def attach_contacts_topodata(logger, contacts, topodata, notification_flag=None):
     updated_topodata = list()
     found_contacts = None
 
@@ -44,7 +44,8 @@ def attach_contacts_topodata(logger, contacts, topodata):
                             if filtered_emails:
                                 entity.update(notifications={
                                     'contacts': filtered_emails,
-                                    'enabled': True
+                                    'enabled': entity['notifications']['enabled'] \
+                                        if notification_flag else True
                                 })
                                 break
                         else:
@@ -54,7 +55,8 @@ def attach_contacts_topodata(logger, contacts, topodata):
                         if filtered_emails:
                             entity.update(notifications={
                                 'contacts': filtered_emails,
-                                'enabled': True
+                                'enabled': entity['notifications']['enabled'] \
+                                    if notification_flag else True
                             })
 
             # group_endpoints topotype
@@ -73,7 +75,8 @@ def attach_contacts_topodata(logger, contacts, topodata):
                     contact = contacts[contact_key]
                     entity.update(notifications={
                         'contacts': contact,
-                        'enabled': True
+                        'enabled': entity['notifications']['enabled'] \
+                            if notification_flag else True
                     })
 
             updated_topodata.append(entity)

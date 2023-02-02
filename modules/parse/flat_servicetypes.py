@@ -32,6 +32,7 @@ class ParseFlatServiceTypes(ParseHelpers):
                     if key.lower().startswith('Service Description'.lower()):
                         target_key = key
                 tmp_dict['description'] = entity[target_key]
+                tmp_dict['tags'] = ['topology']
 
                 if tmp_dict['name'] in already_added:
                     continue

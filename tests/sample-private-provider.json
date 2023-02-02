@@ -1,0 +1,253 @@
+{
+  "total": 128,
+  "from": 0,
+  "to": 128,
+  "results": [
+	{
+        "metadata": {
+			"registeredBy": "Emir Imamagić",
+			"registeredAt": "1669628086708",
+			"modifiedBy": "Emir Imamagić",
+			"modifiedAt": "1669628086708",
+			"terms": [
+				"Emir.Imamagic@srce.hr"
+			],
+			"published": false
+		},
+		"active": true,
+		"suspended": false,
+		"identifiers": null,
+		"migrationStatus": null,
+		"loggingInfo": [
+			{
+				"date": "1669628085756",
+				"userEmail": "Emir.Imamagic@srce.hr",
+				"userFullName": "Emir Imamagić",
+				"userRole": "user",
+				"type": "onboard",
+				"comment": null,
+				"actionType": "registered"
+			},
+			{
+				"date": "1669628254932",
+				"userEmail": "kkoum@admin.grnet.gr",
+				"userFullName": "Kostas Koumantaros",
+				"userRole": "admin",
+				"type": "onboard",
+				"comment": null,
+				"actionType": "approved"
+			}
+		],
+		"latestAuditInfo": null,
+		"latestOnboardingInfo": {
+			"date": "1669628254932",
+			"userEmail": "kkoum@admin.grnet.gr",
+			"userFullName": "Kostas Koumantaros",
+			"userRole": "admin",
+			"type": "onboard",
+			"comment": null,
+			"actionType": "approved"
+		},
+		"latestUpdateInfo": null,
+		"status": "approved provider",
+		"templateStatus": "pending template",
+		"provider": {
+			"id": "srce",
+			"abbreviation": "SRCE",
+			"name": "University of Zagreb University Computing Centre",
+			"website": "https://www.srce.unizg.hr",
+			"legalEntity": true,
+			"legalStatus": "provider_legal_status-public_legal_entity",
+			"hostingLegalEntity": null,
+			"description": "The University Computing Centre (SRCE) has a long tradition in the area of information and communication technologies. It was founded in 1971 within the University of Zagreb, the only Croatian university at the time, with the purpose to enhance the implementation of information technologies in the academic community as well as in Croatia in general.\n\nToday, SRCE is the main computing centre and the architect of the e-infrastructure, covering both the University of Zagreb and the whole research and high education system. Furthermore, SRCE is the competence center for information and communication technologies as well as the center for education and support in the area of ICT application.",
+			"logo": "https://www.srce.unizg.hr/files/srce/logo-en-potpis-crni.png",
+			"multimedia": [],
+			"scientificDomains": [
+				{
+					"scientificDomain": "scientific_domain-engineering_and_technology",
+					"scientificSubdomain": "scientific_subdomain-engineering_and_technology-other_engineering_and_technology_sciences"
+				}
+			],
+			"tags": [],
+			"structureTypes": [
+				"provider_structure_type-distributed"
+			],
+			"location": {
+				"streetNameAndNumber": "J. Marohnica 5",
+				"postalCode": "10000",
+				"city": "Zagreb",
+				"region": null,
+				"country": "HR"
+			},
+			"mainContact": {
+				"firstName": "Emir",
+				"lastName": "Imamagić",
+				"email": "Emir.Imamagic@srce.hr",
+				"phone": "+38516165809",
+				"position": "Head of Advanced Computing Department"
+			},
+			"publicContacts": [
+				{
+					"firstName": null,
+					"lastName": null,
+					"email": "office@srce.hr",
+					"phone": "+38516165555",
+					"position": null
+				}
+			],
+			"lifeCycleStatus": "provider_life_cycle_status-operational",
+			"certifications": [],
+			"participatingCountries": [],
+			"affiliations": [],
+			"networks": [],
+			"catalogueId": "eosc",
+			"esfriDomains": [],
+			"esfriType": null,
+			"merilScientificDomains": [],
+			"areasOfActivity": [],
+			"societalGrandChallenges": [],
+			"nationalRoadmaps": [],
+			"users": [
+				{
+					"id": "",
+					"email": "Emir.Imamagic@srce.hr",
+					"name": "Emir",
+					"surname": "Imamagić"
+				},
+				{
+					"id": "",
+					"email": "Daniel.Vrcic@srce.hr",
+					"name": "Daniel",
+					"surname": "Vrcic"
+				},
+				{
+					"id": "",
+					"email": "Katarina.Zailac@srce.hr",
+					"name": "Katarina",
+					"surname": "Zailac"
+				}
+			]
+		},
+		"id": "srce"
+	},
+    {
+      "metadata": {
+        "registeredBy": null,
+        "registeredAt": null,
+        "modifiedBy": "Axxxxxx Bxxxx",
+        "modifiedAt": "1604506673016",
+        "terms": [
+          "j.x.xxxxxxx.xxxxxxxxxxx@gmail.com",
+          "axxxxxx.bxxxi@isti.cnr.it"
+        ],
+        "published": false
+      },
+      "active": true,
+      "suspended": false,
+      "identifiers": null,
+      "migrationStatus": null,
+      "loggingInfo": null,
+      "latestAuditInfo": null,
+      "latestOnboardingInfo": null,
+      "latestUpdateInfo": null,
+      "status": "approved provider",
+      "templateStatus": "approved template",
+      "provider": {
+        "id": "openaire",
+        "abbreviation": "OpenAIRE",
+        "name": "OpenAIRE",
+        "website": "https://www.openaire.eu/",
+        "legalEntity": true,
+        "legalStatus": "provider_legal_status-non_for_profit_company",
+        "hostingLegalEntity": "OpenaAIRE Non-profit Civil Partnership",
+        "description": "OpenAIRE's vision is to transform society through validated scientific knowledge. Allow citizens, educators, funders, civil servants and industry find ways to make science useful for themselves, their working environments, the society. OpenAIRE's mission is to shift scholarly communication towards openness and transparency and facilitate innovative ways to communicate and monitor research. OpenAIRE’s mission is closely linked to the mission of the European Commission: to provide unlimited, barrier free, open access to research outputs financed by public funding in Europe. OpenAIRE fulfils the EOSC vision substantially, as its operations already provide the glue for many of the user and research driven functionalities, whether these come from the long tail of science (repositories and local support) or domain disciplined research communities or Research Infrastructures. OpenAIRE is a participatory initiative from its onset. The current governance structure consists of three bodies: the General Assembly (decision making body), the Executive Board (steering) and the Management Office (daily activities). Our network of 34 European National Open Access Desks are experts in open access and open science. They are embedded in national infrastructures and settings voicing the needs of the research community. OpenAIRE operates a distributed management office with dedicated people that carry out the day to day activities, and provide the necessary leadership to coordinate the multiple facets of open science in Europe.",
+        "logo": "https://www.openaire.eu/images/OpenAIRE_branding/Logo_Horizontal.png",
+        "multimedia": [],
+        "scientificDomains": [
+          {
+            "scientificDomain": "scientific_domain-generic",
+            "scientificSubdomain": "scientific_subdomain-generic-generic"
+          }
+        ],
+        "tags": [
+          "Open Science "
+        ],
+        "structureTypes": [
+          "provider_structure_type-virtual"
+        ],
+        "location": {
+          "streetNameAndNumber": "Artemidos 6 and Epidavrou",
+          "postalCode": "GR-15125",
+          "city": "Maroussi",
+          "region": "Attica",
+          "country": "EL"
+        },
+        "mainContact": {
+          "firstName": "Nxxxxxx",
+          "lastName": "Mxxxxx",
+          "email": "nxxxxxx@di.uoa.gr",
+          "phone": null,
+          "position": "Managing Director"
+        },
+        "publicContacts": [
+          {
+            "firstName": null,
+            "lastName": null,
+            "email": "info@openaire.eu",
+            "phone": null,
+            "position": null
+          }
+        ],
+        "lifeCycleStatus": "provider_life_cycle_status-operational",
+        "certifications": [],
+        "participatingCountries": [
+          "OT"
+        ],
+        "affiliations": [],
+        "networks": [
+          "provider_network-openaire"
+        ],
+        "catalogueId": "eosc",
+        "esfriDomains": [
+          "provider_esfri_domain-data_computing_and_digital_research_infrastructures",
+          "provider_esfri_domain-social_and_cultural_innovation"
+        ],
+        "esfriType": "provider_esfri_type-not_esfri",
+        "merilScientificDomains": [
+          {
+            "merilScientificDomain": "provider_meril_scientific_domain-information_science_and_technology",
+            "merilScientificSubdomain": "provider_meril_scientific_subdomain-information_science_and_technology-complex_data_facilities"
+          }
+        ],
+        "areasOfActivity": [
+          "provider_area_of_activity-technological_development"
+        ],
+        "societalGrandChallenges": [
+          "provider_societal_grand_challenge-other"
+        ],
+        "nationalRoadmaps": [],
+        "users": [
+          {
+            "id": "",
+            "email": "dxxxxxxxx.cxxxxxxx@isti.cnr.it",
+            "name": "Dxxxxxxxx",
+            "surname": "Cxxxxxxx"
+          },
+          {
+            "id": "",
+            "email": "fxxxxx.zxxxx@isti.cnr.it",
+            "name": "Fxxxxx",
+            "surname": "Zxxxx"
+          },
+          {
+            "id": "",
+            "email": "pxxxx.mxxxxx@isti.cnr.it",
+            "name": "Pxxxx",
+            "surname": "Mxxxxx"
+          }
+        ]
+      },
+      "id": "openaire"
+    }
+  ]
+}

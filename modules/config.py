@@ -11,7 +11,8 @@ class Global(object):
        Class represents parser for global.conf
     """
     # options common for all connectors
-    conf_general = {'General': ['WriteAvro', 'PublishWebAPI', 'PassExtensions']}
+    conf_general = {'General': ['WriteJson',
+                                'PublishWebAPI', 'PassExtensions']}
     conf_auth = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'CAFile',
                                     'VerifyServerCert', 'UsePlainHttpAuth',
                                     'HttpUser', 'HttpPass']}
@@ -20,23 +21,19 @@ class Global(object):
     conf_webapi = {'WebAPI': ['Token', 'Host']}
 
     # options specific for every connector
-    conf_topo_schemas = {'AvroSchemas': ['TopologyGroupOfEndpoints',
-                                         'TopologyGroupOfGroups']}
     conf_topo_output = {'Output': ['TopologyGroupOfEndpoints',
                                    'TopologyGroupOfGroups']}
-    conf_downtimes_schemas = {'AvroSchemas': ['Downtimes']}
     conf_downtimes_output = {'Output': ['Downtimes']}
-    conf_weights_schemas = {'AvroSchemas': ['Weights']}
     conf_weights_output = {'Output': ['Weights']}
     conf_metricprofile_output = {'Output': ['MetricProfile']}
-    conf_metricprofile_schemas = {'AvroSchemas': ['MetricProfile']}
 
     def __init__(self, caller, confpath=None, **kwargs):
         self.optional = dict()
 
         self.logger = Logger(str(self.__class__))
         self._filename = '/etc/argo-connectors/global.conf' if not confpath else confpath
-        self._checkpath = kwargs['checkpath'] if 'checkpath' in kwargs.keys() else False
+        self._checkpath = kwargs['checkpath'] if 'checkpath' in kwargs.keys(
+        ) else False
 
         self.optional.update(self._lowercase_dict(self.conf_auth))
         self.optional.update(self._lowercase_dict(self.conf_webapi))
@@ -48,36 +45,28 @@ class Global(object):
         self.secopts = {
             'topology-gocdb-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_topo_schemas,
-                                self.conf_topo_output),
+                             self.conf_topo_output),
             'topology-json-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_topo_schemas,
-                                self.conf_topo_output),
+                             self.conf_topo_output),
             'topology-provider-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_topo_schemas,
-                                self.conf_topo_output),
+                             self.conf_topo_output),
             'downtimes-csv-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_downtimes_schemas,
-                                self.conf_downtimes_output),
+                             self.conf_downtimes_output),
             'downtimes-gocdb-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_downtimes_schemas,
-                                self.conf_downtimes_output),
+                             self.conf_downtimes_output),
             'weights-vapor-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_weights_schemas,
-                                self.conf_weights_output),
+                             self.conf_weights_output),
             'topology-csv-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_topo_schemas,
-                                self.conf_topo_output),
+                             self.conf_topo_output),
             'metricprofile-webapi-connector.py':
             self._merge_dict(self.shared_secopts,
-                                self.conf_metricprofile_schemas,
-                                self.conf_metricprofile_output),
+                             self.conf_metricprofile_output),
             'service-types-gocdb-connector.py':
             self._merge_dict(self.shared_secopts),
             'service-types-csv-connector.py':
@@ -156,7 +145,7 @@ class Global(object):
         try:
             for sect, opts in self.caller_secopts.items():
                 if (sect.lower() not in lower_section and sect.lower() not in
-                    self.optional.keys()):
+                        self.optional.keys()):
                     raise configparser.NoSectionError(sect.lower())
 
                 for opt in opts:
@@ -168,8 +157,9 @@ class Global(object):
                                     raise OSError(errno.ENOENT, optget)
 
                                 if ('output' in section.lower() and 'DATE' not
-                                    in optget):
-                                    self.logger.error('No DATE placeholder in %s' % opt)
+                                        in optget):
+                                    self.logger.error(
+                                        'No DATE placeholder in %s' % opt)
                                     raise SystemExit(1)
 
                                 options.update({(sect + opt).lower(): optget})
@@ -177,7 +167,7 @@ class Global(object):
                             except configparser.NoOptionError as e:
                                 s = e.section.lower()
                                 if (s in self.optional.keys() and
-                                    e.option in self.optional[s]):
+                                        e.option in self.optional[s]):
                                     pass
                                 else:
                                     raise e
@@ -185,7 +175,8 @@ class Global(object):
             self.options = options
 
             if not self._one_active(self.conf_general):
-                self.logger.error('At least one of %s needs to be True' % (', '.join(self._concat_sectopt(self.conf_general))))
+                self.logger.error('At least one of %s needs to be True' % (
+                    ', '.join(self._concat_sectopt(self.conf_general))))
                 raise SystemExit(1)
 
         except configparser.NoOptionError as e:
@@ -227,7 +218,8 @@ class CustomerConf(object):
                       'BDIIQueryBase', 'BDIIQueryFilterSRM',
                       'BDIIQueryAttributesSRM', 'BDIIQueryFilterSEPATH',
                       'BDIIQueryAttributesSEPATH', 'WebAPIToken',
-                      'WeightsEmpty', 'DowntimesEmpty', 'ServiceTypesFeed']
+                      'WeightsEmpty', 'DowntimesEmpty', 'ServiceTypesFeed',
+                      'HonorNotificationFlag']
     tenantdir = ''
     deftopofeed = 'https://goc.egi.eu/gocdbpi/'
 
@@ -267,26 +259,39 @@ class CustomerConf(object):
                     topofetchtype = config.get(section, 'TopoFetchType')
                     topofeed = config.get(section, 'TopoFeed')
                     topotype = config.get(section, 'TopoType')
-                    topouidservendpoints = config.get(section, 'TopoUIDServiceEndpoints', fallback=False)
+                    topouidservendpoints = config.get(
+                        section, 'TopoUIDServiceEndpoints', fallback=False)
                     toposcope = config.get(section, 'TopoScope', fallback=None)
-                    topofeedsites = config.get(section, 'TopoFeedSites', fallback=None)
-                    topofeedendpoints = config.get(section, 'TopoFeedServiceEndpoints', fallback=None)
-                    topofeedendpointsextensions = config.get(section, 'TopoFeedServiceEndpointsExtensions', fallback=None)
-                    topofeedendpointsextras = config.get(section, 'TopoFeedServiceEndpointsExtras', fallback=None)
-                    topofeedservicegroups = config.get(section, 'TopoFeedServiceGroups', fallback=None)
-                    oidctoken = config.get(section, 'OIDCRefreshToken', fallback=None)
-                    oidctokenapi = config.get(section, 'OIDCTokenEndpoint' , fallback=None)
-                    oidcclientid = config.get(section, 'OIDCClientId' , fallback=None)
-                    topofeedpaging = config.get(section, 'TopoFeedPaging', fallback='GOCDB')
-                    servicetypesfeed = config.get(section, 'ServiceTypesFeed', fallback=None)
-                    downtimesfeed = config.get(section, 'DowntimesFeed', fallback=None)
+                    topofeedsites = config.get(
+                        section, 'TopoFeedSites', fallback=None)
+                    topofeedendpoints = config.get(
+                        section, 'TopoFeedServiceEndpoints', fallback=None)
+                    topofeedendpointsextensions = config.get(
+                        section, 'TopoFeedServiceEndpointsExtensions', fallback=None)
+                    topofeedservicegroups = config.get(
+                        section, 'TopoFeedServiceGroups', fallback=None)
+                    oidctoken = config.get(
+                        section, 'OIDCRefreshToken', fallback=None)
+                    oidctokenapi = config.get(
+                        section, 'OIDCTokenEndpoint', fallback=None)
+                    oidcclientid = config.get(
+                        section, 'OIDCClientId', fallback=None)
+                    topofeedpaging = config.get(
+                        section, 'TopoFeedPaging', fallback='GOCDB')
+                    servicetypesfeed = config.get(
+                        section, 'ServiceTypesFeed', fallback=None)
+                    downtimesfeed = config.get(
+                        section, 'DowntimesFeed', fallback=None)
+                    notifflag = config.getboolean(
+                        section, 'HonorNotificationFlag', fallback=None)
 
                     if not custdir.endswith('/'):
                         custdir = '{}/'.format(custdir)
 
                     for o in lower_custopt:
                         try:
-                            code = "optopts.update(%s = config.get(section, '%s'))" % (o, o)
+                            code = "optopts.update(%s = config.get(section, '%s'))" % (
+                                o, o)
                             exec(code)
                         except configparser.NoOptionError as e:
                             if e.option in lower_custopt:
@@ -305,7 +310,6 @@ class CustomerConf(object):
                                              'TopoFeed': topofeed,
                                              'TopoFeedEndpoints': topofeedendpoints,
                                              'TopoFeedEndpointsExtensions': topofeedendpointsextensions,
-                                             'TopoFeedEndpointsExtras': topofeedendpointsextras,
                                              'TopoFeedPaging': topofeedpaging,
                                              'TopoFeedServiceGroups': topofeedservicegroups,
                                              'TopoFeedSites': topofeedsites,
@@ -313,6 +317,7 @@ class CustomerConf(object):
                                              'TopoScope': toposcope,
                                              'TopoType': topotype,
                                              'TopoUIDServiceEnpoints': topouidservendpoints,
+                                             'HonorNotificationFlag': notifflag,
                                              'OIDCTokenEndpoint': oidctokenapi,
                                              'OIDCRefreshToken': oidctoken,
                                              'OIDCClientId': oidcclientid
@@ -336,7 +341,8 @@ class CustomerConf(object):
                 if self._custattrs:
                     for attr in self._custattrs:
                         if config.has_option(section, attr):
-                            self._cust[section].update({attr: config.get(section, attr)})
+                            self._cust[section].update(
+                                {attr: config.get(section, attr)})
 
         for cust in self._cust:
             for job in self._cust[cust]['Jobs']:
@@ -348,13 +354,16 @@ class CustomerConf(object):
                         self.logger.error(e.message)
                         raise SystemExit(1)
 
-                    self._jobs.update({job: {'Profiles': profiles, 'Dirname': dirname}})
+                    self._jobs.update(
+                        {job: {'Profiles': profiles, 'Dirname': dirname}})
                     if self._jobattrs:
                         for attr in self._jobattrs:
                             if config.has_option(job, attr):
-                                self._jobs[job].update({attr: config.get(job, attr)})
+                                self._jobs[job].update(
+                                    {attr: config.get(job, attr)})
                 else:
-                    self.logger.error("Could not find Jobs: %s for customer: %s" % (job, cust))
+                    self.logger.error(
+                        "Could not find Jobs: %s for customer: %s" % (job, cust))
                     raise SystemExit(1)
 
     def _sect_to_dir(self, sect):
@@ -448,15 +457,18 @@ class CustomerConf(object):
         for cust in self._cust.keys():
             for job in self.get_jobs(cust):
                 if root:
-                    dirs.append(root + '/' + self.get_custname(cust) + '/' + self.get_jobdir(job))
+                    dirs.append(root + '/' + self.get_custname(cust) +
+                                '/' + self.get_jobdir(job))
                 else:
-                    dirs.append(self.get_custdir(cust) + '/' + self.get_jobdir(job))
+                    dirs.append(self.get_custdir(cust) +
+                                '/' + self.get_jobdir(job))
             for d in dirs:
                 try:
                     os.makedirs(d)
                 except OSError as e:
                     if e.args[0] != errno.EEXIST:
-                        self.logger.error('%s %s %s' % (os.strerror(e.args[0]), e.args[1], d))
+                        self.logger.error('%s %s %s' % (
+                            os.strerror(e.args[0]), e.args[1], d))
                         raise SystemExit(1)
 
     def get_jobs(self, cust):
@@ -487,13 +499,15 @@ class CustomerConf(object):
             match = re.findall("(\w+)\s*:\s*(\(.*?\))", tagstr)
             if match is not None:
                 for m in match:
-                    tags.update({m[0]: [e.strip('() ') for e in m[1].split(',')]})
+                    tags.update({m[0]: [e.strip('() ')
+                                for e in m[1].split(',')]})
             match = re.findall('([\w]+)\s*:\s*([\w\.\-\_]+)', tagstr)
             if match is not None:
                 for m in match:
                     tags.update({m[0]: m[1]})
             else:
-                self.logger.error("Could not parse option %s: %s" % (option, tagstr))
+                self.logger.error(
+                    "Could not parse option %s: %s" % (option, tagstr))
                 return dict()
         return tags
 
@@ -505,6 +519,9 @@ class CustomerConf(object):
 
     def get_vo_ggtags(self, job):
         return self._get_tags(job, 'TopoSelectGroupOfGroups')
+
+    def get_notif_flag(self):
+        return self._get_cust_options('HonorNotificationFlag')
 
     def _get_feed(self, job, key):
         try:
@@ -546,9 +563,6 @@ class CustomerConf(object):
 
     def get_oidcclientid(self):
         return self._get_cust_options('OIDCClientId')
-
-    def get_topofeedendpointsextras(self):
-        return self._get_cust_options('TopoFeedEndpointsExtras')
 
     def get_topofeedservicegroups(self):
         return self._get_cust_options('TopoFeedServiceGroups')

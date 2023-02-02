@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <results>
-  <SERVICE_TYPE TYPE_ID="923G0" PRIMARY_KEY="923G0">
-    <SERVICE_TYPE_NAME>org.openstack.horizon</SERVICE_TYPE_NAME>
-    <SERVICE_TYPE_DESC>Horizon is the canonical implementation of OpenStack’s Dashboard, which provides a web based user interface to OpenStack services</SERVICE_TYPE_DESC>
-  </SERVICE_TYPE>
   <SERVICE_TYPE TYPE_ID="803G0" PRIMARY_KEY="803G0">
     <SERVICE_TYPE_NAME>org.openstack.keystone</SERVICE_TYPE_NAME>
     <SERVICE_TYPE_DESC>The primary endpoint for an OpenStack Cloud. Provides identity and an endpoint catalog for other OpenStack services</SERVICE_TYPE_DESC>
+  </SERVICE_TYPE>
+  <SERVICE_TYPE TYPE_ID="343G1" PRIMARY_KEY="343G0">
+    <SERVICE_TYPE_NAME>service.type.empty.desc</SERVICE_TYPE_NAME>
+    <SERVICE_TYPE_DESC></SERVICE_TYPE_DESC>
+  </SERVICE_TYPE>
+  <SERVICE_TYPE TYPE_ID="923G0" PRIMARY_KEY="923G0">
+    <SERVICE_TYPE_NAME>org.openstack.horizon</SERVICE_TYPE_NAME>
+    <SERVICE_TYPE_DESC>Horizon is the canonical implementation of OpenStack’s Dashboard, which provides a web based user interface to OpenStack services</SERVICE_TYPE_DESC>
   </SERVICE_TYPE>
   <SERVICE_TYPE TYPE_ID="343G0" PRIMARY_KEY="343G0">
     <SERVICE_TYPE_NAME>org.openstack.nova</SERVICE_TYPE_NAME>
     <SERVICE_TYPE_DESC>OpenStack Nova provides VM management services</SERVICE_TYPE_DESC>
   </SERVICE_TYPE>
   <SERVICE_TYPE TYPE_ID="343G1" PRIMARY_KEY="343G0">
-    <SERVICE_TYPE_NAME>service.type.empty.desc</SERVICE_TYPE_NAME>
+    <SERVICE_TYPE_NAME>SERVICE.TYPE.UPPERCASE</SERVICE_TYPE_NAME>
     <SERVICE_TYPE_DESC></SERVICE_TYPE_DESC>
   </SERVICE_TYPE>
 </results>

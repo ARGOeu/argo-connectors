@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+  <SITE ID="40" PRIMARY_KEY="73G0" NAME="TU-Kosice">
+    <PRIMARY_KEY>73G0</PRIMARY_KEY>
+    <SHORT_NAME>TU-Kosice</SHORT_NAME>
+    <OFFICIAL_NAME>Technical University of Kosice</OFFICIAL_NAME>
+    <SITE_DESCRIPTION>Technical University of Kosice grid site</SITE_DESCRIPTION>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Site&amp;id=40</GOCDB_PORTAL_URL>
+    <HOME_URL>http://www.tuke.sk</HOME_URL>
+    <CONTACT_EMAIL>contact@lists.tuke.sk</CONTACT_EMAIL>
+    <CONTACT_TEL>+421 55 602 5123</CONTACT_TEL>
+    <GIIS_URL>ldap://mon.grid.tuke.sk:2170/Mds-Vo-name=TU-Kosice,o=grid</GIIS_URL>
+    <COUNTRY_CODE>SK</COUNTRY_CODE>
+    <COUNTRY>Slovakia</COUNTRY>
+    <ROC>NGI_SK</ROC>
+    <PRODUCTION_INFRASTRUCTURE>Production</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Certified</CERTIFICATION_STATUS>
+    <TIMEZONE>Europe/Bratislava</TIMEZONE>
+    <LATITUDE>48.73</LATITUDE>
+    <LONGITUDE>21.24</LONGITUDE>
+    <CSIRT_EMAIL>contact@lists.tuke.sk</CSIRT_EMAIL>
+    <NOTIFICATIONS>TRUE</NOTIFICATIONS>
+    <DOMAIN>
+      <DOMAIN_NAME>tuke.sk</DOMAIN_NAME>
+    </DOMAIN>
+    <SITE_IP>0.0.0.0/255.255.255.255</SITE_IP>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SITE>
+  <SITE ID="41" PRIMARY_KEY="201G0" NAME="IISAS-Bratislava">
+    <PRIMARY_KEY>201G0</PRIMARY_KEY>
+    <SHORT_NAME>IISAS-Bratislava</SHORT_NAME>
+    <OFFICIAL_NAME>Institute of Informatics, Slovak Academy of Sciences, Bratislava</OFFICIAL_NAME>
+    <SITE_DESCRIPTION>IISAS Bratislava production EGI site</SITE_DESCRIPTION>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Site&amp;id=41</GOCDB_PORTAL_URL>
+    <CONTACT_EMAIL>contact@sav.sk</CONTACT_EMAIL>
+    <CONTACT_TEL>+421-2-5941-1289</CONTACT_TEL>
+    <GIIS_URL>ldap://sbdii.ui.savba.sk:2170/Mds-Vo-name=IISAS-Bratislava,o=grid</GIIS_URL>
+    <COUNTRY_CODE>SK</COUNTRY_CODE>
+    <COUNTRY>Slovakia</COUNTRY>
+    <ROC>NGI_SK</ROC>
+    <PRODUCTION_INFRASTRUCTURE>Production</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Certified</CERTIFICATION_STATUS>
+    <TIMEZONE>Europe/Bratislava</TIMEZONE>
+    <LATITUDE>48.17</LATITUDE>
+    <LONGITUDE>17.07</LONGITUDE>
+    <CSIRT_EMAIL>contact@sav.sk</CSIRT_EMAIL>
+    <NOTIFICATIONS>TRUE</NOTIFICATIONS>
+    <DOMAIN>
+      <DOMAIN_NAME>ui.savba.sk</DOMAIN_NAME>
+    </DOMAIN>
+    <SITE_IP>0.0.0.0/255.255.255.255</SITE_IP>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SITE>
+  <SITE ID="42" PRIMARY_KEY="8G0" NAME="prague_cesnet_lcg2_cert">
+    <PRIMARY_KEY>8G0</PRIMARY_KEY>
+    <SHORT_NAME>prague_cesnet_lcg2_cert</SHORT_NAME>
+    <OFFICIAL_NAME>Prague Cesnet</OFFICIAL_NAME>
+    <GOCDB_PORTAL_URL>https://goc.egi.eu/portal/index.php?Page_Type=Site&amp;id=42</GOCDB_PORTAL_URL>
+    <HOME_URL>www.cesnet.cz</HOME_URL>
+    <CONTACT_EMAIL>lcg-admin@fzu.cz</CONTACT_EMAIL>
+    <CONTACT_TEL>+420 2 6605 2145</CONTACT_TEL>
+    <GIIS_URL> ldap://skurut16.cesnet.cz:2170/mds-vo-name=prague_cesnet_lcg2_cert,o=grid</GIIS_URL>
+    <COUNTRY_CODE>CZ</COUNTRY_CODE>
+    <COUNTRY>Czech Republic</COUNTRY>
+    <ROC>NGI_CZ</ROC>
+    <PRODUCTION_INFRASTRUCTURE>Production</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Closed</CERTIFICATION_STATUS>
+    <TIMEZONE>Europe/Prague</TIMEZONE>
+    <CSIRT_EMAIL>contact@fzu.cz</CSIRT_EMAIL>
+    <NOTIFICATIONS>FALSE</NOTIFICATIONS>
+    <DOMAIN>
+      <DOMAIN_NAME>cesnet.cz</DOMAIN_NAME>
+    </DOMAIN>
+    <SITE_IP>0.0.0.0/255.255.255.255</SITE_IP>
+    <SCOPES>
+      <SCOPE>EGI</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SITE>
+</results>

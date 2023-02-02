@@ -9,7 +9,6 @@ import uvloop
 import asyncio
 
 from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
-from argo_connectors.io.avrowrite import AvroWriter
 from argo_connectors.io.statewrite import state_write
 from argo_connectors.log import Logger
 from argo_connectors.config import Global, CustomerConf

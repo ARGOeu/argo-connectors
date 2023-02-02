@@ -41,7 +41,7 @@ class TaskGocdbTopo(unittest.TestCase):
                                       '/api/sites-api', globopts, authopts,
                                       webapiopts, bdiiopts, confcust, 'TESTCUSTOMER',
                                       'https://topofeed.com', 'SITES', True,
-                                      True, True, True)
+                                      True, True, True, True)
         self.task.fetch_data = mock.AsyncMock()
         self.task.fetch_data.side_effect = ['data1', 'data2']
         # await self.task.run()

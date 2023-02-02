@@ -16,6 +16,8 @@ def date_check(arg):
 
 def construct_fqdn(http_endpoint):
     hostname = urlparse(http_endpoint).netloc
+    if type(hostname) == bytes:
+        hostname = hostname.decode('utf-8')
     if ':' in hostname:
         hostname = hostname.split(':')[0]
     return hostname

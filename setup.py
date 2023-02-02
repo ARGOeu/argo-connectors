@@ -48,5 +48,5 @@ setup(name=NAME,
                       'exec/topology-json-connector.py',
                       'exec/topology-provider-connector.py',
                       'exec/weights-vapor-connector.py',
-                  ]),
-                  ('/etc/argo-connectors/schemas', glob.glob('etc/schemas/*.avsc'))])
+                  ])
+                ])

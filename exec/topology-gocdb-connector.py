@@ -102,6 +102,7 @@ def main():
     topofeedendpoints = confcust.get_topofeedendpoints()
     topofeedservicegroups = confcust.get_topofeedservicegroups()
     topofeedsites = confcust.get_topofeedsites()
+    notiflag = confcust.get_notif_flag()
     global SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI, SITES_PI
     if toposcope:
         SERVICE_ENDPOINTS_PI = SERVICE_ENDPOINTS_PI + toposcope
@@ -129,7 +130,7 @@ def main():
             SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI, SITES_PI, globopts,
             auth_opts, webapi_opts, bdii_opts, confcust, custname, topofeed,
             topofetchtype, fixed_date, uidservendp, pass_extensions,
-            topofeedpaging
+            topofeedpaging, notiflag
         )
         loop.run_until_complete(task.run())
 

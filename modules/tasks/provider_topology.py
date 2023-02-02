@@ -9,8 +9,8 @@ from argo_connectors.io.webapi import WebAPI
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.parse.provider_contacts import ParseResourcesContacts
-from argo_connectors.parse.provider_topology import ParseTopo, ParseResourcesExtras, ParseExtensions, buildmap_id2groupname
-from argo_connectors.tasks.common import write_topo_avro as write_avro, write_state
+from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
+from argo_connectors.tasks.common import write_topo_json as write_json, write_state
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
 
 
@@ -30,10 +30,10 @@ class find_next_paging_cursor_count(ParseHelpers, Callable):
     def __call__(self):
         try:
             return self._parse()
-        except ConnectorParseError as exc:
+        except (ConnectorParseError, KeyError) as exc:
             self.logger.error(repr(exc))
             self.logger.error("Tried to parse (512 chars): %.512s" % ''.join(self.res.replace('\r\n', '').replace('\n', '')))
-            raise exc
+            raise ConnectorParseError(exc)
 
     def _parse(self):
         cursor, count = None, None
@@ -103,15 +103,21 @@ class TaskProviderTopology(object):
                         date=fixed_date)
         await webapi.send(data, topotype)
 
-    async def fetch_data(self, feed, paginated):
+    async def fetch_data(self, feed, access_token, paginated):
         fetched_data = list()
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
 
+        headers = {
+            "Accept": "application/json",
+            "Authorization": "Bearer {0}".format(access_token)
+        }
+
         try:
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
                                                             remote_topo.netloc,
-                                                            remote_topo.path))
+                                                            remote_topo.path),
+                                                            headers=headers)
 
         except ConnectorHttpError as exc:
             await session.close()
@@ -131,7 +137,8 @@ class TaskProviderTopology(object):
                                                                                 remote_topo.netloc,
                                                                                 remote_topo.path,
                                                                                 from_index,
-                                                                                num))
+                                                                                num),
+                                                                                headers=headers)
                     fetched_results = fetched_results + filter_out_results(res)
                     next_cursor = find_next_paging_cursor_count(self.logger, res)
                     total, from_index, to_index = next_cursor()
@@ -157,7 +164,8 @@ class TaskProviderTopology(object):
                                                                             remote_topo.netloc,
                                                                             remote_topo.path,
                                                                             from_index,
-                                                                            num))
+                                                                            num),
+                                                                            headers=headers)
                 await session.close()
                 return res
 
@@ -165,7 +173,7 @@ class TaskProviderTopology(object):
                 await session.close()
                 raise exc
 
-    async def token_and_data_fetch(self, oidcclientid, oidctoken, oidcapi, feedextras, paginated):
+    async def token_fetch(self, oidcclientid, oidctoken, oidcapi):
         token_endpoint = urlparse(oidcapi)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
 
@@ -181,83 +189,18 @@ class TaskProviderTopology(object):
                                         })
 
         except ConnectorHttpError as exc:
-            await session.close()
             raise exc
 
-        try:
-            access_token = json.loads(res).get('id_token', None)
-        except json.decoder.JSONDecodeError as exc:
-            msg = "Could not extract OIDC Access token: {}".format(repr(exc))
+        finally:
             await session.close()
+
+        try:
+            access_token = json.loads(res).get('access_token', None)
+        except (json.decoder.JSONDecodeError, TypeError) as exc:
+            msg = "Could not extract OIDC Access token: {}".format(repr(exc))
             raise ConnectorParseError(msg)
 
-        if access_token:
-            headers = {
-                "Accept": "application/json",
-                "Authorization": "Bearer {0}".format(access_token)
-            }
-            extras_feed = urlparse(feedextras)
-
-            try:
-                res = await session.http_get('{}://{}{}'.format(
-                    extras_feed.scheme,
-                    extras_feed.netloc,
-                    extras_feed.path),
-                    headers=headers
-                )
-            except ConnectorHttpError as exc:
-                await session.close()
-                raise exc
-
-            if paginated:
-                try:
-                    next_cursor = find_next_paging_cursor_count(self.logger, res)
-                    total, from_index, to_index = next_cursor()
-                    fetched_results = filter_out_results(res)
-                    num = to_index - from_index
-                    from_index = to_index
-
-                    while to_index != total:
-                        res = await session.http_get('{}://{}{}?from={}&quantity={}'.format(
-                            extras_feed.scheme,
-                            extras_feed.netloc,
-                            extras_feed.path,
-                            from_index, num),
-                            headers=headers
-                        )
-                        fetched_results = fetched_results + filter_out_results(res)
-                        next_cursor = find_next_paging_cursor_count(self.logger, res)
-                        total, from_index, to_index = next_cursor()
-                        num = to_index - from_index
-                        from_index = to_index
-
-                    await session.close()
-                    return dict(results=fetched_results)
-
-                except (ConnectorParseError, ConnectorHttpError) as exc:
-                    await session.close()
-                    raise exc
-
-            else:
-                try:
-                    next_cursor = find_next_paging_cursor_count(self.logger, res)
-                    total, from_index, to_index = next_cursor()
-                    num = total
-                    from_index = 0
-
-                    res = await session.http_get('{}://{}{}?from={}&quantity={}'.format(
-                        extras_feed.scheme,
-                        extras_feed.netloc,
-                        extras_feed.path,
-                        from_index, num),
-                        headers=headers
-                    )
-                    await session.close()
-                    return res
-
-                except ConnectorParseError as exc:
-                    await session.close()
-                    raise exc
+        return access_token
 
     async def run(self):
         topofeedextensions = self.confcust.get_topofeedendpointsextensions()
@@ -267,19 +210,18 @@ class TaskProviderTopology(object):
         oidctokenapi = self.confcust.get_oidctokenapi()
         oidcclientid = self.confcust.get_oidcclientid()
         topofeedresources = self.confcust.get_topofeedendpoints()
-        topofeedextras = self.confcust.get_topofeedendpointsextras()
+
+        if oidctoken and oidctokenapi:
+            access_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
+        else:
+            raise ConnectorError('OIDC token missing')
+
         coros = [
-            self.fetch_data(topofeedresources, self.topofeedpaging),
-            self.fetch_data(topofeedproviders, self.topofeedpaging),
+            self.fetch_data(topofeedresources, access_token, self.topofeedpaging),
+            self.fetch_data(topofeedproviders, access_token, self.topofeedpaging),
         ]
         if topofeedextensions:
-            coros.append(self.fetch_data(topofeedextensions, self.topofeedpaging))
-
-        if oidctoken and oidctokenapi and topofeedextras:
-            coros.append(self.token_and_data_fetch(oidcclientid, oidctoken,
-                                                   oidctokenapi,
-                                                   topofeedextras,
-                                                   self.topofeedpaging))
+            coros.append(self.fetch_data(topofeedextensions, access_token, self.topofeedpaging))
 
         # fetch topology data concurrently in coroutines
         fetched_data = await asyncio.gather(*coros, return_exceptions=True)
@@ -288,22 +230,12 @@ class TaskProviderTopology(object):
         if exc_raised:
             raise ConnectorError(repr(exc))
 
-        if topofeedextensions and topofeedextras:
-            fetched_resources, fetched_providers, fetched_extensions, fetched_extras = fetched_data
-        elif topofeedextensions:
+        if topofeedextensions:
             fetched_resources, fetched_providers, fetched_extensions = fetched_data
-        elif topofeedextras:
-            fetched_resources, fetched_providers, fetched_extras = fetched_data
         else:
             fetched_resources, fetched_providers = fetched_data
 
         if fetched_resources and fetched_providers:
-            if fetched_extras:
-                parsed_extras = ParseResourcesExtras(self.logger,
-                                                     fetched_extras,
-                                                     ['horizontalService'],
-                                                     self.logger.customer).data
-                fetched_resources = join_resources(fetched_resources, parsed_extras)
             group_groups, group_endpoints = self.parse_source_topo(fetched_resources, fetched_providers)
             endpoints_contacts = ParseResourcesContacts(self.logger, fetched_resources).get_contacts()
 
@@ -328,7 +260,7 @@ class TaskProviderTopology(object):
                         loop=self.loop
                 )
 
-            if eval(self.globopts['GeneralWriteAvro'.lower()]):
-                write_avro(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
             self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
