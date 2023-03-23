@@ -171,33 +171,32 @@ class TaskParseContacts(object):
 
 
 class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
-    def __init__(self, loop, logger, connector_name, SERVICE_ENDPOINTS_PI,
-                 SERVICE_GROUPS_PI, SITES_PI, globopts, auth_opts, webapi_opts,
-                 bdii_opts, confcust, custname, topofeed, topofetchtype,
-                 fixed_date, uidservendp, pass_extensions, topofeedpaging,
-                 notiflag):
-        TaskParseTopology.__init__(self, logger, custname, uidservendp,
-                                   pass_extensions, notiflag)
-        super(TaskGocdbTopology, self).__init__(logger)
+    def __init__(self, config, loop):
+        self.config = config
         self.loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.SERVICE_ENDPOINTS_PI = SERVICE_ENDPOINTS_PI
-        self.SERVICE_GROUPS_PI = SERVICE_GROUPS_PI
-        self.SITES_PI = SITES_PI
-        self.globopts = globopts
-        self.auth_opts = auth_opts
-        self.webapi_opts = webapi_opts
-        self.bdii_opts = bdii_opts
-        self.confcust = confcust
-        self.custname = custname
-        self.topofeed = topofeed
-        self.topofetchtype = topofetchtype
-        self.fixed_date = fixed_date
-        self.uidservendp = uidservendp
-        self.pass_extensions = pass_extensions
-        self.topofeedpaging = topofeedpaging
-        self.notification_flag = notiflag
+
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.fixed_date = self.config.get_fixed_date()
+        self.globopts, self.pass_extensions = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.topofeed = self.config.topofeed_data(self.confcust)
+        self.topofeedpaging = self.config.topofeedpaging_data(self.confcust)
+        self.uidservendp = self.config.uidservendp_data(self.confcust)
+        self.topofetchtype = self.config.topofetchtype_data(self.confcust)
+        self.custname = self.config.custname_data(self.confcust)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.bdii_opts = self.config.bdii_opts_data(self.confcust)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust)
+        self.notiflag = self.config.notiflag_data(self.confcust)
+        self.SERVICE_ENDPOINTS_PI, self.SERVICE_GROUPS_PI, self.SITES_PI = self.config.service_data(self.confcust)
+
+
+        TaskParseTopology.__init__(self, self.logger, self.custname, self.uidservendp, self.pass_extensions,
+                 self.notiflag)
+        super(TaskGocdbTopology, self).__init__(self.logger)
+
+
 
     async def fetch_ldap_data(self, host, port, base, filter, attributes):
         ldap_session = LDAPSessionWithRetry(self.logger, int(self.globopts['ConnectionRetry'.lower()]),

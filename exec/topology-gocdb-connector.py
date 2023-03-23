@@ -7,7 +7,7 @@ import sys
 import asyncio
 import uvloop
 
-from argo_connectors.config import Global, CustomerConf
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
 from argo_connectors.log import Logger
 from argo_connectors.tasks.common import write_state
@@ -57,67 +57,16 @@ def main():
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
                         help='write data for this date', type=str, required=False)
     args = parser.parse_args()
-    group_endpoints, group_groups = [], []
-    logger = Logger(os.path.basename(sys.argv[0]))
-
-    fixed_date = None
-    if args.date and date_check(args.date):
-        fixed_date = args.date
-
-    confpath = args.gloconf[0] if args.gloconf else None
-    cglob = Global(sys.argv[0], confpath)
-    globopts = cglob.parse()
-    pass_extensions = eval(globopts['GeneralPassExtensions'.lower()])
-
-    confpath = args.custconf[0] if args.custconf else None
-    confcust = CustomerConf(sys.argv[0], confpath)
-    confcust.parse()
-    confcust.make_dirstruct()
-    confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-    topofeed = confcust.get_topofeed()
-    topofeedpaging = confcust.get_topofeedpaging()
-    uidservendp = confcust.get_uidserviceendpoints()
-    topofetchtype = confcust.get_topofetchtype()
-    custname = confcust.get_custname()
-    logger.customer = custname
-
-    auth_custopts = confcust.get_authopts()
-    auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
-    auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
-    if not auth_complete:
-        logger.error('%s options incomplete, missing %s' %
-                     ('authentication', ' '.join(missing)))
-        raise SystemExit(1)
-
-    bdii_opts = get_bdii_opts(confcust)
-    webapi_opts = get_webapi_opts(cglob, confcust)
-
-    toposcope = confcust.get_toposcope()
-    topofeedendpoints = confcust.get_topofeedendpoints()
-    topofeedservicegroups = confcust.get_topofeedservicegroups()
-    topofeedsites = confcust.get_topofeedsites()
-    notiflag = confcust.get_notif_flag()
-
-    if toposcope:
-        SERVICE_ENDPOINTS_PI = topofeedendpoints + toposcope
-        SERVICE_GROUPS_PI = topofeedservicegroups + toposcope
-        SITES_PI = topofeedsites + toposcope
-
-    else:
-        SERVICE_ENDPOINTS_PI = topofeedendpoints
-        SERVICE_GROUPS_PI = topofeedservicegroups
-        SITES_PI = topofeedsites
 
     loop = uvloop.new_event_loop()
     asyncio.set_event_loop(loop)
+    
+    config = ConfigClass(args)
+    fixed_date = config.get_fixed_date()
 
     try:
-        task = TaskGocdbTopology(
-            loop, logger, sys.argv[0], SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI,
-            SITES_PI, globopts, auth_opts, webapi_opts, bdii_opts, confcust,
-            custname, topofeed, topofetchtype, fixed_date, uidservendp,
-            pass_extensions, topofeedpaging, notiflag
-        )
+        task = TaskGocdbTopology(config, loop)
+
         loop.run_until_complete(task.run())
 
     except (ConnectorError, ConnectorParseError, ConnectorHttpError, KeyboardInterrupt) as exc:
