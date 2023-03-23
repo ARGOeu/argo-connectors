@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
 from argo_connectors.parse.gocdb_contacts import ParseServiceEndpointContacts, ParseSitesWithContacts, ParseServiceGroupWithContacts
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
@@ -93,7 +94,7 @@ class find_next_paging_cursor_count(ParseHelpers, Callable):
         return count, cursor
 
 
-class TaskParseTopology(object):
+class TaskParseTopology():
     def __init__(self, logger, custname, uidservendp, pass_extensions,
                  notiflag):
         self.logger = logger
@@ -156,21 +157,54 @@ def parse_servicegroups(logger, custname, uidservendp, pass_extensions,
 class TaskParseContacts(object):
     def __init__(self, logger):
         self.logger = logger
+        #print("self.logger: ", self.logger)
 
     def parse_siteswith_contacts(self, res):
         contacts = ParseSitesWithContacts(self.logger, res)
+        #print("contacts1: ", contacts)
         return contacts.get_contacts()
 
     def parse_servicegroups_contacts(self, res):
         contacts = ParseServiceGroupWithContacts(self.logger, res)
+        #print("contacts2: ", contacts)
         return contacts.get_contacts()
 
     def parse_serviceendpoints_contacts(self, res):
         contacts = ParseServiceEndpointContacts(self.logger, res)
+
         return contacts.get_contacts()
 
 
 class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
+    # def __init__(self, loop, logger, connector_name, SERVICE_ENDPOINTS_PI,
+    #              SERVICE_GROUPS_PI, SITES_PI, globopts, auth_opts, webapi_opts,
+    #              bdii_opts, confcust, custname, topofeed, topofetchtype,
+    #              fixed_date, uidservendp, pass_extensions, topofeedpaging,
+    #              notiflag):
+    #     TaskParseTopology.__init__(self, logger, custname, uidservendp,
+    #                                pass_extensions, notiflag)
+    #     super(TaskGocdbTopology, self).__init__(logger)
+    #     self.loop = loop
+    #     self.logger = logger
+    #     self.connector_name = connector_name
+    #     self.SERVICE_ENDPOINTS_PI = SERVICE_ENDPOINTS_PI
+    #     self.SERVICE_GROUPS_PI = SERVICE_GROUPS_PI
+    #     self.SITES_PI = SITES_PI
+    #     self.globopts = globopts 
+    #     self.auth_opts = auth_opts
+    #     self.webapi_opts = webapi_opts
+    #     self.bdii_opts = bdii_opts 
+    #     self.confcust = confcust
+    #     self.custname = custname
+    #     self.topofeed = topofeed
+    #     self.topofetchtype = topofetchtype 
+    #     self.fixed_date = fixed_date
+    #     self.uidservendp = uidservendp
+    #     self.pass_extensions = pass_extensions
+    #     self.topofeedpaging = topofeedpaging 
+    #     self.notification_flag = notiflag 
+
+
     def __init__(self, config, loop):
         self.config = config
         self.loop = loop
@@ -178,7 +212,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
         self.fixed_date = self.config.get_fixed_date()
-        self.globopts, self.pass_extensions = self.config.get_globopts_n_pass_ext()
+        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
         self.confcust = self.config.get_confcust(self.globopts)
         self.topofeed = self.config.topofeed_data(self.confcust)
         self.topofeedpaging = self.config.topofeedpaging_data(self.confcust)

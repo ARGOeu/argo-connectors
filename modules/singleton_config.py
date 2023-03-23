@@ -70,7 +70,7 @@ class ConfigClass(metaclass=Singleton):
         cglob = Global(sys.argv[0], confpath)
         globopts = cglob.parse()
         pass_extensions = eval(globopts['GeneralPassExtensions'.lower()])
-        return globopts, pass_extensions
+        return globopts, pass_extensions, cglob
 
     def get_confcust(self, globopts): 
         confpath = self.args.custconf[0] if self.args.custconf else None
@@ -146,4 +146,10 @@ class ConfigClass(metaclass=Singleton):
 
         return SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI, SITES_PI
 
-        # return loop, logger, sys.argv[0], SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI, SITES_PI, globopts, auth_opts, webapi_opts, bdii_opts, confcust, custname, topofeed, topofetchtype, fixed_date, uidservendp, pass_extensions, topofeedpaging, notiflag
+    def vaporrpi_data(self, confcust):
+        VAPORPI = confcust.get_vaporpi()
+        return VAPORPI
+
+    def get_feeds(self, confcust, VAPORPI):
+        feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed=VAPORPI)
+        return feeds

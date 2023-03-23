@@ -9,17 +9,32 @@ from argo_connectors.tasks.common import write_weights_metricprofile_state as wr
 
 
 class TaskVaporWeights(object):
-    def __init__(self, loop, logger, connector_name, globopts, confcust, feed,
-                 jobcust, cglob, fixed_date):
+    # def __init__(self, loop, logger, connector_name, globopts, confcust, feed,
+    #             jobcust, cglob, fixed_date):
+        # self.event_loop = loop
+        # self.logger = logger
+        # self.connector_name = connector_name
+        # self.globopts = globopts
+        # self.confcust = confcust
+        # self.feed = feed
+        # self.jobcust = jobcust
+        # self.cglob = cglob
+        # self.fixed_date = fixed_date
+
+    ########################################################
+
+    def __init__(self, config, loop, jobcust):
+        self.config = config
         self.event_loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.confcust = confcust
-        self.feed = feed
         self.jobcust = jobcust
-        self.cglob = cglob
-        self.fixed_date = fixed_date
+
+        self.logger = config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.feed = self.config.vaporrpi_data(self.confcust)
+        self.fixed_date = self.config.get_fixed_date()
+
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)
