@@ -20,6 +20,7 @@ Requires: python3-requests
 Requires: python3-typing-extensions
 Requires: python3-uvloop
 Requires: python3-bonsai
+Requires: python3-unidecode
 Requires: python36-lxml
 
 BuildRequires: python3-devel python3-setuptools
