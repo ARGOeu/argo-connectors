@@ -82,12 +82,14 @@ class ConfigClass(metaclass=Singleton):
     
     def __init__(self, args):
         self.args = args
+        self._setup_loop()
 
-    @classmethod
-    def get_loop(cls):
-        if cls._loop is None:
-            cls._loop = uvloop.new_event_loop()
-        return cls._loop
+    def _setup_loop(self):
+        if self._loop is None:
+            self._loop = uvloop.new_event_loop()
+
+    def get_loop(self):
+        return self._loop
 
     def get_logger(self):
         logger = Logger(os.path.basename(sys.argv[0]))
@@ -136,8 +138,6 @@ class ConfigClass(metaclass=Singleton):
     def custname_data(self, confcust):
         custname = confcust.get_custname()
         return custname
-
-        # logger.customer = custname #TODO: VIDITI DAL MI TREBA KASNIJE
 
     def get_auth_opts(self, confcust, logger):
         confpath = self.args.gloconf[0] if self.args.gloconf else None
@@ -190,3 +190,16 @@ class ConfigClass(metaclass=Singleton):
     def get_feeds(self, confcust, VAPORPI):
         feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed=VAPORPI)
         return feeds
+
+    def get_feed(self, confcust):
+        feed = confcust.get_servicesfeed()
+        return feed
+
+    def get_initsync(self):
+        return self.args.initsync
+
+    def get_downtime_feed(self, confcust):
+        return confcust.get_downfeed()
+
+    def get_target_date(self):
+        return self.args.date[0]

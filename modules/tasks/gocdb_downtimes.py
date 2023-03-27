@@ -1,7 +1,9 @@
 import os
+import asyncio
 
 from urllib.parse import urlparse
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.gocdb_downtimes import ParseDowntimes
 from argo_connectors.io.webapi import WebAPI
@@ -9,23 +11,46 @@ from argo_connectors.tasks.common import write_state, write_downtimes_json as wr
 
 
 class TaskGocdbDowntimes(object):
-    def __init__(self, loop, logger, connector_name, globopts, auth_opts,
-                 webapi_opts, confcust, custname, feed, start, end,
-                 uidservtype, targetdate, timestamp):
-        self.event_loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.auth_opts = auth_opts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
+    # def __init__(self, loop, logger, connector_name, globopts, auth_opts,
+    #              webapi_opts, confcust, custname, feed, start, end,
+    #              uidservtype, targetdate, timestamp):
+    #     self.event_loop = loop
+    #     self.logger = logger
+    #     self.connector_name = connector_name
+    #     self.globopts = globopts
+    #     self.auth_opts = auth_opts
+    #     self.webapi_opts = webapi_opts
+    #     self.confcust = confcust
+    #     self.custname = custname
+    #     print("self.custname: ", self.custname)
+    #     self.feed = feed
+    #     self.start = start
+    #     self.end = end
+    #     self.uidservtype = uidservtype
+    #     self.targetdate = targetdate
+    #     self.timestamp = timestamp
+
+    ###################################################################################
+
+    def __init__(self, custname, start, end, timestamp):
         self.custname = custname
-        self.feed = feed
         self.start = start
         self.end = end
-        self.uidservtype = uidservtype
-        self.targetdate = targetdate
         self.timestamp = timestamp
+
+        self.config = ConfigClass()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)  
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust)
+        self.custname = self.config.custname_data(self.confcust)
+        self.feed = self.config.get_downtime_feed(self.confcust)
+        self.uidservtype = self.config.uidservendp_data(self.confcust)
+        self.targetdate = self.config.get_target_date()
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)

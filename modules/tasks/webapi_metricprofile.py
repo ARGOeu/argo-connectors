@@ -1,5 +1,7 @@
 import os
+import asyncio
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state, write_metricprofile_json as write_json
@@ -9,16 +11,34 @@ API_PATH = '/api/v2/metric_profiles'
 
 
 class TaskWebApiMetricProfile(object):
-    def __init__(self, loop, logger, connector_name, globopts, cglob, confcust,
-                 cust, fixed_date):
-        self.loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
+    # def __init__(self, loop, logger, connector_name, globopts, cglob, confcust,
+    #              cust, fixed_date):
+    #     self.loop = loop
+    #     self.logger = logger
+    #     self.connector_name = connector_name
+    #     self.globopts = globopts
+    #     self.cust = cust
+    #     self.confcust = confcust
+    #     self.cglob = cglob
+    #     self.fixed_date = fixed_date
+
+    ####################################################################################
+
+    def __init__(self, cust):
         self.cust = cust
-        self.confcust = confcust
-        self.cglob = cglob
-        self.fixed_date = fixed_date
+
+        self.config = ConfigClass()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, _, self.cglob = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.fixed_date = self.config.get_fixed_date()
+
+
+    ####################################################################################
+
 
     async def fetch_data(self, host, token):
         session = SessionWithRetry(self.logger,

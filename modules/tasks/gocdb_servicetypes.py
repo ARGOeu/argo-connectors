@@ -3,6 +3,7 @@ import asyncio
 
 from urllib.parse import urlparse
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.gocdb_servicetypes import ParseGocdbServiceTypes
 from argo_connectors.parse.webapi_servicetypes import ParseWebApiServiceTypes
@@ -20,19 +21,38 @@ def contains_exception(list):
 
 
 class TaskGocdbServiceTypes(object):
-    def __init__(self, loop, logger, connector_name, globopts, auth_opts,
-                 webapi_opts, confcust, custname, feed, timestamp, initsync):
-        self.logger = logger
-        self.loop = loop
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.auth_opts = auth_opts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
-        self.custname = custname
-        self.feed = feed
-        self.timestamp = timestamp
-        self.initsync = initsync
+    # def __init__(self, loop, logger, connector_name, globopts, auth_opts,
+    #              webapi_opts, confcust, custname, feed, timestamp, initsync):
+    #     self.logger = logger
+    #     self.loop = loop
+    #     self.connector_name = connector_name
+    #     self.globopts = globopts
+    #     self.auth_opts = auth_opts
+    #     self.webapi_opts = webapi_opts
+    #     self.confcust = confcust
+    #     self.custname = custname
+    #     self.feed = feed
+    #     self.timestamp = timestamp
+    #     self.initsync = initsync
+
+    ############################################################################
+
+    def __init__(self):
+        self.config = ConfigClass()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, _, _ = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust)
+        self.custname = self.config.custname_data(self.confcust)
+        self.feed = self.config.get_feed(self.confcust)
+        self.timestamp = self.config.get_fixed_date()
+        self.initsync = self.config.get_initsync()
+
+
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)

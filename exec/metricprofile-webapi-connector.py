@@ -7,6 +7,7 @@ import sys
 import asyncio
 import uvloop
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.config import CustomerConf, Global
 from argo_connectors.log import Logger
 from argo_connectors.tasks.webapi_metricprofile import TaskWebApiMetricProfile
@@ -26,30 +27,53 @@ def main():
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
 
-    logger = Logger(os.path.basename(sys.argv[0]))
+    # logger = Logger(os.path.basename(sys.argv[0]))
 
-    fixed_date = None
-    if args.date and date_check(args.date):
-        fixed_date = args.date
+    # fixed_date = None
+    # if args.date and date_check(args.date):
+    #     fixed_date = args.date
 
-    confpath = args.gloconf[0] if args.gloconf else None
-    cglob = Global(sys.argv[0], confpath)
-    globopts = cglob.parse()
+    # confpath = args.gloconf[0] if args.gloconf else None
+    # cglob = Global(sys.argv[0], confpath)
+    # globopts = cglob.parse()
 
-    confpath = args.custconf[0] if args.custconf else None
-    confcust = CustomerConf(sys.argv[0], confpath)
-    confcust.parse()
-    confcust.make_dirstruct()
-    confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
+    # confpath = args.custconf[0] if args.custconf else None
+    # confcust = CustomerConf(sys.argv[0], confpath)
+    # confcust.parse()
+    # confcust.make_dirstruct()
+    # confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
 
-    loop = uvloop.new_event_loop()
+    # loop = uvloop.new_event_loop()
+    # asyncio.set_event_loop(loop)
+
+
+    ############################################################################
+
+    config = ConfigClass(args)
+
+    globopts, _, _ = config.get_globopts_n_pass_ext()
+    confcust = config.get_confcust(globopts)
+    loop = config.get_loop()
     asyncio.set_event_loop(loop)
+
+    ############################################################################
+
+
 
     for cust in confcust.get_customers():
         try:
-            task = TaskWebApiMetricProfile(
-                loop, logger, sys.argv[0], globopts, cglob, confcust, cust, fixed_date
-            )
+            # task = TaskWebApiMetricProfile(
+            #     loop, logger, sys.argv[0], globopts, cglob, confcust, cust, fixed_date
+            # )
+
+            ###########################################################################
+
+            task = TaskWebApiMetricProfile(cust)
+
+            ###########################################################################
+            
+
+
             loop.run_until_complete(task.run())
 
         except (KeyboardInterrupt) as exc:

@@ -8,6 +8,7 @@ import sys
 import asyncio
 import uvloop
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
 from argo_connectors.tasks.gocdb_servicetypes import TaskGocdbServiceTypes
@@ -39,41 +40,63 @@ def main():
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
 
-    fixed_date = None
-    if args.date and date_check(args.date):
-        fixed_date = args.date
+    # fixed_date = None
+    # if args.date and date_check(args.date):
+    #     fixed_date = args.date
 
-    logger = Logger(os.path.basename(sys.argv[0]))
-    confpath = args.gloconf[0] if args.gloconf else None
-    cglob = Global(sys.argv[0], confpath)
-    globopts = cglob.parse()
+    # logger = Logger(os.path.basename(sys.argv[0]))
+    # confpath = args.gloconf[0] if args.gloconf else None
+    # cglob = Global(sys.argv[0], confpath)
+    # globopts = cglob.parse()
 
-    confpath = args.custconf[0] if args.custconf else None
-    confcust = CustomerConf(sys.argv[0], confpath)
-    confcust.parse()
-    confcust.make_dirstruct()
-    confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-    feed = confcust.get_servicesfeed()
-    custname = confcust.get_custname()
-    logger.customer = confcust.get_custname()
+    # confpath = args.custconf[0] if args.custconf else None
+    # confcust = CustomerConf(sys.argv[0], confpath)
+    # confcust.parse()
+    # confcust.make_dirstruct()
+    # confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
+    # feed = confcust.get_servicesfeed()
+    # custname = confcust.get_custname()
+    # logger.customer = confcust.get_custname()
 
-    auth_custopts = confcust.get_authopts()
-    auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
-    auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
-    if not auth_complete:
-        logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
-        raise SystemExit(1)
+    # auth_custopts = confcust.get_authopts()
+    # auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
+    # auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
+    # if not auth_complete:
+    #     logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
+    #     raise SystemExit(1)
 
-    webapi_opts = get_webapi_opts(cglob, confcust)
+    # webapi_opts = get_webapi_opts(cglob, confcust)
 
-    loop = uvloop.new_event_loop()
+    # loop = uvloop.new_event_loop()
+    # asyncio.set_event_loop(loop)
+
+    ##########################################################################
+
+    config = ConfigClass(args)
+
+    loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
+    fixed_date = config.get_fixed_date()
+    globopts, _, _ = config.get_globopts_n_pass_ext()
+    confcust = config.get_confcust(globopts)  
+
+    ##########################################################################
+
+
+
     try:
-        task = TaskGocdbServiceTypes(
-            loop, logger, sys.argv[0], globopts, auth_opts, webapi_opts,
-            confcust, custname, feed, fixed_date, args.initsync
-        )
+        # task = TaskGocdbServiceTypes(
+        #     loop, logger, sys.argv[0], globopts, auth_opts, webapi_opts,
+        #     confcust, custname, feed, fixed_date, args.initsync
+        # )
+
+    #####################################################################
+
+        task = TaskGocdbServiceTypes()
+
+    #####################################################################
+
         loop.run_until_complete(task.run())
 
     except (KeyboardInterrupt) as exc:

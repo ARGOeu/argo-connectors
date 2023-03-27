@@ -157,16 +157,13 @@ def parse_servicegroups(logger, custname, uidservendp, pass_extensions,
 class TaskParseContacts(object):
     def __init__(self, logger):
         self.logger = logger
-        #print("self.logger: ", self.logger)
 
     def parse_siteswith_contacts(self, res):
         contacts = ParseSitesWithContacts(self.logger, res)
-        #print("contacts1: ", contacts)
         return contacts.get_contacts()
 
     def parse_servicegroups_contacts(self, res):
         contacts = ParseServiceGroupWithContacts(self.logger, res)
-        #print("contacts2: ", contacts)
         return contacts.get_contacts()
 
     def parse_serviceendpoints_contacts(self, res):
@@ -205,21 +202,10 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
     #     self.notification_flag = notiflag 
 
 
-    def __init__(self):#, config):#, loop):
-        #self.config = config
-        #self.loop = loop
-
-        # self.loop = EventLoopSingleton.get_event_loop()
-        # asyncio.set_event_loop(self.loop)
-
+    def __init__(self):
         self.config = ConfigClass()
-        print("self.config: ", self.config)
-
-
         self.loop = self.config.get_loop()
         asyncio.set_event_loop(self.loop)
-
-
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
         self.fixed_date = self.config.get_fixed_date()
@@ -235,7 +221,6 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.webapi_opts = self.config.get_webapi_opts_data(self.confcust)
         self.notiflag = self.config.notiflag_data(self.confcust)
         self.SERVICE_ENDPOINTS_PI, self.SERVICE_GROUPS_PI, self.SITES_PI = self.config.service_data(self.confcust)
-
 
 
         TaskParseTopology.__init__(self, self.logger, self.custname, self.uidservendp, self.pass_extensions,

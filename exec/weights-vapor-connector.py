@@ -54,28 +54,18 @@ def main():
     #####################################################################
 
     config = ConfigClass(args)
-    print("config2:      ", config)
-
     loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
     logger = config.get_logger()
     fixed_date = config.get_fixed_date()
-    globopts, pass_extensions, cglob = config.get_globopts_n_pass_ext()
+    globopts, _, _ = config.get_globopts_n_pass_ext()
     confcust = config.get_confcust(globopts)
     VAPORPI = config.vaporrpi_data(confcust)
     feeds = config.get_feeds(confcust, VAPORPI)
 
 
     #####################################################################
-
-
-    # loop = uvloop.new_event_loop()
-    # asyncio.set_event_loop(loop)
-
-    # loop = EventLoopSingleton.get_event_loop()
-    # asyncio.set_event_loop(loop)
-
 
     for feed, jobcust in feeds.items():
         customers = set(map(lambda jc: confcust.get_custname(jc[1]), jobcust))

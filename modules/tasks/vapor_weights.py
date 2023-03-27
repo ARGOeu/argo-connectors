@@ -26,21 +26,11 @@ class TaskVaporWeights(object):
     ########################################################
 
     def __init__(self, jobcust):
-        #self.config = config
-
-        self.config = ConfigClass()
-        print("self.config2: ", self.config)
-        # self.event_loop = loop
         self.jobcust = jobcust
-
-        # self.loop = EventLoopSingleton.get_event_loop()
-        # asyncio.set_event_loop(self.loop)
-        
-        
-
+           
+        self.config = ConfigClass()
         self.loop = self.config.get_loop()
         asyncio.set_event_loop(self.loop)        
-
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
         self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
