@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 
-from argo_connectors.singleton_config import ConfigClass
+from argo_connectors.singleton_config import ConfigClass#, EventLoopSingleton
 from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
 from argo_connectors.parse.gocdb_contacts import ParseServiceEndpointContacts, ParseSitesWithContacts, ParseServiceGroupWithContacts
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
@@ -205,9 +205,20 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
     #     self.notification_flag = notiflag 
 
 
-    def __init__(self, config, loop):
-        self.config = config
-        self.loop = loop
+    def __init__(self):#, config):#, loop):
+        #self.config = config
+        #self.loop = loop
+
+        # self.loop = EventLoopSingleton.get_event_loop()
+        # asyncio.set_event_loop(self.loop)
+
+        self.config = ConfigClass()
+        print("self.config: ", self.config)
+
+
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)
+
 
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
@@ -224,6 +235,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.webapi_opts = self.config.get_webapi_opts_data(self.confcust)
         self.notiflag = self.config.notiflag_data(self.confcust)
         self.SERVICE_ENDPOINTS_PI, self.SERVICE_GROUPS_PI, self.SITES_PI = self.config.service_data(self.confcust)
+
 
 
         TaskParseTopology.__init__(self, self.logger, self.custname, self.uidservendp, self.pass_extensions,

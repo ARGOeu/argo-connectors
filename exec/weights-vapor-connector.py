@@ -7,13 +7,13 @@ import sys
 import asyncio
 import uvloop
 
-from argo_connectors.singleton_config import ConfigClass
+from argo_connectors.singleton_config import ConfigClass#, EventLoopSingleton
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.tasks.vapor_weights import TaskVaporWeights
 from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state
 from argo_connectors.log import Logger
 
-#from argo_connectors.config import Global, CustomerConf
+from argo_connectors.config import Global, CustomerConf
 from argo_connectors.utils import date_check
 
 globopts = {}
@@ -32,7 +32,7 @@ def main():
                         help='write data for this date', type=str, required=False)
     args = parser.parse_args()
 
-    logger = Logger(os.path.basename(sys.argv[0]))
+    # logger = Logger(os.path.basename(sys.argv[0]))
 
     # fixed_date = None
     # if args.date and date_check(args.date):
@@ -54,7 +54,12 @@ def main():
     #####################################################################
 
     config = ConfigClass(args)
+    print("config2:      ", config)
 
+    loop = config.get_loop()
+    asyncio.set_event_loop(loop)
+
+    logger = config.get_logger()
     fixed_date = config.get_fixed_date()
     globopts, pass_extensions, cglob = config.get_globopts_n_pass_ext()
     confcust = config.get_confcust(globopts)
@@ -65,8 +70,12 @@ def main():
     #####################################################################
 
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # loop = uvloop.new_event_loop()
+    # asyncio.set_event_loop(loop)
+
+    # loop = EventLoopSingleton.get_event_loop()
+    # asyncio.set_event_loop(loop)
+
 
     for feed, jobcust in feeds.items():
         customers = set(map(lambda jc: confcust.get_custname(jc[1]), jobcust))
@@ -83,7 +92,12 @@ def main():
             #                         confcust, VAPORPI, jobcust, cglob,
             #                         fixed_date)
             
-            task = TaskVaporWeights(config, loop, jobcust)
+            ###############################################################
+
+            task = TaskVaporWeights(jobcust)
+
+            ###############################################################
+
             loop.run_until_complete(task.run())
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:

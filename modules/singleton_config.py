@@ -38,6 +38,23 @@ def get_bdii_opts(confcust):
     else:
         return None
 
+
+# class Singleton(object):
+#     __instance = None
+
+#     def __init__(self):
+#         if Singleton.__instance != None:
+#             raise Exception("This class is a singleton!")
+#         else:
+#             Singleton.__instance = self
+
+#     @staticmethod
+#     def get_instance():
+#         if Singleton.__instance == None:
+#             Singleton()
+#         return Singleton.__instance
+
+
 class Singleton(type):
     _instances = {}
 
@@ -46,11 +63,31 @@ class Singleton(type):
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
-        
+
+
+# class EventLoopSingleton(metaclass=Singleton):
+#     _loop = None
+
+#     @classmethod
+#     def get_event_loop(cls):
+#         if cls._loop is None:
+#             cls._loop = uvloop.new_event_loop()
+#         return cls._loop
+
+
+
 
 class ConfigClass(metaclass=Singleton):
+    _loop = None
+    
     def __init__(self, args):
         self.args = args
+
+    @classmethod
+    def get_loop(cls):
+        if cls._loop is None:
+            cls._loop = uvloop.new_event_loop()
+        return cls._loop
 
     def get_logger(self):
         logger = Logger(os.path.basename(sys.argv[0]))
@@ -65,14 +102,14 @@ class ConfigClass(metaclass=Singleton):
             fixed_date = self.args.date
         return fixed_date
 
-    def get_globopts_n_pass_ext(self):        
+    def get_globopts_n_pass_ext(self):
         confpath = self.args.gloconf[0] if self.args.gloconf else None
         cglob = Global(sys.argv[0], confpath)
         globopts = cglob.parse()
         pass_extensions = eval(globopts['GeneralPassExtensions'.lower()])
         return globopts, pass_extensions, cglob
 
-    def get_confcust(self, globopts): 
+    def get_confcust(self, globopts):
         confpath = self.args.custconf[0] if self.args.custconf else None
         confcust = CustomerConf(sys.argv[0], confpath)
         confcust.parse()
@@ -100,7 +137,7 @@ class ConfigClass(metaclass=Singleton):
         custname = confcust.get_custname()
         return custname
 
-        #logger.customer = custname #TODO: VIDITI DAL MI TREBA KASNIJE 
+        # logger.customer = custname #TODO: VIDITI DAL MI TREBA KASNIJE
 
     def get_auth_opts(self, confcust, logger):
         confpath = self.args.gloconf[0] if self.args.gloconf else None

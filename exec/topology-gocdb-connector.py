@@ -7,7 +7,7 @@ import sys
 import asyncio
 import uvloop
 
-from argo_connectors.singleton_config import ConfigClass
+from argo_connectors.singleton_config import ConfigClass#, EventLoopSingleton
 from argo_connectors.config import Global, CustomerConf
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
 from argo_connectors.log import Logger
@@ -120,10 +120,18 @@ def main():
 
     ###############################################################################################
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # loop = uvloop.new_event_loop()
+    # asyncio.set_event_loop(loop)
+
+    # loop = EventLoopSingleton.get_event_loop()
+    # asyncio.set_event_loop(loop)
 
     config = ConfigClass(args)
+    print("config:      ", config)
+   
+    loop = config.get_loop()
+    asyncio.set_event_loop(loop)
+
     fixed_date = config.get_fixed_date()
 
     ###############################################################################################
@@ -139,7 +147,7 @@ def main():
         ###############################################################################################
 
 
-        task = TaskGocdbTopology(config, loop) #TODO: OVAKO TREBA IZGLEDATI
+        task = TaskGocdbTopology()#config)#, loop) #TODO: OVAKO TREBA IZGLEDATI
 
 
         ###############################################################################################
