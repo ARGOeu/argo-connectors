@@ -53,6 +53,8 @@ def main():
 
     globopts, _, _ = config.get_globopts_n_pass_ext()
     confcust = config.get_confcust(globopts)
+    logger = config.get_logger()
+
     loop = config.get_loop()
     asyncio.set_event_loop(loop)
 

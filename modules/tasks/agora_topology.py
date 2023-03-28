@@ -1,6 +1,7 @@
 import asyncio
 from urllib.parse import urlparse
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.agora_topology import ParseAgoraTopo
@@ -17,17 +18,34 @@ def contains_exception(list):
 
 
 class TaskProviderTopology(object):
-    def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, uidservendp, fetchtype, fixed_date):
-        self.loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
-        self.uidservendp = uidservendp
-        self.fixed_date = fixed_date
-        self.fetchtype = fetchtype
+    # def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
+    #              confcust, uidservendp, fetchtype, fixed_date):
+    #     self.loop = loop
+    #     self.logger = logger
+    #     self.connector_name = connector_name
+    #     self.globopts = globopts
+    #     self.webapi_opts = webapi_opts
+    #     self.confcust = confcust
+    #     self.uidservendp = uidservendp
+    #     self.fixed_date = fixed_date
+    #     self.fetchtype = fetchtype
+
+    #################################################################################
+
+    def __init__(self):
+        self.config = ConfigClass()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.custname = self.config.custname_data(self.confcust)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.uidservendp = self.config.uidservendp_data(self.confcust)
+        self.fixed_date = self.config.get_fixed_date()
+        self.fetchtype = self.config.topofetchtype_data(self.confcust)[0]
+
 
 
     def parse_source_topo(self, resources, providers):
@@ -51,7 +69,7 @@ class TaskProviderTopology(object):
 
     async def fetch_data(self, feed):
         remote_topo = urlparse(feed)
-        session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
+        session = SessionWithRetry(self.logger, self.custname, self.globopts, handle_session_close=True)
         headers = {
             "Accept": "application/json",
         }
@@ -106,4 +124,4 @@ class TaskProviderTopology(object):
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
-            self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))

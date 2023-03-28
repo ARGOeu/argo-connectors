@@ -10,16 +10,15 @@ from argo_connectors.utils import date_check
 
 
 logger = None
-globopts = {}
-custname = ''
-isok = True
+# globopts = {}
+# custname = ''
+# isok = True
 
 
 def get_webapi_opts(cglob, confcust, custname):
     webapi_custopts = confcust.get_webapiopts()
     webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
     webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
-    print("custname: ", custname)
     if not webapi_complete:
         logger.error('Customer:%s %s options incomplete, missing %s' %
                      (custname, 'webapi', ' '.join(missopt)))

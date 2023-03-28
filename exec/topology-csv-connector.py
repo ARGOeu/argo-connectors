@@ -81,12 +81,14 @@ def main():
 
 
     config = ConfigClass(args)
-   
+
+    globopts, _, _ = config.get_globopts_n_pass_ext()
+    confcust = config.get_confcust(globopts)
+    logger = config.get_logger()
     loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
     fixed_date = config.get_fixed_date()
-
 
 ####################################################################################
 

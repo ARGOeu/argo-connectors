@@ -7,6 +7,7 @@ import sys
 import uvloop
 import asyncio
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
 from argo_connectors.config import Global, CustomerConf
@@ -20,14 +21,14 @@ globopts = {}
 custname = ''
 
 
-def get_webapi_opts(cglob, confcust):
-    webapi_custopts = confcust.get_webapiopts()
-    webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
-    webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
-    if not webapi_complete:
-        logger.error('Customer:%s %s options incomplete, missing %s' % (logger.customer, 'webapi', ' '.join(missopt)))
-        raise SystemExit(1)
-    return webapi_opts
+# def get_webapi_opts(cglob, confcust):
+#     webapi_custopts = confcust.get_webapiopts()
+#     webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
+#     webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
+#     if not webapi_complete:
+#         logger.error('Customer:%s %s options incomplete, missing %s' % (logger.customer, 'webapi', ' '.join(missopt)))
+#         raise SystemExit(1)
+#     return webapi_opts
 
 
 def main():
@@ -39,35 +40,56 @@ def main():
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
 
-    logger = Logger(os.path.basename(sys.argv[0]))
-    fixed_date = None
-    if args.date and date_check(args.date):
-        fixed_date = args.date
+    # logger = Logger(os.path.basename(sys.argv[0]))
+    # fixed_date = None
+    # if args.date and date_check(args.date):
+    #     fixed_date = args.date
 
-    confpath = args.gloconf[0] if args.gloconf else None
-    cglob = Global(sys.argv[0], confpath)
-    globopts = cglob.parse()
+    # confpath = args.gloconf[0] if args.gloconf else None
+    # cglob = Global(sys.argv[0], confpath)
+    # globopts = cglob.parse()
     
-    confpath = args.custconf[0] if args.custconf else None
-    confcust = CustomerConf(sys.argv[0], confpath)
-    confcust.parse()
-    confcust.make_dirstruct()
-    confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-    global custname
-    custname = confcust.get_custname()
-    fetchtype = confcust.get_topofetchtype()[0]
-    webapi_opts = get_webapi_opts(cglob, confcust)
-    logger.customer = custname
-    uidservendp = confcust.get_uidserviceendpoints()
+    # confpath = args.custconf[0] if args.custconf else None
+    # confcust = CustomerConf(sys.argv[0], confpath)
+    # confcust.parse()
+    # confcust.make_dirstruct()
+    # confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
+    # global custname
+    # custname = confcust.get_custname()
+    # fetchtype = confcust.get_topofetchtype()[0]
+    # webapi_opts = get_webapi_opts(cglob, confcust)
+    # logger.customer = custname
+    # uidservendp = confcust.get_uidserviceendpoints()
 
-    loop = uvloop.new_event_loop()
+    # loop = uvloop.new_event_loop()
+    # asyncio.set_event_loop(loop)
+
+    ###############################################################################
+
+    config = ConfigClass(args)
+
+    globopts, _, _ = config.get_globopts_n_pass_ext()
+    confcust = config.get_confcust(globopts)
+    logger = config.get_logger()
+    fixed_date = config.get_fixed_date()
+    
+    loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
+    ###############################################################################
+
     try:
-        task = TaskProviderTopology(
-            loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
-            uidservendp, fetchtype, fixed_date
-        )
+        # task = TaskProviderTopology(
+        #     loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
+        #     uidservendp, fetchtype, fixed_date
+        # )
+
+        #################################################################################
+
+        task = TaskProviderTopology()
+
+        #################################################################################
+
         loop.run_until_complete(task.run())
 
     except (ConnectorError, ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:

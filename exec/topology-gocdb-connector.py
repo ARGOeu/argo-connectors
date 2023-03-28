@@ -15,10 +15,10 @@ from argo_connectors.tasks.common import write_state
 from argo_connectors.tasks.gocdb_topology import TaskGocdbTopology
 from argo_connectors.utils import date_check
 
-logger = None
-globopts = {}
-custname = ''
-isok = True
+# logger = None
+# globopts = {}
+# custname = ''
+# isok = True
 
 # GOCDB explicitly says &scope='' for all scopes
 
@@ -121,11 +121,15 @@ def main():
     ###############################################################################################
 
     config = ConfigClass(args)
-   
+
+    globopts, _, _ = config.get_globopts_n_pass_ext()
+    confcust = config.get_confcust(globopts)
+    logger = config.get_logger()
+    fixed_date = config.get_fixed_date()
+    
     loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
-    fixed_date = config.get_fixed_date()
 
     ###############################################################################################
 
@@ -161,29 +165,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-# print("loop: ", loop)           # <uvloop.Loop running=False closed=False debug=False>
-# print("logger: ", logger)       # <argo_connectors.log.Logger object at 0x7f66f53b8940>
-# print("sys.argv[0]: ", sys.argv[0]) # /usr/libexec/argo-connectors/topology-gocdb-connector.py
-# print("SERVICE_ENDPOINTS_PI: ", SERVICE_ENDPOINTS_PI) # https://goc-sdc.argo.grnet.gr//gocdbpi/private/?method=get_service_endpoint&scope=
-# print("SERVICE_GROUPS_PI: ", SERVICE_GROUPS_PI)       # https://goc-sdc.argo.grnet.gr//gocdbpi/private/?method=get_service_group&scope=
-# print("SITES_PI: ", SITES_PI)   # https://goc-sdc.argo.grnet.gr//gocdbpi/private/?method=get_site&scope=
-# print("globopts: ", globopts)   # {'generalwritejson': 'True', 'generalpublishwebapi': 'False', 'generalpassextensions': 'True', 'generalcompressjson': 'False', 'authenticationhostkey': '/etc/grid-security/hostkey.pem', 'authenticationhostcert': '/etc/grid-security/hostcert.pem', 'authenticationcapath': '/etc/grid-security/certificates', 'authenticationcafile': '/etc/pki/tls/certs/ca-bundle.crt', 'authenticationverifyservercert': 'True', 'authenticationuseplainhttpauth': 'False', 'authenticationhttpuser': 'xxxx', 'authenticationhttppass': 'xxxx', 'connectiontimeout': '180', 'connectionretry': '60', 'connectionsleepretry': '60', 'connectionretryrandom': 'True', 'connectionsleeprandomretrymax': '300', 'inputstatesavedir': '/var/lib/argo-connectors/states/', 'inputstatedays': '3', 'webapihost': 'api.devel.argo.grnet.gr', 'outputtopologygroupofendpoints': 'group_endpoints_DATE.json', 'outputtopologygroupofgroups': 'group_groups_DATE.json'}
-# print("auth_opts: ", auth_opts) # {'authenticationhostkey': '/etc/grid-security/hostkey.pem', 'authenticationhostcert': '/etc/grid-security/hostcert.pem', 'authenticationcapath': '/etc/grid-security/certificates', 'authenticationcafile': '/etc/pki/tls/certs/ca-bundle.crt', 'authenticationverifyservercert': 'True', 'authenticationuseplainhttpauth': 'False', 'authenticationhttpuser': 'xxxx', 'authenticationhttppass': 'xxxx'}
-# print("webapi_opts: ", webapi_opts) # {'webapitoken': '4473153af6c67a650a74d81d367e9e83f70e2b7b', 'webapihost': 'api.devel.argo.grnet.gr'}
-# print("bdii_opts: ", bdii_opts) # None
-# print("confcust: ", confcust)   # <argo_connectors.config.CustomerConf object at 0x7f66f53d32b0>
-# print("custname: ", custname)   # SDC
-# print("topofeed: ", topofeed)   # https://goc-sdc.argo.grnet.gr/
-# print("topofetchtype: ", topofetchtype) # ['sites', 'servicegroups']
-# print("fixed_date: ", fixed_date)       # None
-# print("uidservendp: ", uidservendp)     # False
-# print("pass_extensions: ", pass_extensions) # True
-# print("topofeedpaging: ", topofeedpaging)   # False
-# print("notiflag: ", notiflag)   # True

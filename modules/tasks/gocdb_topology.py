@@ -201,7 +201,8 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
     #     self.topofeedpaging = topofeedpaging 
     #     self.notification_flag = notiflag 
 
-
+    #################################################################################################
+    
     def __init__(self):
         self.config = ConfigClass()
         self.loop = self.config.get_loop()
