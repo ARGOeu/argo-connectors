@@ -218,7 +218,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.custname = self.config.custname_data(self.confcust)
         self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
         self.bdii_opts = self.config.bdii_opts_data(self.confcust)
-        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
         self.notiflag = self.config.notiflag_data(self.confcust)
         self.SERVICE_ENDPOINTS_PI, self.SERVICE_GROUPS_PI, self.SITES_PI = self.config.service_data(self.confcust)
 

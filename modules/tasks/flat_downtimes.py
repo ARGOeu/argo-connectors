@@ -1,7 +1,9 @@
 import os
+import asyncio
 
 from urllib.parse import urlparse
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
@@ -10,21 +12,41 @@ from argo_connectors.tasks.common import write_state, write_downtimes_json as wr
 
 
 class TaskCsvDowntimes(object):
-    def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, custname, feed, current_date,
-                 uidservtype, targetdate, timestamp):
-        self.event_loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
-        self.custname = custname
-        self.feed = feed
+    # def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
+    #              confcust, custname, feed, current_date,
+    #              uidservtype, targetdate, timestamp):
+    #     self.event_loop = loop +
+    #     self.logger = logger +
+    #     self.connector_name = connector_name +
+    #     self.globopts = globopts +
+    #     self.webapi_opts = webapi_opts +
+    #     self.confcust = confcust + 
+    #     self.custname = custname +
+    #     self.feed = feed +
+    #     self.current_date = current_date + 
+    #     self.uidservtype = uidservtype +
+    #     self.targetdate = targetdate
+    #     self.timestamp = timestamp +
+
+    ###########################################################################
+
+    def __init__(self, cust, current_date, timestamp):
+        self.custname = cust
         self.current_date = current_date
-        self.uidservtype = uidservtype
-        self.targetdate = targetdate
         self.timestamp = timestamp
+
+        self.config = ConfigClass()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)  
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.feed = self.config.get_downtime_feed(self.confcust)
+        self.uidservtype = self.config.uidservendp_data(self.confcust)
+        self.targetdate = self.config.get_targetdate()
+
 
     async def fetch_data(self):
         session = SessionWithRetry(self.logger,

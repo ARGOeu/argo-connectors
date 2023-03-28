@@ -7,6 +7,7 @@ import sys
 import asyncio
 import uvloop
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.config import Global, CustomerConf
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
@@ -22,14 +23,14 @@ custname = ''
 isok = True
 
 
-def get_webapi_opts(cglob, confcust):
-    webapi_custopts = confcust.get_webapiopts()
-    webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
-    webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
-    if not webapi_complete:
-        logger.error('Customer:%s %s options incomplete, missing %s' % (logger.customer, 'webapi', ' '.join(missopt)))
-        raise SystemExit(1)
-    return webapi_opts
+# def get_webapi_opts(cglob, confcust):
+#     webapi_custopts = confcust.get_webapiopts()
+#     webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
+#     webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
+#     if not webapi_complete:
+#         logger.error('Customer:%s %s options incomplete, missing %s' % (logger.customer, 'webapi', ' '.join(missopt)))
+#         raise SystemExit(1)
+#     return webapi_opts
 
 
 def main():
@@ -41,45 +42,69 @@ def main():
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
-    logger = Logger(os.path.basename(sys.argv[0]))
 
-    fixed_date = None
-    if args.date and date_check(args.date):
-        fixed_date = args.date
 
-    confpath = args.gloconf[0] if args.gloconf else None
-    cglob = Global(sys.argv[0], confpath)
-    globopts = cglob.parse()
+    # logger = Logger(os.path.basename(sys.argv[0]))
 
-    confpath = args.custconf[0] if args.custconf else None
-    confcust = CustomerConf(sys.argv[0], confpath)
-    confcust.parse()
-    confcust.make_dirstruct()
-    confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-    topofeed = confcust.get_topofeed()
-    uidservendp = confcust.get_uidserviceendpoints()
-    topofetchtype = confcust.get_topofetchtype()[0]
-    custname = confcust.get_custname()
-    logger.customer = custname
+    # fixed_date = None
+    # if args.date and date_check(args.date):
+    #     fixed_date = args.date
 
-    webapi_opts = get_webapi_opts(cglob, confcust)
+    # confpath = args.gloconf[0] if args.gloconf else None
+    # cglob = Global(sys.argv[0], confpath)
+    # globopts = cglob.parse()
 
-    auth_custopts = confcust.get_authopts()
-    auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
-    auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
-    if not auth_complete:
-        logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
-        raise SystemExit(1)
+    # confpath = args.custconf[0] if args.custconf else None
+    # confcust = CustomerConf(sys.argv[0], confpath)
+    # confcust.parse()
+    # confcust.make_dirstruct()
+    # confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
+    # topofeed = confcust.get_topofeed()
+    # uidservendp = confcust.get_uidserviceendpoints()
+    # topofetchtype = confcust.get_topofetchtype()[0]
+    # custname = confcust.get_custname()
+    # logger.customer = custname
 
-    loop = uvloop.new_event_loop()
+    # webapi_opts = get_webapi_opts(cglob, confcust)
+
+    # auth_custopts = confcust.get_authopts()
+    # auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
+    # auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
+    # if not auth_complete:
+    #     logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
+    #     raise SystemExit(1)
+
+    # loop = uvloop.new_event_loop()
+    # asyncio.set_event_loop(loop)
+
+####################################################################################
+
+
+    config = ConfigClass(args)
+   
+    loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
+    fixed_date = config.get_fixed_date()
+
+
+####################################################################################
+
+
     try:
-        task = TaskFlatTopology(
-            loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
-            custname, topofeed, topofetchtype, fixed_date, uidservendp,
-            is_csv=True
-        )
+        # task = TaskFlatTopology(
+        #     loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
+        #     custname, topofeed, topofetchtype, fixed_date, uidservendp,
+        #     is_csv=True
+        # )
+
+        ####################################################################################
+
+        task = TaskFlatTopology()
+
+        ####################################################################################
+
+
         loop.run_until_complete(task.run())
 
     except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:

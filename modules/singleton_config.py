@@ -15,13 +15,14 @@ custname = ''
 isok = True
 
 
-def get_webapi_opts(cglob, confcust):
+def get_webapi_opts(cglob, confcust, custname):
     webapi_custopts = confcust.get_webapiopts()
     webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
     webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
+    print("custname: ", custname)
     if not webapi_complete:
         logger.error('Customer:%s %s options incomplete, missing %s' %
-                     (logger.customer, 'webapi', ' '.join(missopt)))
+                     (custname, 'webapi', ' '.join(missopt)))
         raise SystemExit(1)
     return webapi_opts
 
@@ -39,22 +40,6 @@ def get_bdii_opts(confcust):
         return None
 
 
-# class Singleton(object):
-#     __instance = None
-
-#     def __init__(self):
-#         if Singleton.__instance != None:
-#             raise Exception("This class is a singleton!")
-#         else:
-#             Singleton.__instance = self
-
-#     @staticmethod
-#     def get_instance():
-#         if Singleton.__instance == None:
-#             Singleton()
-#         return Singleton.__instance
-
-
 class Singleton(type):
     _instances = {}
 
@@ -62,19 +47,6 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
-
-
-
-# class EventLoopSingleton(metaclass=Singleton):
-#     _loop = None
-
-#     @classmethod
-#     def get_event_loop(cls):
-#         if cls._loop is None:
-#             cls._loop = uvloop.new_event_loop()
-#         return cls._loop
-
-
 
 
 class ConfigClass(metaclass=Singleton):
@@ -155,10 +127,10 @@ class ConfigClass(metaclass=Singleton):
         bdii_opts = get_bdii_opts(confcust)
         return bdii_opts
 
-    def get_webapi_opts_data(self, confcust):
+    def get_webapi_opts_data(self, confcust, connector_name):
         confpath = self.args.gloconf[0] if self.args.gloconf else None
         cglob = Global(sys.argv[0], confpath)
-        webapi_opts = get_webapi_opts(cglob, confcust)
+        webapi_opts = get_webapi_opts(cglob, confcust, connector_name)
         return webapi_opts
 
     def notiflag_data(self, confcust):
@@ -202,4 +174,10 @@ class ConfigClass(metaclass=Singleton):
         return confcust.get_downfeed()
 
     def get_target_date(self):
+        return self.args.date[0]
+
+    def is_csv(self):
+        return True
+
+    def get_targetdate(self):
         return self.args.date[0]

@@ -22,28 +22,28 @@ isok = True
 
 # GOCDB explicitly says &scope='' for all scopes
 
-def get_webapi_opts(cglob, confcust):
-    webapi_custopts = confcust.get_webapiopts()
-    webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
-    webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
-    if not webapi_complete:
-        logger.error('Customer:%s %s options incomplete, missing %s' %
-                     (logger.customer, 'webapi', ' '.join(missopt)))
-        raise SystemExit(1)
-    return webapi_opts
+# def get_webapi_opts(cglob, confcust):
+#     webapi_custopts = confcust.get_webapiopts()
+#     webapi_opts = cglob.merge_opts(webapi_custopts, 'webapi')
+#     webapi_complete, missopt = cglob.is_complete(webapi_opts, 'webapi')
+#     if not webapi_complete:
+#         logger.error('Customer:%s %s options incomplete, missing %s' %
+#                      (logger.customer, 'webapi', ' '.join(missopt)))
+#         raise SystemExit(1)
+#     return webapi_opts
 
 
-def get_bdii_opts(confcust):
-    bdii_custopts = confcust._get_cust_options('BDIIOpts')
-    if bdii_custopts:
-        bdii_complete, missing = confcust.is_complete_bdii(bdii_custopts)
-        if not bdii_complete:
-            logger.error('%s options incomplete, missing %s' %
-                         ('bdii', ' '.join(missing)))
-            raise SystemExit(1)
-        return bdii_custopts
-    else:
-        return None
+# def get_bdii_opts(confcust):
+#     bdii_custopts = confcust._get_cust_options('BDIIOpts')
+#     if bdii_custopts:
+#         bdii_complete, missing = confcust.is_complete_bdii(bdii_custopts)
+#         if not bdii_complete:
+#             logger.error('%s options incomplete, missing %s' %
+#                          ('bdii', ' '.join(missing)))
+#             raise SystemExit(1)
+#         return bdii_custopts
+#     else:
+#         return None
 
 
 def main():
