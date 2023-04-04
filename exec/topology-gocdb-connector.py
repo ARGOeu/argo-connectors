@@ -47,17 +47,20 @@ from argo_connectors.utils import date_check
 
 
 def main():
-    global logger, globopts, confcust
-    parser = argparse.ArgumentParser(description="""Fetch entities (ServiceGroups, Sites, Endpoints)
-                                                    from GOCDB for every customer and job listed in customer.conf and write them
-                                                    in an appropriate place""")
-    parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf',
-                        help='path to customer configuration file', type=str, required=False)
-    parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf',
-                        help='path to global configuration file', type=str, required=False)
-    parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
-                        help='write data for this date', type=str, required=False)
-    args = parser.parse_args()
+    # #global logger, globopts, confcust
+    # parser = argparse.ArgumentParser(description="""Fetch entities (ServiceGroups, Sites, Endpoints)
+    #                                                 from GOCDB for every customer and job listed in customer.conf and write them
+    #                                                 in an appropriate place""")
+                                                
+    # parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf',
+    #                     help='path to customer configuration file', type=str, required=False)
+    # parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf',
+    #                     help='path to global configuration file', type=str, required=False)
+    # parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
+    #                     help='write data for this date', type=str, required=False)
+    #args = parser.parse_args()  # TODO: NASTAVITI DA PREBACIM ARGPARSE U METODE DA IH MOGU KORISTITI U SVAKOJ KLASI !!!!!!!!!!!!!
+
+    #print("args: ", args)
 
     # logger = Logger(os.path.basename(sys.argv[0]))
 
@@ -120,13 +123,14 @@ def main():
 
     ###############################################################################################
 
-    config = ConfigClass(args)
-
-    globopts, _, _ = config.get_globopts_n_pass_ext()
-    confcust = config.get_confcust(globopts)
+    config = ConfigClass()
+    args = config.parse_args()  # DODAN ARGS
+    cglob = config.get_cglob(args)
+    globopts = config.get_globopts(cglob)  #
+    confcust = config.get_confcust(globopts, args)  #
     logger = config.get_logger()
-    fixed_date = config.get_fixed_date()
-    
+    fixed_date = config.get_fixed_date(args)  #
+
     loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
@@ -144,7 +148,7 @@ def main():
         ###############################################################################################
 
 
-        task = TaskGocdbTopology() #TODO: OVAKO TREBA IZGLEDATI
+        task = TaskGocdbTopology()
 
 
         ###############################################################################################

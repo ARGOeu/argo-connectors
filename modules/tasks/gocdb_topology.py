@@ -207,19 +207,22 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.config = ConfigClass()
         self.loop = self.config.get_loop()
         asyncio.set_event_loop(self.loop)
+        self.args = self.config.parse_args()
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
-        self.fixed_date = self.config.get_fixed_date()
-        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
-        self.confcust = self.config.get_confcust(self.globopts)
+        self.fixed_date = self.config.get_fixed_date(self.args) 
+        self.cglob = self.config.get_cglob(self.args)
+        self.globopts= self.config.get_globopts(self.cglob)
+        self.pass_extensions = eval(self.globopts['GeneralPassExtensions'.lower()])
+        self.confcust = self.config.get_confcust(self.globopts, self.args)
         self.topofeed = self.config.topofeed_data(self.confcust)
         self.topofeedpaging = self.config.topofeedpaging_data(self.confcust)
         self.uidservendp = self.config.uidservendp_data(self.confcust)
         self.topofetchtype = self.config.topofetchtype_data(self.confcust)
         self.custname = self.config.custname_data(self.confcust)
-        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.cglob, self.logger)
         self.bdii_opts = self.config.bdii_opts_data(self.confcust)
-        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.cglob, self.custname)
         self.notiflag = self.config.notiflag_data(self.confcust)
         self.SERVICE_ENDPOINTS_PI, self.SERVICE_GROUPS_PI, self.SITES_PI = self.config.service_data(self.confcust)
 
@@ -438,8 +441,10 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
             )
 
         if eval(self.globopts['GeneralWriteJson'.lower()]):
-            write_json(self.logger, self.globopts, self.confcust,
-                       group_groups, group_endpoints, self.fixed_date)
+            #write_json(self.logger, self.globopts, self.confcust,
+            #           group_groups, group_endpoints, self.fixed_date)
+            write_json(group_groups, group_endpoints)
+
 
         self.logger.info('Customer:' + self.custname + ' Type:%s ' % (','.join(
             self.topofetchtype)) + 'Fetched Endpoints:%d' % (numge) + ' Groups:%d' % (numgg))

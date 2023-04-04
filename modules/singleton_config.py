@@ -1,8 +1,8 @@
 import os
 import sys
 
-import asyncio
 import uvloop
+import argparse
 
 from argo_connectors.log import Logger
 from argo_connectors.config import Global, CustomerConf
@@ -51,9 +51,19 @@ class Singleton(type):
 class ConfigClass(metaclass=Singleton):
     _loop = None
     
-    def __init__(self, args):
-        self.args = args
+    def __init__(self):
         self._setup_loop()
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf',
+                            help='path to customer configuration file', type=str, required=False)
+        parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf',
+                            help='path to global configuration file', type=str, required=False)
+        parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
+                            help='write data for this date', type=str, required=False)
+        args = parser.parse_args()
+        return args
 
     def _setup_loop(self):
         if self._loop is None:
@@ -69,21 +79,23 @@ class ConfigClass(metaclass=Singleton):
     def get_connector_name(self):
         return sys.argv[0]
 
-    def get_fixed_date(self):
+    def get_fixed_date(self, args):
         fixed_date = None
-        if self.args.date and date_check(self.args.date):
-            fixed_date = self.args.date
+        if args.date and date_check(args.date):
+            fixed_date = args.date
         return fixed_date
 
-    def get_globopts_n_pass_ext(self):
-        confpath = self.args.gloconf[0] if self.args.gloconf else None
+    def get_cglob(self, args):  #
+        confpath = args.gloconf[0] if args.gloconf else None
         cglob = Global(sys.argv[0], confpath)
-        globopts = cglob.parse()
-        pass_extensions = eval(globopts['GeneralPassExtensions'.lower()])
-        return globopts, pass_extensions, cglob
+        return cglob
 
-    def get_confcust(self, globopts):
-        confpath = self.args.custconf[0] if self.args.custconf else None
+    def get_globopts(self, cglob): #
+        globopts = cglob.parse()
+        return globopts
+    
+    def get_confcust(self, globopts, args):
+        confpath = args.custconf[0] if args.custconf else None
         confcust = CustomerConf(sys.argv[0], confpath)
         confcust.parse()
         confcust.make_dirstruct()
@@ -110,9 +122,7 @@ class ConfigClass(metaclass=Singleton):
         custname = confcust.get_custname()
         return custname
 
-    def get_auth_opts(self, confcust, logger):
-        confpath = self.args.gloconf[0] if self.args.gloconf else None
-        cglob = Global(sys.argv[0], confpath)
+    def get_auth_opts(self, confcust, cglob, logger): #
         auth_custopts = confcust.get_authopts()
         auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
         auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
@@ -126,9 +136,7 @@ class ConfigClass(metaclass=Singleton):
         bdii_opts = get_bdii_opts(confcust)
         return bdii_opts
 
-    def get_webapi_opts_data(self, confcust, connector_name):
-        confpath = self.args.gloconf[0] if self.args.gloconf else None
-        cglob = Global(sys.argv[0], confpath)
+    def get_webapi_opts_data(self, confcust, cglob, connector_name): #
         webapi_opts = get_webapi_opts(cglob, confcust, connector_name)
         return webapi_opts
 
@@ -166,17 +174,17 @@ class ConfigClass(metaclass=Singleton):
         feed = confcust.get_servicesfeed()
         return feed
 
-    def get_initsync(self):
-        return self.args.initsync
+    def get_initsync(self, args):
+        return args.initsync
 
     def get_downtime_feed(self, confcust):
         return confcust.get_downfeed()
 
-    def get_target_date(self):
-        return self.args.date[0]
+    def get_target_date(self, args):
+        return args.date[0]
 
     def is_csv(self):
         return True
 
-    def get_targetdate(self):
-        return self.args.date[0]
+    def get_targetdate(self, args):
+        return args.date[0]

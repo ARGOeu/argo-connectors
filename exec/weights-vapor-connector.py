@@ -30,7 +30,7 @@ def main():
                         help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
                         help='write data for this date', type=str, required=False)
-    args = parser.parse_args()
+    #args = parser.parse_args()
 
     # logger = Logger(os.path.basename(sys.argv[0]))
 
@@ -53,12 +53,14 @@ def main():
 
     #####################################################################
 
-    config = ConfigClass(args)
+    config = ConfigClass()#args)
     
+    args = config.parse_args()
     logger = config.get_logger()
-    fixed_date = config.get_fixed_date()
-    globopts, _, _ = config.get_globopts_n_pass_ext()
-    confcust = config.get_confcust(globopts)
+    fixed_date = config.get_fixed_date(args)
+    cglob = config.get_cglob(args)
+    globopts = config.get_globopts(cglob)
+    confcust = config.get_confcust(globopts, args)
     VAPORPI = config.vaporrpi_data(confcust)
     feeds = config.get_feeds(confcust, VAPORPI)
 
