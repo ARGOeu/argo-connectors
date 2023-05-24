@@ -6,6 +6,7 @@ from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.gocdb_downtimes import ParseDowntimes
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.tasks.common import write_state, write_downtimes_json as write_json
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError, ConnectorError
 
 
 class TaskGocdbDowntimes(object):
@@ -72,22 +73,27 @@ class TaskGocdbDowntimes(object):
     async def run(self):
         # we don't have multiple tenant definitions in one
         # customer file so we can safely assume one tenant/customer
-        write_empty = self.confcust.send_empty(self.connector_name)
-        if not write_empty:
-            res = await self.fetch_data()
-            dts = self.parse_source(res)
-        else:
-            dts = []
+        try:
+            write_empty = self.confcust.send_empty(self.connector_name)
+            if not write_empty:
+                res = await self.fetch_data()            
+                dts = self.parse_source(res)
+            else:
+                dts = []
 
-        await write_state(self.connector_name, self.globopts, self.confcust, self.timestamp, True)
+            await write_state(self.connector_name, self.globopts, self.confcust, self.timestamp, True)
 
-        if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-            await self.send_webapi(dts)
+            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                await self.send_webapi(dts)
 
-        if dts or write_empty:
-            cust = list(self.confcust.get_customers())[0]
-            self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
-                        (self.confcust.get_custname(cust), self.targetdate, len(dts)))
+            if dts or write_empty:
+                cust = list(self.confcust.get_customers())[0]
+                self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
+                            (self.confcust.get_custname(cust), self.targetdate, len(dts)))
 
-        if eval(self.globopts['GeneralWriteJson'.lower()]):
-            write_json(self.logger, self.globopts, self.confcust, dts, self.timestamp)
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts, self.confcust, dts, self.timestamp)
+
+        except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.confcust, self.timestamp, False)

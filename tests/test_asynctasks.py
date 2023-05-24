@@ -12,6 +12,9 @@ from argo_connectors.tasks.flat_servicetypes import TaskFlatServiceTypes
 from argo_connectors.tasks.gocdb_servicetypes import TaskGocdbServiceTypes
 from argo_connectors.tasks.gocdb_topology import TaskGocdbTopology, find_next_paging_cursor_count
 from argo_connectors.tasks.provider_topology import TaskProviderTopology
+from argo_connectors.tasks.gocdb_downtimes import TaskGocdbDowntimes
+from argo_connectors.tasks.vapor_weights import TaskVaporWeights
+
 from argo_connectors.parse.base import ParseHelpers
 
 
@@ -349,7 +352,7 @@ class ServiceTypesGocdb(unittest.TestCase):
         self.assertFalse(self.services_gocdb.send_webapi.called)
 
 
-class ServiceTypesFlat(unittest.TestCase):
+class ServiceTypesFlat(unittest.TestCase): 
     def setUp(self):
         logger = mock.Mock()
         logger.customer = CUSTOMER_NAME
@@ -460,7 +463,7 @@ class DowntimesCsv(unittest.TestCase):
             timestamp
         )
         self.maxDiff = None
-
+        
     @mock.patch('argo_connectors.tasks.flat_downtimes.write_json')
     @mock.patch('argo_connectors.tasks.flat_downtimes.write_state')
     @async_test
@@ -504,3 +507,86 @@ class DowntimesCsv(unittest.TestCase):
         self.assertTrue(self.downtimes_flat.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.downtimes_flat.send_webapi.called)
+
+class GocdbDowntimes(unittest.TestCase):
+    def setUp(self):
+        self.loop = asyncio.get_event_loop()
+        logger = mock.Mock()
+        logger.customer = CUSTOMER_NAME
+        mocked_globopts = dict(generalpublishwebapi='True',
+                        generalwritejson='True',
+                        outputdowntimes='downtimes_DATE.json',
+                        inputstatesavedir='/some/mock/path/',
+                        inputstatedays=3
+                        )
+        globopts = mocked_globopts
+        authopts = mock.Mock()
+        webapiopts = mock.Mock()
+        confcust = mock.Mock()
+        confcust.send_empty.return_value = False
+        confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
+        confcust.get_fullstatedir.return_value = '/some/mock/path/CUSTOMERFOO'
+        custname = CUSTOMER_NAME
+        downtime_feed = 'https://gocdb-downtimes.com/api/fetch'
+        now = datetime.datetime.now().strftime('%Y-%m-%d')
+        start = datetime.datetime.strptime(now, '%Y-%m-%d')
+        end = datetime.datetime.strptime(now, '%Y-%m-%d')
+        timestamp = start.strftime('%Y_%m_%d')
+        start = start.replace(hour=0, minute=0, second=0)
+        end = end.replace(hour=23, minute=59, second=59)
+
+        self.gocdb_downtimes = TaskGocdbDowntimes(self.loop, logger, 'test_asynctasks_gocdbdowntimes', globopts,
+                                  authopts, webapiopts, confcust,
+                                  custname, downtime_feed, start,
+                                  end, False, timestamp, timestamp)
+        
+
+        
+    @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_json')
+    @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_state')
+    @async_test
+    async def test_StepsSuccessRun(self, mock_writestate, mock_writejson):
+        self.gocdb_downtimes.fetch_data = mock.AsyncMock()
+        self.gocdb_downtimes.fetch_data.side_effect = ['downtimes-ok']
+        self.gocdb_downtimes.send_webapi = mock.AsyncMock()
+        self.gocdb_downtimes.parse_source = mock.MagicMock()
+        await self.gocdb_downtimes.run()
+        self.assertTrue(self.gocdb_downtimes.fetch_data.called)
+        self.assertTrue(self.gocdb_downtimes.parse_source.called)
+        self.gocdb_downtimes.parse_source.assert_called_with('downtimes-ok')
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_gocdbdowntimes')
+        self.assertEqual(
+            mock_writestate.call_args[0][3], self.gocdb_downtimes.timestamp)
+        self.assertTrue(mock_writestate.call_args[0][4])
+        self.assertTrue(mock_writejson.called, True)
+        self.assertEqual(
+            mock_writejson.call_args[0][4], datetime.datetime.now().strftime('%Y_%m_%d'))
+        self.assertTrue(self.gocdb_downtimes.send_webapi.called)
+        self.assertTrue(self.gocdb_downtimes.logger.info.called)
+        
+        
+    @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_state')
+    @async_test
+    async def test_StepsFailedRun(self, mock_writestate):
+        self.gocdb_downtimes.fetch_data = mock.AsyncMock()
+        self.gocdb_downtimes.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.gocdb_downtimes.send_webapi = mock.AsyncMock()
+        self.gocdb_downtimes.parse_source = mock.MagicMock()
+        await self.gocdb_downtimes.run()
+        self.assertTrue(self.gocdb_downtimes.fetch_data.called)
+        self.assertFalse(self.gocdb_downtimes.parse_source.called)
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_gocdbdowntimes')
+        self.assertEqual(
+            mock_writestate.call_args[0][3], self.gocdb_downtimes.timestamp)
+        self.assertFalse(mock_writestate.call_args[0][4])
+        self.assertTrue(self.gocdb_downtimes.logger.error.called)
+        self.assertTrue(self.gocdb_downtimes.logger.error.call_args[0][0], repr(
+            ConnectorHttpError('fetch_data failed')))
+        self.assertFalse(self.gocdb_downtimes.send_webapi.called)
+        
+        
+
+
+        
