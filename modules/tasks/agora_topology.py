@@ -5,7 +5,7 @@ from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.agora_topology import ParseAgoraTopo
 from argo_connectors.tasks.common import write_topo_json as write_json, write_state
-from argo_connectors.exceptions import ConnectorError, ConnectorHttpError
+from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
 
 
 def contains_exception(list):
@@ -19,7 +19,7 @@ def contains_exception(list):
 class TaskProviderTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, uidservendp, fetchtype, fixed_date):
-        self.loop = loop
+        self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
         self.globopts = globopts
@@ -71,39 +71,43 @@ class TaskProviderTopology(object):
 
 
     async def run(self):
-        topofeedproviders = self.confcust.get_topofeedservicegroups()
-        topofeedresources = self.confcust.get_topofeedendpoints()
+        try:
+            topofeedproviders = self.confcust.get_topofeedservicegroups()
+            topofeedresources = self.confcust.get_topofeedendpoints()
 
-        coros = [
-            self.fetch_data(topofeedresources),
-            self.fetch_data(topofeedproviders),
-        ]
+            coros = [
+                self.fetch_data(topofeedresources),
+                self.fetch_data(topofeedproviders),
+            ]
 
-        # fetch topology data concurrently in coroutines
-        fetched_data = await asyncio.gather(*coros, return_exceptions=True)
+            # fetch topology data concurrently in coroutines
+            fetched_data = await asyncio.gather(*coros, return_exceptions=True)
 
-        exc_raised, exc = contains_exception(fetched_data)
-        if exc_raised:
-            raise ConnectorError(repr(exc))
+            exc_raised, exc = contains_exception(fetched_data)            
+            if exc_raised:
+                raise ConnectorError(repr(exc))
 
-        fetched_resources, fetched_providers = fetched_data
-        if fetched_resources and fetched_providers:
-            group_providers, group_resources = self.parse_source_topo(fetched_resources, fetched_providers)
+            fetched_resources, fetched_providers = fetched_data
+            if fetched_resources and fetched_providers:
+                group_providers, group_resources = self.parse_source_topo(fetched_resources, fetched_providers)
 
-            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
+                await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
-            numgg = len(group_providers)
-            numge = len(group_resources)
+                numgg = len(group_providers)
+                numge = len(group_resources)
 
-            # send concurrently to WEB-API in coroutines
-            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-                await asyncio.gather(
-                        self.send_webapi(self.webapi_opts, group_resources, 'endpoints', self.fixed_date),
-                        self.send_webapi(self.webapi_opts, group_providers, 'groups', self.fixed_date),
-                        loop=self.loop
-                )
+                # send concurrently to WEB-API in coroutines
+                if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                    await asyncio.gather(
+                            self.send_webapi(self.webapi_opts, group_resources, 'endpoints', self.fixed_date),
+                            self.send_webapi(self.webapi_opts, group_providers, 'groups', self.fixed_date),
+                    )
 
-            if eval(self.globopts['GeneralWriteJson'.lower()]):
-                write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
+                if eval(self.globopts['GeneralWriteJson'.lower()]):
+                    write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
-            self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+                self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            
+        except (ConnectorError, ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, False)
