@@ -16,7 +16,7 @@ from argo_connectors.tasks.gocdb_downtimes import TaskGocdbDowntimes
 from argo_connectors.tasks.vapor_weights import TaskVaporWeights
 from argo_connectors.tasks.webapi_metricprofile import TaskWebApiMetricProfile
 from argo_connectors.tasks.flat_topology import TaskFlatTopology
-from argo_connectors.tasks.agora_topology import TaskProviderTopology
+from argo_connectors.tasks.agora_topology import AgoraProviderTopology
 
 from argo_connectors.parse.base import ParseHelpers
 
@@ -355,8 +355,7 @@ class ServiceTypesGocdb(unittest.TestCase):
         self.assertFalse(self.services_gocdb.send_webapi.called)
 
 
-
-class ServiceTypesFlat(unittest.TestCase): # pogledati ovo 
+class ServiceTypesFlat(unittest.TestCase):
     def setUp(self):
         logger = mock.Mock()
         logger.customer = CUSTOMER_NAME
@@ -513,7 +512,6 @@ class DowntimesCsv(unittest.TestCase):
         self.assertFalse(self.downtimes_flat.send_webapi.called)
 
 
-
 class GocdbDowntimes(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
@@ -589,7 +587,6 @@ class GocdbDowntimes(unittest.TestCase):
         self.assertTrue(self.gocdb_downtimes.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.gocdb_downtimes.send_webapi.called)
-        
         
 
 class WaporWeights(unittest.TestCase):
@@ -681,7 +678,6 @@ class MetricprofileWebapi(unittest.TestCase):
                 self.loop, logger, 'test_asynctasks_metricprofile', globopts, cglob, confcust, cust='CUSTOMER_FOO', fixed_date=None
             )
 
-
     @mock.patch('argo_connectors.tasks.webapi_metricprofile.write_json')
     @mock.patch('argo_connectors.tasks.webapi_metricprofile.write_state')
     @async_test
@@ -698,8 +694,6 @@ class MetricprofileWebapi(unittest.TestCase):
         self.assertTrue(mock_writestate.call_args[0][4])
         self.assertTrue(mock_writejson.called, True)
         self.assertTrue(self.webapi_metricprofile.logger.info.called)
-
-
 
     @mock.patch('argo_connectors.tasks.webapi_metricprofile.write_state')
     @async_test
@@ -744,7 +738,6 @@ class TopologyCsv(unittest.TestCase):
                  confcust, custname, topofeed, fetchtype, fixed_date=None,
                  uidservendp=True, is_csv=True)
 
-
     @mock.patch('argo_connectors.tasks.flat_topology.write_json')
     @mock.patch('argo_connectors.tasks.flat_topology.write_state')
     @async_test
@@ -763,7 +756,6 @@ class TopologyCsv(unittest.TestCase):
         self.assertTrue(mock_writejson.called, True)
         self.assertTrue(self.flat_topology.send_webapi.called)
         self.assertTrue(self.flat_topology.logger.info.called)
-
 
     @mock.patch('argo_connectors.tasks.flat_topology.write_state')
     @async_test
@@ -799,15 +791,14 @@ class TopologyAgora(unittest.TestCase):
         confcust = mock.Mock()
         confcust.send_empty.return_value = False
         confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
-        confcust.get_topofeedservicegroups.return_value = 'https://foo.mock.eu/api/providers/'
-        confcust.get_topofeedendpoints.return_value = 'https://foo.mock.eu/api/resources/'
+        confcust.get_topofeedservicegroups.return_value = 'https://agora.ni4os.eu/api/v2/public/providers/'
+        confcust.get_topofeedendpoints.return_value = 'https://agora.ni4os.eu/api/v2/public/resources/'
         
         uidservendp = False
         fetchtype='foo-servicegroups'
 
-        self.agora_topology = TaskProviderTopology(self.loop, logger, 'test_asynctasks_agora_topology', globopts, webapi_opts,
+        self.agora_topology = AgoraProviderTopology(self.loop, logger, 'test_asynctasks_agora_topology', globopts, webapi_opts,
                     confcust, uidservendp, fetchtype, fixed_date=None)
-    
     
     @mock.patch('argo_connectors.tasks.agora_topology.contains_exception')
     @mock.patch('argo_connectors.tasks.agora_topology.write_json')
@@ -818,7 +809,7 @@ class TopologyAgora(unittest.TestCase):
         self.agora_topology.fetch_data.side_effect = ['weights-ok']
         mock_contains_exception.return_value = False, None 
         self.agora_topology.parse_source_topo = mock.MagicMock()
-        self.agora_topology.parse_source_topo.return_value = [{'group': 'Foo_Providers', 'type': 'FOO_PROVIDERS', 'subgroup': 'foo_subgroup', 'tags': {'foo_id': '1111111'}}], [{'group': 'foo_group', 'type': 'FOO_GROUPS', 'service': 'foo.service.entry', 'hostname': 'foo_hostname', 'tags': {'hostname': 'foo_hostname_2'}}]
+        self.agora_topology.parse_source_topo.return_value = [{'group': 'NI4OS Providers', 'type': 'PROVIDERS', 'subgroup': 'UoB_IBISS', 'tags': {'info_ext_catalog_id': '02dc5b9a-99ba-4924-ab80-aa51b9c86b1e'}}], [{'group': 'UoB-RCUB', 'type': 'SERVICEGROUPS', 'service': 'catalog.service.entry', 'hostname': 'agora.ni4os.eu_uob_nardus', 'tags': {'hostname': 'agora.ni4os.eu'}}]
         self.agora_topology.send_webapi = mock.AsyncMock()
         await self.agora_topology.run()
         self.assertTrue(self.agora_topology.fetch_data.called)

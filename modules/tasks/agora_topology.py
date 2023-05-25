@@ -16,7 +16,7 @@ def contains_exception(list):
     return (False, None)
 
 
-class TaskProviderTopology(object):
+class AgoraProviderTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, uidservendp, fetchtype, fixed_date):
         self.event_loop = loop
