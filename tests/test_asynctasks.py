@@ -15,6 +15,7 @@ from argo_connectors.tasks.provider_topology import TaskProviderTopology
 from argo_connectors.tasks.gocdb_downtimes import TaskGocdbDowntimes
 from argo_connectors.tasks.vapor_weights import TaskVaporWeights
 from argo_connectors.tasks.webapi_metricprofile import TaskWebApiMetricProfile
+from argo_connectors.tasks.flat_topology import TaskFlatTopology
 
 from argo_connectors.parse.base import ParseHelpers
 
@@ -353,6 +354,7 @@ class ServiceTypesGocdb(unittest.TestCase):
         self.assertFalse(self.services_gocdb.send_webapi.called)
 
 
+##########################################################################################
 
 class ServiceTypesFlat(unittest.TestCase): # pogledati ovo 
     def setUp(self):
@@ -429,6 +431,7 @@ class ServiceTypesFlat(unittest.TestCase): # pogledati ovo
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.services_flat.send_webapi.called)
 
+##########################################################################################
 
 class DowntimesCsv(unittest.TestCase):
     def setUp(self):
@@ -510,6 +513,10 @@ class DowntimesCsv(unittest.TestCase):
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.downtimes_flat.send_webapi.called)
 
+
+
+########################################################################################################
+
 class GocdbDowntimes(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
@@ -587,6 +594,9 @@ class GocdbDowntimes(unittest.TestCase):
         self.assertFalse(self.gocdb_downtimes.send_webapi.called)
         
         
+########################################################################################################
+
+
 class WaporWeights(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
@@ -651,6 +661,8 @@ class WaporWeights(unittest.TestCase):
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.vapor_weights.send_webapi.called)
     
+#########################################################################################################
+
 
 class MetricprofileWebapi(unittest.TestCase):
     def setUp(self):
@@ -712,8 +724,72 @@ class MetricprofileWebapi(unittest.TestCase):
         self.assertTrue(self.webapi_metricprofile.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
 
+#########################################################################################################
+
+
+class TopologyCsv(unittest.TestCase):
+    def setUp(self):
+        self.loop = asyncio.get_event_loop()
+        with open('tests/sample-csv-topology.csv') as tf:
+            self.res = tf.read()
+            
+        logger = mock.Mock()   
+        mocked_globopts = dict(generalpublishwebapi='True',
+                        generalwritejson='True',
+                        outputdowntimes='downtimes_DATE.json',
+                        inputstatesavedir='/some/mock/path/',
+                        inputstatedays=3
+                        )
+        globopts = mocked_globopts
+        webapi_opts = mock.Mock()
+        confcust = mock.Mock()
+        confcust.send_empty.return_value = False
+        confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
+        custname = CUSTOMER_NAME
+        topofeed = 'https://topo-csv-foo.com/api/fetch'
+        fetchtype = 'foo-groups'
+
+        self.flat_topology = TaskFlatTopology(self.loop, logger, 'test_asynctasks_topology_csv', globopts, webapi_opts,
+                 confcust, custname, topofeed, fetchtype, fixed_date=None,
+                 uidservendp=True, is_csv=True)
+
+
+    @mock.patch('argo_connectors.tasks.flat_topology.write_json')
+    @mock.patch('argo_connectors.tasks.flat_topology.write_state')
+    @async_test
+    async def test_StepsSuccessRun(self, mock_writestate, mock_writejson):
+        self.flat_topology.fetch_data = mock.AsyncMock()
+        self.flat_topology.fetch_data.return_value = self.res
+        self.flat_topology.parse_source_topo = mock.MagicMock()
+        self.flat_topology.parse_source_topo.return_value = {'type': 'FOO_PROJECT'}, {'type': 'FOO_SERVICEGROUPS', 'group': 'mock_group'}    
+
+        self.flat_topology.send_webapi = mock.AsyncMock()
+        await self.flat_topology.run()  
+        self.assertTrue(self.flat_topology.fetch_data.called)
+        self.assertTrue(self.flat_topology.parse_source_topo.called)
+        
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_topology_csv')
+        self.assertTrue(mock_writestate.call_args[0][4])
+        self.assertTrue(mock_writejson.called, True)
+        self.assertTrue(self.flat_topology.send_webapi.called)
+        self.assertTrue(self.flat_topology.logger.info.called)
 
 
 
-
-
+    @mock.patch('argo_connectors.tasks.flat_topology.write_state')
+    @async_test
+    async def test_FailedSuccessRun(self, mock_writestate):
+        self.flat_topology.fetch_data = mock.AsyncMock()
+        self.flat_topology.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.flat_topology.parse_source_topo = mock.MagicMock()
+        self.flat_topology.send_webapi = mock.AsyncMock()
+        await self.flat_topology.run()
+        self.assertTrue(self.flat_topology.fetch_data.called)
+        self.assertFalse(self.flat_topology.parse_source_topo.called)
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_topology_csv')
+        self.assertFalse(mock_writestate.call_args[0][4])
+        self.assertTrue(self.flat_topology.logger.error.called)
+        self.assertTrue(self.flat_topology.logger.error.call_args[0][0], repr(
+            ConnectorHttpError('fetch_data failed')))
