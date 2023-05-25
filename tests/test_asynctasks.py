@@ -721,7 +721,7 @@ class MetricprofileWebapi(unittest.TestCase):
 class TopologyCsv(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
-        with open('../tests/sample-csv-topology.csv') as tf:
+        with open('tests/sample-csv-topology.csv') as tf:
             self.res = tf.read()
             
         logger = mock.Mock()   
