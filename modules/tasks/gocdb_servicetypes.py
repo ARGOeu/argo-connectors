@@ -1,5 +1,6 @@
 import os
 import asyncio
+import time
 
 from urllib.parse import urlparse
 
@@ -77,6 +78,8 @@ class TaskGocdbServiceTypes(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             coros = [self.fetch_data()]
 
             if not self.initsync:
@@ -105,6 +108,9 @@ class TaskGocdbServiceTypes(object):
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await self.send_webapi(service_types)
             self.logger.info('Customer:' + self.custname + ' Fetched GOCDB ServiceTypes:%d' % (len(service_types)))
+            
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorError, ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

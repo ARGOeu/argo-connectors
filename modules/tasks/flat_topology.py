@@ -1,5 +1,6 @@
 import json
 import asyncio
+import time
 
 from urllib.parse import urlparse
 
@@ -74,6 +75,8 @@ class TaskFlatTopology(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             if self._is_feed(self.topofeed):
                 res = await self.fetch_data()
                 group_groups, group_endpoints = self.parse_source_topo(res)
@@ -104,6 +107,9 @@ class TaskFlatTopology(object):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
             self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
         
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))
