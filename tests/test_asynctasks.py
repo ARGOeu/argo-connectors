@@ -627,7 +627,7 @@ class WaporWeights(unittest.TestCase):
         self.assertEqual(
             mock_writestate.call_args[0][0], 'test_asynctasks_weights')
         self.assertEqual(
-            mock_writestate.call_args[0][3], 'Critical')
+            mock_writestate.call_args[0][3], 'Critical_foo')
         self.assertTrue(mock_writestate.call_args[0][4])
         self.assertTrue(mock_writejson.called, True)
         self.assertTrue(self.vapor_weights.send_webapi.called)
