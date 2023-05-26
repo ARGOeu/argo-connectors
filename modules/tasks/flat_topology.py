@@ -9,6 +9,7 @@ from argo_connectors.parse.flat_contacts import ParseContacts
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 from argo_connectors.tasks.common import write_state, write_topo_json as write_json
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 
 
 class TaskFlatTopology(object):
@@ -72,33 +73,38 @@ class TaskFlatTopology(object):
         await webapi.send(data, topotype)
 
     async def run(self):
-        if self._is_feed(self.topofeed):
-            res = await self.fetch_data()
-            group_groups, group_endpoints = self.parse_source_topo(res)
-            contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
-            attach_contacts_topodata(self.logger, contacts, group_endpoints)
+        try:
+            if self._is_feed(self.topofeed):
+                res = await self.fetch_data()
+                group_groups, group_endpoints = self.parse_source_topo(res)
+                contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
+                attach_contacts_topodata(self.logger, contacts, group_endpoints)
 
-        elif not self._is_feed(self.topofeed) and not self.is_csv:
-            try:
-                with open(self.topofeed) as fp:
-                    js = json.load(fp)
-                    group_groups, group_endpoints = self.parse_source_topo(js)
-            except IOError as exc:
-                self.logger.error('Customer:%s : Problem opening %s - %s' % (self.logger.customer, self.topofeed, repr(exc)))
+            elif not self._is_feed(self.topofeed) and not self.is_csv:
+                try:
+                    with open(self.topofeed) as fp:
+                        js = json.load(fp)
+                        group_groups, group_endpoints = self.parse_source_topo(js)
+                except IOError as exc:
+                    self.logger.error('Customer:%s : Problem opening %s - %s' % (self.logger.customer, self.topofeed, repr(exc)))
 
-        await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
+            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
-        numge = len(group_endpoints)
-        numgg = len(group_groups)
+            numge = len(group_endpoints)
+            numgg = len(group_groups)
 
-        # send concurrently to WEB-API in coroutines
-        if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-            await asyncio.gather(
-                self.send_webapi(group_groups, 'groups'),
-                self.send_webapi(group_endpoints,'endpoints')
-            )
+            # send concurrently to WEB-API in coroutines
+            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                await asyncio.gather(
+                    self.send_webapi(group_groups, 'groups'),
+                    self.send_webapi(group_endpoints,'endpoints')
+                )
 
-        if eval(self.globopts['GeneralWriteJson'.lower()]):
-            write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
-        self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+        
+        except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, False)

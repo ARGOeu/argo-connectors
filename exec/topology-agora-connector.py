@@ -11,7 +11,7 @@ from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, Conne
 from argo_connectors.log import Logger
 from argo_connectors.config import Global, CustomerConf
 from argo_connectors.utils import date_check
-from argo_connectors.tasks.agora_topology import TaskProviderTopology
+from argo_connectors.tasks.agora_topology import AgoraProviderTopology
 from argo_connectors.tasks.common import write_state
 
 
@@ -64,7 +64,7 @@ def main():
     asyncio.set_event_loop(loop)
 
     try:
-        task = TaskProviderTopology(
+        task = AgoraProviderTopology(
             loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
             uidservendp, fetchtype, fixed_date
         )

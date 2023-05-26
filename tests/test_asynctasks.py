@@ -15,6 +15,8 @@ from argo_connectors.tasks.provider_topology import TaskProviderTopology
 from argo_connectors.tasks.gocdb_downtimes import TaskGocdbDowntimes
 from argo_connectors.tasks.vapor_weights import TaskVaporWeights
 from argo_connectors.tasks.webapi_metricprofile import TaskWebApiMetricProfile
+from argo_connectors.tasks.flat_topology import TaskFlatTopology
+from argo_connectors.tasks.agora_topology import AgoraProviderTopology
 
 from argo_connectors.parse.base import ParseHelpers
 
@@ -101,7 +103,7 @@ class TopologyGocdb(unittest.TestCase):
 class TestFindNextPagingCursorCount(unittest.TestCase):
     def setUp(self):
         self.logger = mock.MagicMock()
-        with open('../tests/sample-topofeedpaging.xml') as tf:
+        with open('tests/sample-topofeedpaging.xml') as tf:
             self.res = tf.read()
 
     def test_count_n_cursor(self):
@@ -707,4 +709,134 @@ class MetricprofileWebapi(unittest.TestCase):
         self.assertFalse(mock_writestate.call_args[0][6])
         self.assertTrue(self.webapi_metricprofile.logger.error.called)
         self.assertTrue(self.webapi_metricprofile.logger.error.call_args[0][0], repr(
+            ConnectorHttpError('fetch_data failed')))
+
+class TopologyCsv(unittest.TestCase):
+    def setUp(self):
+        self.loop = asyncio.get_event_loop()
+        with open('tests/sample-csv-topology.csv') as tf:
+            self.res = tf.read()
+
+        logger = mock.Mock()
+        mocked_globopts = dict(generalpublishwebapi='True',
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
+        globopts = mocked_globopts
+        webapi_opts = mock.Mock()
+        confcust = mock.Mock()
+        confcust.send_empty.return_value = False
+        confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
+        custname = CUSTOMER_NAME
+        topofeed = 'https://topo-csv-foo.com/api/fetch'
+        fetchtype = 'foo-groups'
+
+        self.flat_topology = TaskFlatTopology(self.loop, logger, 'test_asynctasks_topology_csv', globopts, webapi_opts,
+                                              confcust, custname, topofeed, fetchtype, fixed_date=None,
+                                              uidservendp=True, is_csv=True)
+
+    @mock.patch('argo_connectors.tasks.flat_topology.write_json')
+    @mock.patch('argo_connectors.tasks.flat_topology.write_state')
+    @async_test
+    async def test_StepsSuccessRun(self, mock_writestate, mock_writejson):
+        self.flat_topology.fetch_data = mock.AsyncMock()
+        self.flat_topology.fetch_data.return_value = self.res
+        self.flat_topology.parse_source_topo = mock.MagicMock()
+        self.flat_topology.parse_source_topo.return_value = {'type': 'FOO_PROJECT'}, {
+            'type': 'FOO_SERVICEGROUPS', 'group': 'mock_group'}
+        self.flat_topology.send_webapi = mock.AsyncMock()
+        await self.flat_topology.run()
+        self.assertTrue(self.flat_topology.fetch_data.called)
+        self.assertTrue(self.flat_topology.parse_source_topo.called)
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_topology_csv')
+        self.assertTrue(mock_writestate.call_args[0][4])
+        self.assertTrue(mock_writejson.called, True)
+        self.assertTrue(self.flat_topology.send_webapi.called)
+        self.assertTrue(self.flat_topology.logger.info.called)
+
+    @mock.patch('argo_connectors.tasks.flat_topology.write_state')
+    @async_test
+    async def test_FailedSuccessRun(self, mock_writestate):
+        self.flat_topology.fetch_data = mock.AsyncMock()
+        self.flat_topology.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
+        self.flat_topology.parse_source_topo = mock.MagicMock()
+        self.flat_topology.send_webapi = mock.AsyncMock()
+        await self.flat_topology.run()
+        self.assertTrue(self.flat_topology.fetch_data.called)
+        self.assertFalse(self.flat_topology.parse_source_topo.called)
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_topology_csv')
+        self.assertFalse(mock_writestate.call_args[0][4])
+        self.assertTrue(self.flat_topology.logger.error.called)
+        self.assertTrue(self.flat_topology.logger.error.call_args[0][0], repr(
+            ConnectorHttpError('fetch_data failed')))
+
+
+class TopologyAgora(unittest.TestCase):
+    def setUp(self):
+        self.loop = asyncio.get_event_loop()
+        logger = mock.Mock()
+        logger.customer = CUSTOMER_NAME
+        mocked_globopts = dict(generalpublishwebapi='True',
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
+        globopts = mocked_globopts
+        webapi_opts = mock.Mock()
+        confcust = mock.Mock()
+        confcust.send_empty.return_value = False
+        confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
+        confcust.get_topofeedservicegroups.return_value = 'https://agora.ni4os.eu/api/v2/public/providers/'
+        confcust.get_topofeedendpoints.return_value = 'https://agora.ni4os.eu/api/v2/public/resources/'
+
+        uidservendp = False
+        fetchtype = 'foo-servicegroups'
+
+        self.agora_topology = AgoraProviderTopology(self.loop, logger, 'test_asynctasks_agora_topology', globopts, webapi_opts,
+                                                    confcust, uidservendp, fetchtype, fixed_date=None)
+
+    @mock.patch('argo_connectors.tasks.agora_topology.contains_exception')
+    @mock.patch('argo_connectors.tasks.agora_topology.write_json')
+    @mock.patch('argo_connectors.tasks.agora_topology.write_state')
+    @async_test
+    async def test_StepsSuccessRun(self, mock_writestate, mock_writejson, mock_contains_exception):
+        self.agora_topology.fetch_data = mock.AsyncMock()
+        self.agora_topology.fetch_data.side_effect = ['topology-ok']
+        mock_contains_exception.return_value = False, None
+        self.agora_topology.parse_source_topo = mock.MagicMock()
+        self.agora_topology.parse_source_topo.return_value = [{'group': 'Foo_Providers', 'type': 'FOO_PROVIDERS', 'subgroup': 'foo_subgroup', 'tags': {'info_ext_catalog_id': 'foo-id'}}], [
+            {'group': 'some_group', 'type': 'SERVICEGROUPS', 'service': 'catalog.foo.some', 'hostname': 'agora.foo.eu_mock', 'tags': {'hostname': 'agora.foo.com'}}]
+        self.agora_topology.send_webapi = mock.AsyncMock()
+        await self.agora_topology.run()
+        self.assertTrue(self.agora_topology.fetch_data.called)
+        self.assertTrue(self.agora_topology.parse_source_topo.called)
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_agora_topology')
+        self.assertTrue(mock_writestate.call_args[0][4])
+        self.assertTrue(mock_writejson.called, True)
+        self.assertTrue(self.agora_topology.send_webapi.called)
+        self.assertTrue(self.agora_topology.logger.info.called)
+
+    @mock.patch('argo_connectors.tasks.agora_topology.write_state')
+    @async_test
+    async def test_FailedSuccessRun(self, mock_writestate):
+        self.agora_topology.fetch_data = mock.AsyncMock()
+        self.agora_topology.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
+        self.agora_topology.parse_source_topo = mock.MagicMock()
+        self.agora_topology.send_webapi = mock.AsyncMock()
+        await self.agora_topology.run()
+        self.assertTrue(self.agora_topology.fetch_data.called)
+        self.assertFalse(self.agora_topology.parse_source_topo.called)
+        self.assertEqual(
+            mock_writestate.call_args[0][0], 'test_asynctasks_agora_topology')
+        self.assertFalse(mock_writestate.call_args[0][4])
+        self.assertTrue(self.agora_topology.logger.error.called)
+        self.assertTrue(self.agora_topology.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
