@@ -604,7 +604,7 @@ class WaporWeights(unittest.TestCase):
         confcust.send_empty.return_value = False
         confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
         VAPORPI = 'https://foo-portal.eu/'
-        jobcust = [('Critical', 'CUSTOMER_FOO')]
+        jobcust = [('Critical_foo', 'CUSTOMER_FOO')]
         cglob = mock.Mock()
 
         self.vapor_weights = TaskVaporWeights(self.loop, logger, 'test_asynctasks_weights', globopts,
@@ -672,7 +672,7 @@ class MetricprofileWebapi(unittest.TestCase):
         cglob = mock.Mock()
         cglob.is_complete.return_value = True, None
         cglob.merge_opts.return_value = dict(
-            webapitoken='505c3be00e9e30400b72dbfb0c06268aa73f694b', webapihost='api.devel.argo.grnet.gr')
+            webapitoken='foo_token', webapihost='foo.mock.com')
 
         self.webapi_metricprofile = TaskWebApiMetricProfile(
             self.loop, logger, 'test_asynctasks_metricprofile', globopts, cglob, confcust, cust='CUSTOMER_FOO', fixed_date=None
@@ -809,11 +809,11 @@ class TopologyAgora(unittest.TestCase):
     @async_test
     async def test_StepsSuccessRun(self, mock_writestate, mock_writejson, mock_contains_exception):
         self.agora_topology.fetch_data = mock.AsyncMock()
-        self.agora_topology.fetch_data.side_effect = ['weights-ok']
+        self.agora_topology.fetch_data.side_effect = ['topology-ok']
         mock_contains_exception.return_value = False, None
         self.agora_topology.parse_source_topo = mock.MagicMock()
-        self.agora_topology.parse_source_topo.return_value = [{'group': 'NI4OS Providers', 'type': 'PROVIDERS', 'subgroup': 'UoB_IBISS', 'tags': {'info_ext_catalog_id': '02dc5b9a-99ba-4924-ab80-aa51b9c86b1e'}}], [
-            {'group': 'UoB-RCUB', 'type': 'SERVICEGROUPS', 'service': 'catalog.service.entry', 'hostname': 'agora.ni4os.eu_uob_nardus', 'tags': {'hostname': 'agora.ni4os.eu'}}]
+        self.agora_topology.parse_source_topo.return_value = [{'group': 'Foo_Providers', 'type': 'FOO_PROVIDERS', 'subgroup': 'foo_subgroup', 'tags': {'info_ext_catalog_id': 'foo-id'}}], [
+            {'group': 'some_group', 'type': 'SERVICEGROUPS', 'service': 'catalog.foo.some', 'hostname': 'agora.foo.eu_mock', 'tags': {'hostname': 'agora.foo.com'}}]
         self.agora_topology.send_webapi = mock.AsyncMock()
         await self.agora_topology.run()
         self.assertTrue(self.agora_topology.fetch_data.called)
