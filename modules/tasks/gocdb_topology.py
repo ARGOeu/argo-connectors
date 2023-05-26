@@ -1,5 +1,6 @@
 import os
 import asyncio
+import time
 from lxml import etree
 
 from collections import Callable
@@ -252,6 +253,8 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         await webapi.send(data, topotype)
 
     async def run(self):
+        start_time = time.time()
+        
         fetched_sites, fetched_servicegroups, fetched_endpoints = None, None, None
         fetched_bdii = None
 
@@ -412,3 +415,6 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
 
         self.logger.info('Customer:' + self.custname + ' Type:%s ' % (','.join(
             self.topofetchtype)) + 'Fetched Endpoints:%d' % (numge) + ' Groups:%d' % (numgg))
+        
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'Task completed in {elapsed_time} seconds.')

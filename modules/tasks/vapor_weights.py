@@ -1,4 +1,5 @@
 import os
+import time
 
 from urllib.parse import urlparse
 
@@ -58,6 +59,8 @@ class TaskVaporWeights(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             for job, cust in self.jobcust:
                 self.logger.customer = self.confcust.get_custname(cust)
                 self.logger.job = job
@@ -90,6 +93,9 @@ class TaskVaporWeights(object):
                                         if len(jobs) == 1 else
                                         '({0})'.format(','.join(jobs)),
                                         len(weights)))
+                    
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 
 from collections import Callable
 from urllib.parse import urlparse
@@ -205,6 +206,8 @@ class TaskProviderTopology(object):
         return access_token
 
     async def run(self):
+        start_time = time.time()
+        
         topofeedextensions = self.confcust.get_topofeedendpointsextensions()
         topofeedproviders = self.confcust.get_topofeedservicegroups()
         topofeedresources = self.confcust.get_topofeedendpoints()
@@ -266,3 +269,6 @@ class TaskProviderTopology(object):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
             self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+        
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'Task completed in {elapsed_time} seconds.')
