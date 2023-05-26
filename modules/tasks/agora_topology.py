@@ -1,5 +1,6 @@
 import asyncio
 from urllib.parse import urlparse
+import time
 
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
@@ -72,6 +73,8 @@ class AgoraProviderTopology(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             topofeedproviders = self.confcust.get_topofeedservicegroups()
             topofeedresources = self.confcust.get_topofeedendpoints()
 
@@ -107,7 +110,14 @@ class AgoraProviderTopology(object):
                     write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
                 self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+
+            # calculate the elapsed time
+            elapsed_time = time.time() - start_time  
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
+        
                 
         except (ConnectorHttpError, ConnectorParseError, ConnectorError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))
             await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, False)
+
+  
