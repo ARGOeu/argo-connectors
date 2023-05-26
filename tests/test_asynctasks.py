@@ -465,7 +465,7 @@ class DowntimesCsv(unittest.TestCase):
             current_date,
             timestamp
         )
-        self.maxDiff = None       
+        self.maxDiff = None
 
     @mock.patch('argo_connectors.tasks.flat_downtimes.write_json')
     @mock.patch('argo_connectors.tasks.flat_downtimes.write_state')
@@ -518,11 +518,11 @@ class GocdbDowntimes(unittest.TestCase):
         logger = mock.Mock()
         logger.customer = CUSTOMER_NAME
         mocked_globopts = dict(generalpublishwebapi='True',
-                        generalwritejson='True',
-                        outputdowntimes='downtimes_DATE.json',
-                        inputstatesavedir='/some/mock/path/',
-                        inputstatedays=3
-                        )
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
         globopts = mocked_globopts
         authopts = mock.Mock()
         webapiopts = mock.Mock()
@@ -539,11 +539,10 @@ class GocdbDowntimes(unittest.TestCase):
         end = end.replace(hour=23, minute=59, second=59)
 
         self.gocdb_downtimes = TaskGocdbDowntimes(self.loop, logger, 'test_asynctasks_gocdbdowntimes', globopts,
-                                  authopts, webapiopts, confcust,
-                                  custname, downtime_feed, start,
-                                  end, False, timestamp, timestamp)
-        
-        
+                                                  authopts, webapiopts, confcust,
+                                                  custname, downtime_feed, start,
+                                                  end, False, timestamp, timestamp)
+
     @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_json')
     @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_state')
     @async_test
@@ -566,13 +565,13 @@ class GocdbDowntimes(unittest.TestCase):
             mock_writejson.call_args[0][4], datetime.datetime.now().strftime('%Y_%m_%d'))
         self.assertTrue(self.gocdb_downtimes.send_webapi.called)
         self.assertTrue(self.gocdb_downtimes.logger.info.called)
-        
-        
+
     @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_state')
     @async_test
     async def test_StepsFailedRun(self, mock_writestate):
         self.gocdb_downtimes.fetch_data = mock.AsyncMock()
-        self.gocdb_downtimes.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.gocdb_downtimes.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
         self.gocdb_downtimes.send_webapi = mock.AsyncMock()
         self.gocdb_downtimes.parse_source = mock.MagicMock()
         await self.gocdb_downtimes.run()
@@ -587,31 +586,31 @@ class GocdbDowntimes(unittest.TestCase):
         self.assertTrue(self.gocdb_downtimes.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.gocdb_downtimes.send_webapi.called)
-        
+
 
 class WaporWeights(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
         logger = mock.Mock()
-        logger.customer = CUSTOMER_NAME        
+        logger.customer = CUSTOMER_NAME
         mocked_globopts = dict(generalpublishwebapi='True',
-                        generalwritejson='True',
-                        outputdowntimes='downtimes_DATE.json',
-                        inputstatesavedir='/some/mock/path/',
-                        inputstatedays=3
-                        )
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
         globopts = mocked_globopts
         confcust = mock.Mock()
         confcust.send_empty.return_value = False
         confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
         VAPORPI = 'https://foo-portal.eu/'
         jobcust = [('Critical', 'CUSTOMER_FOO')]
-        cglob = mock.Mock()    
+        cglob = mock.Mock()
 
         self.vapor_weights = TaskVaporWeights(self.loop, logger, 'test_asynctasks_weights', globopts,
-                                confcust, VAPORPI, jobcust, cglob,
-                                fixed_date=None)
-        
+                                              confcust, VAPORPI, jobcust, cglob,
+                                              fixed_date=None)
+
     @mock.patch('argo_connectors.tasks.vapor_weights.write_json')
     @mock.patch('argo_connectors.tasks.vapor_weights.write_state')
     @async_test
@@ -633,13 +632,13 @@ class WaporWeights(unittest.TestCase):
         self.assertTrue(mock_writejson.called, True)
         self.assertTrue(self.vapor_weights.send_webapi.called)
         self.assertTrue(self.vapor_weights.logger.info.called)
-        
-        
+
     @mock.patch('argo_connectors.tasks.vapor_weights.write_state')
     @async_test
     async def test_StepsFailedRun(self, mock_writestate):
         self.vapor_weights.fetch_data = mock.AsyncMock()
-        self.vapor_weights.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.vapor_weights.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
         self.vapor_weights.get_webapi_opts = mock.MagicMock()
         self.vapor_weights.parse_source = mock.MagicMock()
         self.vapor_weights.send_webapi = mock.AsyncMock()
@@ -652,18 +651,18 @@ class WaporWeights(unittest.TestCase):
         self.assertTrue(self.vapor_weights.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
         self.assertFalse(self.vapor_weights.send_webapi.called)
-    
+
 
 class MetricprofileWebapi(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
-        logger = mock.Mock()   
+        logger = mock.Mock()
         mocked_globopts = dict(generalpublishwebapi='True',
-                        generalwritejson='True',
-                        outputdowntimes='downtimes_DATE.json',
-                        inputstatesavedir='/some/mock/path/',
-                        inputstatedays=3
-                        )
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
         globopts = mocked_globopts
         confcust = mock.Mock()
         confcust.send_empty.return_value = False
@@ -672,11 +671,12 @@ class MetricprofileWebapi(unittest.TestCase):
         confcust.get_profiles.return_value = ['FOO_CUSTOMER_CRITICAL']
         cglob = mock.Mock()
         cglob.is_complete.return_value = True, None
-        cglob.merge_opts.return_value = dict(webapitoken='505c3be00e9e30400b72dbfb0c06268aa73f694b', webapihost='api.devel.argo.grnet.gr')
-        
+        cglob.merge_opts.return_value = dict(
+            webapitoken='505c3be00e9e30400b72dbfb0c06268aa73f694b', webapihost='api.devel.argo.grnet.gr')
+
         self.webapi_metricprofile = TaskWebApiMetricProfile(
-                self.loop, logger, 'test_asynctasks_metricprofile', globopts, cglob, confcust, cust='CUSTOMER_FOO', fixed_date=None
-            )
+            self.loop, logger, 'test_asynctasks_metricprofile', globopts, cglob, confcust, cust='CUSTOMER_FOO', fixed_date=None
+        )
 
     @mock.patch('argo_connectors.tasks.webapi_metricprofile.write_json')
     @mock.patch('argo_connectors.tasks.webapi_metricprofile.write_state')
@@ -699,9 +699,10 @@ class MetricprofileWebapi(unittest.TestCase):
     @async_test
     async def test_StepsFailedRun(self, mock_writestate):
         self.webapi_metricprofile.fetch_data = mock.AsyncMock()
-        self.webapi_metricprofile.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.webapi_metricprofile.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
         self.webapi_metricprofile.parse_source = mock.MagicMock()
-        await self.webapi_metricprofile.run() 
+        await self.webapi_metricprofile.run()
         self.assertTrue(self.webapi_metricprofile.fetch_data.called)
         self.assertFalse(self.webapi_metricprofile.parse_source.called)
         self.assertEqual(
@@ -717,14 +718,14 @@ class TopologyCsv(unittest.TestCase):
         self.loop = asyncio.get_event_loop()
         with open('tests/sample-csv-topology.csv') as tf:
             self.res = tf.read()
-            
-        logger = mock.Mock()   
+
+        logger = mock.Mock()
         mocked_globopts = dict(generalpublishwebapi='True',
-                        generalwritejson='True',
-                        outputdowntimes='downtimes_DATE.json',
-                        inputstatesavedir='/some/mock/path/',
-                        inputstatedays=3
-                        )
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
         globopts = mocked_globopts
         webapi_opts = mock.Mock()
         confcust = mock.Mock()
@@ -735,8 +736,8 @@ class TopologyCsv(unittest.TestCase):
         fetchtype = 'foo-groups'
 
         self.flat_topology = TaskFlatTopology(self.loop, logger, 'test_asynctasks_topology_csv', globopts, webapi_opts,
-                 confcust, custname, topofeed, fetchtype, fixed_date=None,
-                 uidservendp=True, is_csv=True)
+                                              confcust, custname, topofeed, fetchtype, fixed_date=None,
+                                              uidservendp=True, is_csv=True)
 
     @mock.patch('argo_connectors.tasks.flat_topology.write_json')
     @mock.patch('argo_connectors.tasks.flat_topology.write_state')
@@ -745,9 +746,10 @@ class TopologyCsv(unittest.TestCase):
         self.flat_topology.fetch_data = mock.AsyncMock()
         self.flat_topology.fetch_data.return_value = self.res
         self.flat_topology.parse_source_topo = mock.MagicMock()
-        self.flat_topology.parse_source_topo.return_value = {'type': 'FOO_PROJECT'}, {'type': 'FOO_SERVICEGROUPS', 'group': 'mock_group'}    
+        self.flat_topology.parse_source_topo.return_value = {'type': 'FOO_PROJECT'}, {
+            'type': 'FOO_SERVICEGROUPS', 'group': 'mock_group'}
         self.flat_topology.send_webapi = mock.AsyncMock()
-        await self.flat_topology.run()  
+        await self.flat_topology.run()
         self.assertTrue(self.flat_topology.fetch_data.called)
         self.assertTrue(self.flat_topology.parse_source_topo.called)
         self.assertEqual(
@@ -761,7 +763,8 @@ class TopologyCsv(unittest.TestCase):
     @async_test
     async def test_FailedSuccessRun(self, mock_writestate):
         self.flat_topology.fetch_data = mock.AsyncMock()
-        self.flat_topology.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.flat_topology.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
         self.flat_topology.parse_source_topo = mock.MagicMock()
         self.flat_topology.send_webapi = mock.AsyncMock()
         await self.flat_topology.run()
@@ -773,19 +776,19 @@ class TopologyCsv(unittest.TestCase):
         self.assertTrue(self.flat_topology.logger.error.called)
         self.assertTrue(self.flat_topology.logger.error.call_args[0][0], repr(
             ConnectorHttpError('fetch_data failed')))
-        
+
 
 class TopologyAgora(unittest.TestCase):
     def setUp(self):
-        self.loop = asyncio.get_event_loop()           
+        self.loop = asyncio.get_event_loop()
         logger = mock.Mock()
-        logger.customer = CUSTOMER_NAME     
+        logger.customer = CUSTOMER_NAME
         mocked_globopts = dict(generalpublishwebapi='True',
-                        generalwritejson='True',
-                        outputdowntimes='downtimes_DATE.json',
-                        inputstatesavedir='/some/mock/path/',
-                        inputstatedays=3
-                        )
+                               generalwritejson='True',
+                               outputdowntimes='downtimes_DATE.json',
+                               inputstatesavedir='/some/mock/path/',
+                               inputstatedays=3
+                               )
         globopts = mocked_globopts
         webapi_opts = mock.Mock()
         confcust = mock.Mock()
@@ -793,13 +796,13 @@ class TopologyAgora(unittest.TestCase):
         confcust.get_customers.return_value = ['CUSTOMERFOO', 'CUSTOMERBAR']
         confcust.get_topofeedservicegroups.return_value = 'https://agora.ni4os.eu/api/v2/public/providers/'
         confcust.get_topofeedendpoints.return_value = 'https://agora.ni4os.eu/api/v2/public/resources/'
-        
+
         uidservendp = False
-        fetchtype='foo-servicegroups'
+        fetchtype = 'foo-servicegroups'
 
         self.agora_topology = AgoraProviderTopology(self.loop, logger, 'test_asynctasks_agora_topology', globopts, webapi_opts,
-                    confcust, uidservendp, fetchtype, fixed_date=None)
-    
+                                                    confcust, uidservendp, fetchtype, fixed_date=None)
+
     @mock.patch('argo_connectors.tasks.agora_topology.contains_exception')
     @mock.patch('argo_connectors.tasks.agora_topology.write_json')
     @mock.patch('argo_connectors.tasks.agora_topology.write_state')
@@ -807,9 +810,10 @@ class TopologyAgora(unittest.TestCase):
     async def test_StepsSuccessRun(self, mock_writestate, mock_writejson, mock_contains_exception):
         self.agora_topology.fetch_data = mock.AsyncMock()
         self.agora_topology.fetch_data.side_effect = ['weights-ok']
-        mock_contains_exception.return_value = False, None 
+        mock_contains_exception.return_value = False, None
         self.agora_topology.parse_source_topo = mock.MagicMock()
-        self.agora_topology.parse_source_topo.return_value = [{'group': 'NI4OS Providers', 'type': 'PROVIDERS', 'subgroup': 'UoB_IBISS', 'tags': {'info_ext_catalog_id': '02dc5b9a-99ba-4924-ab80-aa51b9c86b1e'}}], [{'group': 'UoB-RCUB', 'type': 'SERVICEGROUPS', 'service': 'catalog.service.entry', 'hostname': 'agora.ni4os.eu_uob_nardus', 'tags': {'hostname': 'agora.ni4os.eu'}}]
+        self.agora_topology.parse_source_topo.return_value = [{'group': 'NI4OS Providers', 'type': 'PROVIDERS', 'subgroup': 'UoB_IBISS', 'tags': {'info_ext_catalog_id': '02dc5b9a-99ba-4924-ab80-aa51b9c86b1e'}}], [
+            {'group': 'UoB-RCUB', 'type': 'SERVICEGROUPS', 'service': 'catalog.service.entry', 'hostname': 'agora.ni4os.eu_uob_nardus', 'tags': {'hostname': 'agora.ni4os.eu'}}]
         self.agora_topology.send_webapi = mock.AsyncMock()
         await self.agora_topology.run()
         self.assertTrue(self.agora_topology.fetch_data.called)
@@ -820,12 +824,13 @@ class TopologyAgora(unittest.TestCase):
         self.assertTrue(mock_writejson.called, True)
         self.assertTrue(self.agora_topology.send_webapi.called)
         self.assertTrue(self.agora_topology.logger.info.called)
-        
+
     @mock.patch('argo_connectors.tasks.agora_topology.write_state')
     @async_test
     async def test_FailedSuccessRun(self, mock_writestate):
         self.agora_topology.fetch_data = mock.AsyncMock()
-        self.agora_topology.fetch_data.side_effect = [ConnectorHttpError('fetch_data failed')]
+        self.agora_topology.fetch_data.side_effect = [
+            ConnectorHttpError('fetch_data failed')]
         self.agora_topology.parse_source_topo = mock.MagicMock()
         self.agora_topology.send_webapi = mock.AsyncMock()
         await self.agora_topology.run()
