@@ -1,5 +1,5 @@
 import os
-
+import time
 from urllib.parse import urlparse
 
 from argo_connectors.io.http import SessionWithRetry
@@ -71,6 +71,8 @@ class TaskGocdbDowntimes(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             # we don't have multiple tenant definitions in one
             # customer file so we can safely assume one tenant/customer
             write_empty = self.confcust.send_empty(self.connector_name)
@@ -92,6 +94,9 @@ class TaskGocdbDowntimes(object):
 
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts, self.confcust, dts, self.timestamp)
+                
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
         
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

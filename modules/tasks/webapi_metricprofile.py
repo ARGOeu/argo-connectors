@@ -1,4 +1,5 @@
 import os
+import time
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.io.http import SessionWithRetry
@@ -33,6 +34,8 @@ class TaskWebApiMetricProfile(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             for job in self.confcust.get_jobs(self.cust):
                 self.logger.customer = self.confcust.get_custname(self.cust)
                 self.logger.job = job
@@ -56,6 +59,9 @@ class TaskWebApiMetricProfile(object):
                     write_json(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
 
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
+
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
             self.logger.error(repr(exc))

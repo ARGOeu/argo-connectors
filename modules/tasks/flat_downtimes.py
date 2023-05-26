@@ -1,5 +1,5 @@
 import os
-
+import time
 from urllib.parse import urlparse
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
@@ -52,6 +52,8 @@ class TaskCsvDowntimes(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             write_empty = self.confcust.send_empty(self.connector_name)
             if not write_empty:
                 res = await self.fetch_data()
@@ -74,6 +76,9 @@ class TaskCsvDowntimes(object):
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts,
                            self.confcust, dts, self.timestamp)
+            
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))
