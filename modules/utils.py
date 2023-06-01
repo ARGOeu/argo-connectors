@@ -60,3 +60,9 @@ def remove_non_utf(string):
         string = string.replace('"', '')
 
     return unidecode(string)
+
+
+def parse_conf_path(path):
+    tenant = path.split('/')[3].split('-')[0]
+    
+    return tenant.upper()

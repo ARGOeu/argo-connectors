@@ -10,7 +10,7 @@ import uvloop
 from argo_connectors.config import CustomerConf, Global
 from argo_connectors.log import Logger
 from argo_connectors.tasks.webapi_metricprofile import TaskWebApiMetricProfile
-from argo_connectors.utils import date_check
+from argo_connectors.utils import date_check, parse_conf_path
 
 logger = None
 
@@ -26,7 +26,6 @@ def main():
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
 
-    logger = Logger(os.path.basename(sys.argv[0]))
 
     fixed_date = None
     if args.date and date_check(args.date):
@@ -38,6 +37,10 @@ def main():
 
     confpath = args.custconf[0] if args.custconf else None
     confcust = CustomerConf(sys.argv[0], confpath)
+    tenant_name = parse_conf_path(confpath)
+    
+    logger = Logger(os.path.basename(sys.argv[0]), tenant_name)
+    
     confcust.parse()
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
