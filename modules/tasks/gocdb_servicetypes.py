@@ -36,6 +36,8 @@ class TaskGocdbServiceTypes(object):
         self.initsync = initsync
 
     async def fetch_data(self):
+        start_time = time.time()
+
         feed_parts = urlparse(self.feed)
         session = SessionWithRetry(self.logger,
                                    os.path.basename(self.connector_name),
@@ -44,9 +46,13 @@ class TaskGocdbServiceTypes(object):
                                                            feed_parts.netloc,
                                                            feed_parts.path,
                                                            feed_parts.query))
+
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     async def fetch_webapi(self):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -55,9 +61,14 @@ class TaskGocdbServiceTypes(object):
                         self.globopts['ConnectionRetryRandom'.lower()],
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.timestamp)
+        
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_webapi completed in {elapsed_time} seconds.')
+        
         return await webapi.get('service-types', jsonret=False)
 
     async def send_webapi(self, data):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -67,6 +78,8 @@ class TaskGocdbServiceTypes(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.timestamp)
         await webapi.send(data, 'service-types')
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     def parse_source(self, res):
         gocdb = ParseGocdbServiceTypes(self.logger, res)
@@ -107,10 +120,10 @@ class TaskGocdbServiceTypes(object):
 
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await self.send_webapi(service_types)
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'run completed in {elapsed_time} seconds.')
             self.logger.info('Customer:' + self.custname + ' Fetched GOCDB ServiceTypes:%d' % (len(service_types)))
             
-            elapsed_time = time.time() - start_time
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorError, ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

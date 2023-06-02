@@ -27,11 +27,14 @@ class TaskCsvDowntimes(object):
         self.timestamp = timestamp
 
     async def fetch_data(self):
+        start_time = time.time()
         session = SessionWithRetry(self.logger,
                                    os.path.basename(self.connector_name),
                                    self.globopts)
         res = await session.http_get(self.feed)
 
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source(self, res):
@@ -40,6 +43,7 @@ class TaskCsvDowntimes(object):
         return csv_downtimes.get_data()
 
     async def send_webapi(self, dts):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -49,6 +53,8 @@ class TaskCsvDowntimes(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -78,7 +84,7 @@ class TaskCsvDowntimes(object):
                            self.confcust, dts, self.timestamp)
             
             elapsed_time = time.time() - start_time
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
+            self.logger.info(f'run completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

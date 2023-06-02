@@ -39,6 +39,7 @@ class TaskFlatTopology(object):
             return True
 
     async def fetch_data(self):
+        start_time = time.time()
         remote_topo = urlparse(self.topofeed)
         session = SessionWithRetry(self.logger, self.custname, self.globopts)
         if remote_topo.query:
@@ -51,6 +52,9 @@ class TaskFlatTopology(object):
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
                                                             remote_topo.netloc,
                                                             remote_topo.path))
+            
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source_topo(self, res):
@@ -63,6 +67,7 @@ class TaskFlatTopology(object):
         return group_groups, group_endpoints
 
     async def send_webapi(self, data, topotype):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -72,6 +77,8 @@ class TaskFlatTopology(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.fixed_date)
         await webapi.send(data, topotype)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -106,10 +113,11 @@ class TaskFlatTopology(object):
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'run completed in {elapsed_time} seconds.')
+            
             self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
             
-            elapsed_time = time.time() - start_time
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
         
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

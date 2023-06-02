@@ -23,12 +23,15 @@ class TaskVaporWeights(object):
         self.fixed_date = fixed_date
 
     async def fetch_data(self):
+        start_time = time.time()
         feed_parts = urlparse(self.feed)
         session = SessionWithRetry(self.logger, os.path.basename(
             self.connector_name), self.globopts)
         res = await session.http_get('{}://{}{}'.format(feed_parts.scheme,
                                                         feed_parts.netloc,
                                                         feed_parts.path))
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def get_webapi_opts(self, cust, job):
@@ -46,6 +49,7 @@ class TaskVaporWeights(object):
         return weights
 
     async def send_webapi(self, weights, webapi_opts, job):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
                         webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -56,6 +60,8 @@ class TaskVaporWeights(object):
                         report=self.confcust.get_jobdir(job), endpoints_group='SITES',
                         date=self.fixed_date)
         await webapi.send(weights)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -88,14 +94,14 @@ class TaskVaporWeights(object):
                 custs = set([cust for job, cust in self.jobcust])
                 for cust in custs:
                     jobs = [job for job, lcust in self.jobcust if cust == lcust]
+                    elapsed_time = time.time() - start_time
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
                     self.logger.info('Customer:%s Jobs:%s Sites:%d' %
                                     (self.confcust.get_custname(cust), jobs[0]
                                         if len(jobs) == 1 else
                                         '({0})'.format(','.join(jobs)),
                                         len(weights)))
                     
-            elapsed_time = time.time() - start_time
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

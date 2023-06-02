@@ -38,6 +38,7 @@ class AgoraProviderTopology(object):
 
 
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
                         webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -48,9 +49,12 @@ class AgoraProviderTopology(object):
                         date=fixed_date)
 
         await webapi.send(data, topotype)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
 
     async def fetch_data(self, feed):
+        start_time = time.time()
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
         headers = {
@@ -64,6 +68,8 @@ class AgoraProviderTopology(object):
                                                             headers=headers)
 
             await session.close()
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
             return res
 
         except ConnectorHttpError as exc:
@@ -109,11 +115,10 @@ class AgoraProviderTopology(object):
                 if eval(self.globopts['GeneralWriteJson'.lower()]):
                     write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
+                elapsed_time = time.time() - start_time  
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
                 self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
 
-            # calculate the elapsed time
-            elapsed_time = time.time() - start_time  
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
         
                 
         except (ConnectorHttpError, ConnectorParseError, ConnectorError, KeyboardInterrupt) as exc:

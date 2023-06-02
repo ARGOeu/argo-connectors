@@ -28,6 +28,7 @@ class TaskGocdbDowntimes(object):
         self.timestamp = timestamp
 
     async def fetch_data(self):
+        start_time = time.time()
         feed_parts = urlparse(self.feed)
         start_fmt = self.start.strftime("%Y-%m-%d")
         end_fmt = self.end.strftime("%Y-%m-%d")
@@ -50,6 +51,8 @@ class TaskGocdbDowntimes(object):
                                                            feed_parts.path,
                                                            start_fmt, end_fmt)
         res = await session.http_get(query_url)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
         return res
 
@@ -59,6 +62,7 @@ class TaskGocdbDowntimes(object):
         return gocdb.get_data()
 
     async def send_webapi(self, dts):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -68,6 +72,8 @@ class TaskGocdbDowntimes(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -89,14 +95,14 @@ class TaskGocdbDowntimes(object):
 
             if dts or write_empty:
                 cust = list(self.confcust.get_customers())[0]
+                elapsed_time = time.time() - start_time
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
                 self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
                             (self.confcust.get_custname(cust), self.targetdate, len(dts)))
 
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts, self.confcust, dts, self.timestamp)
                 
-            elapsed_time = time.time() - start_time
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
         
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

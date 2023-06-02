@@ -201,13 +201,18 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         self.notification_flag = notiflag
 
     async def fetch_ldap_data(self, host, port, base, filter, attributes):
+        start_time = time.time()
         ldap_session = LDAPSessionWithRetry(self.logger, int(self.globopts['ConnectionRetry'.lower()]),
                                             int(self.globopts['ConnectionSleepRetry'.lower()]), int(self.globopts['ConnectionTimeout'.lower()]))
 
         res = await ldap_session.search(host, port, base, filter, attributes)
+
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_ldap_data completed in {elapsed_time} seconds.')
         return res
 
     async def fetch_data(self, api):
+        start_time = time.time()
         feed_parts = urlparse(api)
         fetched_data = list()
         if self.topofeedpaging:
@@ -230,6 +235,9 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
                 except ConnectorParseError as exc:
                     await session.close()
                     raise exc
+                
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
             return filter_multiple_tags(''.join(fetched_data))
 
@@ -239,9 +247,12 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
                                        self.globopts, custauth=self.auth_opts)
             res = await session.http_get(api)
 
+            elapsed_time = time.time() - start_time
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
             return res
 
     async def send_webapi(self, data, topotype):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -251,6 +262,8 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.fixed_date)
         await webapi.send(data, topotype)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         start_time = time.time()
@@ -413,8 +426,9 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
             write_json(self.logger, self.globopts, self.confcust,
                        group_groups, group_endpoints, self.fixed_date)
 
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'run completed in {elapsed_time} seconds.')
+        
         self.logger.info('Customer:' + self.custname + ' Type:%s ' % (','.join(
             self.topofetchtype)) + 'Fetched Endpoints:%d' % (numge) + ' Groups:%d' % (numgg))
         
-        elapsed_time = time.time() - start_time
-        self.logger.info(f'Task completed in {elapsed_time} seconds.')

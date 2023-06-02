@@ -22,10 +22,14 @@ class TaskWebApiMetricProfile(object):
         self.fixed_date = fixed_date
 
     async def fetch_data(self, host, token):
+        start_time = time.time()
         session = SessionWithRetry(self.logger,
                                    os.path.basename(self.connector_name),
                                    self.globopts, token=token)
         res = await session.http_get('{}://{}{}'.format('https', host, API_PATH))
+
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source(self, res, profiles):
@@ -58,10 +62,11 @@ class TaskWebApiMetricProfile(object):
                 if eval(self.globopts['GeneralWriteJson'.lower()]):
                     write_json(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
 
+                elapsed_time = time.time() - start_time
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
+                
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
 
-            elapsed_time = time.time() - start_time
-            self.logger.info(f'Task completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
             self.logger.error(repr(exc))
