@@ -13,10 +13,8 @@ class Logger:
         self.connector = connector
         self.tenant_name = tenant_name
 
-        LOGFILE = f"/var/log/argo-connectors/{self.tenant_name}/connectors.log"
-
-        if self.tenant_name is not None and not os.path.exists(LOGFILE):
-            os.makedirs(f'/var/log/argo-connectors/{self.tenant_name}/')
+        if self.tenant_name is not None:
+            LOGFILE = f"/var/log/argo-connectors/connectors-{self.tenant_name}.log"
 
         logging.basicConfig(format=lfs, level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger(connector)
