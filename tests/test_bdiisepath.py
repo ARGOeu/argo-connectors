@@ -9,7 +9,7 @@ from argo_connectors.mesh.storage_element_path import attach_sepath_topodata
 from bonsai import LDAPEntry
 
 
-logger = Logger('test_contactfeed.py')
+logger = Logger('test_contactfeed.py', 'foo_tenant')
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
 

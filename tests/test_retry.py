@@ -9,7 +9,7 @@ from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.log import Logger
 from argo_connectors.exceptions import ConnectorHttpError
 
-logger = Logger('test_topofeed.py')
+logger = Logger('test_topofeed.py', 'foo_tenant')
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
 
