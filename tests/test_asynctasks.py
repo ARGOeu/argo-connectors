@@ -73,7 +73,8 @@ class TopologyGocdb(unittest.TestCase):
             uidservendp,
             passext,
             topofeedpaging,
-            notification_flag
+            notification_flag,
+            performance=0
         )
 
     @mock.patch.object(ParseHelpers, 'parse_xml')
@@ -141,7 +142,8 @@ class TopologyProvider(unittest.TestCase):
             topofeedpaging,
             uidservendp,
             fixed_date,
-            fetchtype
+            fetchtype,
+            performance=0
         )
 
     @mock.patch.object(ParseHelpers, 'parse_json')
@@ -214,7 +216,8 @@ class ServiceTypesGocdb(unittest.TestCase):
             custname,
             feed,
             timestamp,
-            initsync
+            initsync,
+            performance=0
         )
         self.maxDiff = None
 
@@ -378,7 +381,8 @@ class ServiceTypesFlat(unittest.TestCase):
             confcust,
             custname,
             feed,
-            timestamp
+            timestamp,
+            performance=0
         )
         self.maxDiff = None
 
@@ -463,7 +467,8 @@ class DowntimesCsv(unittest.TestCase):
             current_date,
             True,
             current_date,
-            timestamp
+            timestamp,
+            performance=0
         )
         self.maxDiff = None
 
@@ -540,7 +545,7 @@ class GocdbDowntimes(unittest.TestCase):
         self.gocdb_downtimes = TaskGocdbDowntimes(self.loop, logger, 'test_asynctasks_gocdbdowntimes', globopts,
                                                   authopts, webapiopts, confcust,
                                                   custname, downtime_feed, start,
-                                                  end, False, timestamp, timestamp)
+                                                  end, False, timestamp, timestamp, performance=0)
 
     @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_json')
     @mock.patch('argo_connectors.tasks.gocdb_downtimes.write_state')
@@ -587,7 +592,7 @@ class GocdbDowntimes(unittest.TestCase):
         self.assertFalse(self.gocdb_downtimes.send_webapi.called)
 
 
-class WaporWeights(unittest.TestCase):
+class VaporWeights(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
         logger = mock.Mock()
@@ -608,7 +613,7 @@ class WaporWeights(unittest.TestCase):
 
         self.vapor_weights = TaskVaporWeights(self.loop, logger, 'test_asynctasks_weights', globopts,
                                               confcust, VAPORPI, jobcust, cglob,
-                                              fixed_date=None)
+                                              fixed_date=None, performance=0)
 
     @mock.patch('argo_connectors.tasks.vapor_weights.write_json')
     @mock.patch('argo_connectors.tasks.vapor_weights.write_state')
@@ -674,7 +679,7 @@ class MetricprofileWebapi(unittest.TestCase):
             webapitoken='foo_token', webapihost='foo.mock.com')
 
         self.webapi_metricprofile = TaskWebApiMetricProfile(
-            self.loop, logger, 'test_asynctasks_metricprofile', globopts, cglob, confcust, cust='CUSTOMER_FOO', fixed_date=None
+            self.loop, logger, 'test_asynctasks_metricprofile', globopts, cglob, confcust, cust='CUSTOMER_FOO', fixed_date=None, performance=0
         )
 
     @mock.patch('argo_connectors.tasks.webapi_metricprofile.write_json')
@@ -735,7 +740,7 @@ class TopologyCsv(unittest.TestCase):
 
         self.flat_topology = TaskFlatTopology(self.loop, logger, 'test_asynctasks_topology_csv', globopts, webapi_opts,
                                               confcust, custname, topofeed, fetchtype, fixed_date=None,
-                                              uidservendp=True, is_csv=True)
+                                              uidservendp=True, performance=0, is_csv=True)
 
     @mock.patch('argo_connectors.tasks.flat_topology.write_json')
     @mock.patch('argo_connectors.tasks.flat_topology.write_state')
@@ -799,7 +804,7 @@ class TopologyAgora(unittest.TestCase):
         fetchtype = 'foo-servicegroups'
 
         self.agora_topology = AgoraProviderTopology(self.loop, logger, 'test_asynctasks_agora_topology', globopts, webapi_opts,
-                                                    confcust, uidservendp, fetchtype, fixed_date=None)
+                                                    confcust, uidservendp, fetchtype, fixed_date=None, performance=0)
 
     @mock.patch('argo_connectors.tasks.agora_topology.contains_exception')
     @mock.patch('argo_connectors.tasks.agora_topology.write_json')
