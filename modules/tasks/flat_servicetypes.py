@@ -22,7 +22,7 @@ def contains_exception(list):
 
 class TaskFlatServiceTypes(object):
     def __init__(self, loop, logger, connector_name, globopts, auth_opts,
-                 webapi_opts, confcust, custname, feed, timestamp,
+                 webapi_opts, confcust, custname, feed, timestamp, performance,
                  is_csv=False, initsync=False):
         self.logger = logger
         self.loop = loop
@@ -34,6 +34,7 @@ class TaskFlatServiceTypes(object):
         self.custname = custname
         self.feed = feed
         self.timestamp = timestamp
+        self.performance = performance
         self.is_csv = is_csv
         self.initsync = initsync
 
@@ -48,7 +49,8 @@ class TaskFlatServiceTypes(object):
                                                            feed_parts.path,
                                                            feed_parts.query))
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
         return res
 
@@ -64,7 +66,8 @@ class TaskFlatServiceTypes(object):
                         date=self.timestamp)
 
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_webapi completed in {elapsed_time} seconds.')
         
         return await webapi.get('service-types', jsonret=False)
 
@@ -80,7 +83,8 @@ class TaskFlatServiceTypes(object):
                         date=self.timestamp)
         await webapi.send(data, 'service-types')
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     def parse_webapi_poem(self, res):
         webapi = ParseWebApiServiceTypes(self.logger, res)
@@ -123,7 +127,8 @@ class TaskFlatServiceTypes(object):
                 await self.send_webapi(service_types)
 
             elapsed_time = time.time() - start_time
-            self.logger.info(f'run completed in {elapsed_time} seconds.')  
+            if self.performance > 0:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')  
             self.logger.info('Customer:' + self.custname + ' Fetched Flat ServiceTypes:%d' % (len(service_types)))
             
         

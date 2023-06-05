@@ -12,7 +12,7 @@ from argo_connectors.tasks.common import write_state, write_downtimes_json as wr
 class TaskCsvDowntimes(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, custname, feed, current_date,
-                 uidservtype, targetdate, timestamp):
+                 uidservtype, targetdate, timestamp, performance):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -25,6 +25,7 @@ class TaskCsvDowntimes(object):
         self.uidservtype = uidservtype
         self.targetdate = targetdate
         self.timestamp = timestamp
+        self.performance = performance
 
     async def fetch_data(self):
         start_time = time.time()
@@ -34,7 +35,8 @@ class TaskCsvDowntimes(object):
         res = await session.http_get(self.feed)
 
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source(self, res):
@@ -54,7 +56,8 @@ class TaskCsvDowntimes(object):
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -84,7 +87,8 @@ class TaskCsvDowntimes(object):
                            self.confcust, dts, self.timestamp)
             
             elapsed_time = time.time() - start_time
-            self.logger.info(f'run completed in {elapsed_time} seconds.')
+            if self.performance > 0:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))
