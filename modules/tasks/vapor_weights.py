@@ -11,7 +11,7 @@ from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 
 class TaskVaporWeights(object):
     def __init__(self, loop, logger, connector_name, globopts, confcust, feed,
-                 jobcust, cglob, fixed_date):
+                 jobcust, cglob, fixed_date, performance):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -21,6 +21,7 @@ class TaskVaporWeights(object):
         self.jobcust = jobcust
         self.cglob = cglob
         self.fixed_date = fixed_date
+        self.performance = performance
 
     async def fetch_data(self):
         start_time = time.time()
@@ -31,7 +32,8 @@ class TaskVaporWeights(object):
                                                         feed_parts.netloc,
                                                         feed_parts.path))
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def get_webapi_opts(self, cust, job):
@@ -61,7 +63,8 @@ class TaskVaporWeights(object):
                         date=self.fixed_date)
         await webapi.send(weights)
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -95,7 +98,8 @@ class TaskVaporWeights(object):
                 for cust in custs:
                     jobs = [job for job, lcust in self.jobcust if cust == lcust]
                     elapsed_time = time.time() - start_time
-                    self.logger.info(f'run completed in {elapsed_time} seconds.')
+                    if self.performance > 0:
+                        self.logger.info(f'run completed in {elapsed_time} seconds.')
                     self.logger.info('Customer:%s Jobs:%s Sites:%d' %
                                     (self.confcust.get_custname(cust), jobs[0]
                                         if len(jobs) == 1 else

@@ -11,7 +11,7 @@ API_PATH = '/api/v2/metric_profiles'
 
 class TaskWebApiMetricProfile(object):
     def __init__(self, loop, logger, connector_name, globopts, cglob, confcust,
-                 cust, fixed_date):
+                 cust, fixed_date, performance):
         self.loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -20,6 +20,7 @@ class TaskWebApiMetricProfile(object):
         self.confcust = confcust
         self.cglob = cglob
         self.fixed_date = fixed_date
+        self.performance = performance
 
     async def fetch_data(self, host, token):
         start_time = time.time()
@@ -29,7 +30,8 @@ class TaskWebApiMetricProfile(object):
         res = await session.http_get('{}://{}{}'.format('https', host, API_PATH))
 
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source(self, res, profiles):
@@ -63,7 +65,8 @@ class TaskWebApiMetricProfile(object):
                     write_json(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
 
                 elapsed_time = time.time() - start_time
-                self.logger.info(f'run completed in {elapsed_time} seconds.')
+                if self.performance > 0:
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
                 
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
 

@@ -11,7 +11,7 @@ from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 class TaskGocdbDowntimes(object):
     def __init__(self, loop, logger, connector_name, globopts, auth_opts,
                  webapi_opts, confcust, custname, feed, start, end,
-                 uidservtype, targetdate, timestamp):
+                 uidservtype, targetdate, timestamp, performance):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -26,6 +26,7 @@ class TaskGocdbDowntimes(object):
         self.uidservtype = uidservtype
         self.targetdate = targetdate
         self.timestamp = timestamp
+        self.performance = performance
 
     async def fetch_data(self):
         start_time = time.time()
@@ -52,7 +53,8 @@ class TaskGocdbDowntimes(object):
                                                            start_fmt, end_fmt)
         res = await session.http_get(query_url)
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
         return res
 
@@ -73,7 +75,8 @@ class TaskGocdbDowntimes(object):
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
@@ -96,7 +99,8 @@ class TaskGocdbDowntimes(object):
             if dts or write_empty:
                 cust = list(self.confcust.get_customers())[0]
                 elapsed_time = time.time() - start_time
-                self.logger.info(f'run completed in {elapsed_time} seconds.')
+                if self.performance > 0:
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
                 self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
                             (self.confcust.get_custname(cust), self.targetdate, len(dts)))
 

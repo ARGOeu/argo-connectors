@@ -56,10 +56,15 @@ def main():
                         help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
                         help='write data for this date', type=str, required=False)
+    parser.add_argument('-v', '--verbose', dest="performance",
+                        help='Set verbosity level', action='count', default=0)
+    
+    
     args = parser.parse_args()
     group_endpoints, group_groups = [], []
     logger = Logger(os.path.basename(sys.argv[0]))
-
+    
+    performance = args.performance
     fixed_date = None
     if args.date and date_check(args.date):
         fixed_date = args.date
@@ -116,7 +121,7 @@ def main():
             loop, logger, sys.argv[0], SERVICE_ENDPOINTS_PI, SERVICE_GROUPS_PI,
             SITES_PI, globopts, auth_opts, webapi_opts, bdii_opts, confcust,
             custname, topofeed, topofetchtype, fixed_date, uidservendp,
-            pass_extensions, topofeedpaging, notiflag
+            pass_extensions, topofeedpaging, notiflag, performance
         )
         loop.run_until_complete(task.run())
 

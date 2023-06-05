@@ -73,7 +73,7 @@ def join_resources(left, right):
 
 class TaskProviderTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, topofeedpaging, uidservendp, fetchtype, fixed_date):
+                 confcust, topofeedpaging, uidservendp, fetchtype, fixed_date, performance):
         self.loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -84,6 +84,7 @@ class TaskProviderTopology(object):
         self.uidservendp = uidservendp
         self.fixed_date = fixed_date
         self.fetchtype = fetchtype
+        self.performance = performance
 
     def parse_source_extensions(self, extensions, groupnames):
         resources_extended = ParseExtensions(self.logger, extensions, groupnames, self.uidservendp, self.logger.customer)
@@ -107,7 +108,8 @@ class TaskProviderTopology(object):
                         date=fixed_date)
         await webapi.send(data, topotype)
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def fetch_data(self, feed, access_token, paginated):
         start_time = time.time()
@@ -154,7 +156,8 @@ class TaskProviderTopology(object):
 
                 await session.close()
                 elapsed_time = time.time() - start_time
-                self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+                if self.performance > 0:
+                    self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
                 return dict(results=fetched_results)
 
             except ConnectorParseError as exc:
@@ -177,7 +180,8 @@ class TaskProviderTopology(object):
                                                                             headers=headers)           
                 await session.close()
                 elapsed_time = time.time() - start_time
-                self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+                if self.performance > 0:
+                    self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
                 return res
 
             except ConnectorParseError as exc:
@@ -213,7 +217,8 @@ class TaskProviderTopology(object):
             raise ConnectorParseError(msg)
 
         elapsed_time = time.time() - start_time
-        self.logger.info(f'token_fetch completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'token_fetch completed in {elapsed_time} seconds.')
         return access_token
 
     async def run(self):
@@ -280,6 +285,7 @@ class TaskProviderTopology(object):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
             elapsed_time = time.time() - start_time
-            self.logger.info(f'run completed in {elapsed_time} seconds.')
+            if self.performance > 0:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
             self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
         

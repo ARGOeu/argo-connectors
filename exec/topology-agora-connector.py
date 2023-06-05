@@ -37,9 +37,11 @@ def main():
     parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf', help='path to customer configuration file', type=str, required=False)
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
+    parser.add_argument('-v', '--verbose', dest="performance", help='Set verbosity level', action='count', default=0)
     args = parser.parse_args()
 
     logger = Logger(os.path.basename(sys.argv[0]))
+    performance = args.performance
     fixed_date = None
     if args.date and date_check(args.date):
         fixed_date = args.date
@@ -66,7 +68,7 @@ def main():
     try:
         task = AgoraProviderTopology(
             loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
-            uidservendp, fetchtype, fixed_date
+            uidservendp, fetchtype, fixed_date, performance
         )
         loop.run_until_complete(task.run())
 

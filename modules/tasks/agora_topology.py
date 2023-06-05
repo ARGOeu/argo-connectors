@@ -19,7 +19,7 @@ def contains_exception(list):
 
 class AgoraProviderTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, uidservendp, fetchtype, fixed_date):
+                 confcust, uidservendp, fetchtype, fixed_date, performance):
         self.loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -29,7 +29,7 @@ class AgoraProviderTopology(object):
         self.uidservendp = uidservendp
         self.fixed_date = fixed_date
         self.fetchtype = fetchtype
-
+        self.performance = performance
 
     def parse_source_topo(self, resources, providers):
         topo = ParseAgoraTopo(self.logger, providers, resources, self.uidservendp)
@@ -50,7 +50,8 @@ class AgoraProviderTopology(object):
 
         await webapi.send(data, topotype)
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
 
     async def fetch_data(self, feed):
@@ -69,7 +70,8 @@ class AgoraProviderTopology(object):
 
             await session.close()
             elapsed_time = time.time() - start_time
-            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+            if self.performance > 0:
+                self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
             return res
 
         except ConnectorHttpError as exc:
@@ -116,7 +118,8 @@ class AgoraProviderTopology(object):
                     write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
                 elapsed_time = time.time() - start_time  
-                self.logger.info(f'run completed in {elapsed_time} seconds.')
+                if self.performance > 0:
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
                 self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
 
         

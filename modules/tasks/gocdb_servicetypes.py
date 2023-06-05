@@ -22,7 +22,7 @@ def contains_exception(list):
 
 class TaskGocdbServiceTypes(object):
     def __init__(self, loop, logger, connector_name, globopts, auth_opts,
-                 webapi_opts, confcust, custname, feed, timestamp, initsync):
+                 webapi_opts, confcust, custname, feed, timestamp, initsync, performance):
         self.logger = logger
         self.loop = loop
         self.connector_name = connector_name
@@ -34,6 +34,7 @@ class TaskGocdbServiceTypes(object):
         self.feed = feed
         self.timestamp = timestamp
         self.initsync = initsync
+        self.performance = performance
 
     async def fetch_data(self):
         start_time = time.time()
@@ -48,7 +49,8 @@ class TaskGocdbServiceTypes(object):
                                                            feed_parts.query))
 
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     async def fetch_webapi(self):
@@ -63,7 +65,8 @@ class TaskGocdbServiceTypes(object):
                         date=self.timestamp)
         
         elapsed_time = time.time() - start_time
-        self.logger.info(f'fetch_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'fetch_webapi completed in {elapsed_time} seconds.')
         
         return await webapi.get('service-types', jsonret=False)
 
@@ -79,7 +82,8 @@ class TaskGocdbServiceTypes(object):
                         date=self.timestamp)
         await webapi.send(data, 'service-types')
         elapsed_time = time.time() - start_time
-        self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
+        if self.performance > 0:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     def parse_source(self, res):
         gocdb = ParseGocdbServiceTypes(self.logger, res)
@@ -121,7 +125,8 @@ class TaskGocdbServiceTypes(object):
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await self.send_webapi(service_types)
             elapsed_time = time.time() - start_time
-            self.logger.info(f'run completed in {elapsed_time} seconds.')
+            if self.performance > 0:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
             self.logger.info('Customer:' + self.custname + ' Fetched GOCDB ServiceTypes:%d' % (len(service_types)))
             
 
