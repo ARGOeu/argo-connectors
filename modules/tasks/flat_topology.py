@@ -55,7 +55,7 @@ class TaskFlatTopology(object):
                                                             remote_topo.path))
             
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
@@ -80,7 +80,7 @@ class TaskFlatTopology(object):
                         date=self.fixed_date)
         await webapi.send(data, topotype)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
@@ -117,7 +117,7 @@ class TaskFlatTopology(object):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
             elapsed_time = time.time() - start_time
-            if self.performance > 0:
+            if self.performance:
                 self.logger.info(f'run completed in {elapsed_time} seconds.')
             
             self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))

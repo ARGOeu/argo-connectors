@@ -210,7 +210,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
 
         elapsed_time = time.time() - start_time
         
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'fetch_ldap_data completed in {elapsed_time} seconds.')
         return res
 
@@ -241,7 +241,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
                 
             elapsed_time = time.time() - start_time
             
-            if self.performance > 0:
+            if self.performance:
                 self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
             return filter_multiple_tags(''.join(fetched_data))
@@ -254,7 +254,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
 
             elapsed_time = time.time() - start_time
         
-            if self.performance > 0:
+            if self.performance:
                 self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
             return res
 
@@ -271,7 +271,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
         await webapi.send(data, topotype)
         elapsed_time = time.time() - start_time
         
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
@@ -437,7 +437,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
 
         elapsed_time = time.time() - start_time
         
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'run completed in {elapsed_time} seconds.')
         
         self.logger.info('Customer:' + self.custname + ' Type:%s ' % (','.join(

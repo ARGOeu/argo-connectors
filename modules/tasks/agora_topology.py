@@ -50,7 +50,7 @@ class AgoraProviderTopology(object):
 
         await webapi.send(data, topotype)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
 
@@ -70,7 +70,7 @@ class AgoraProviderTopology(object):
 
             await session.close()
             elapsed_time = time.time() - start_time
-            if self.performance > 0:
+            if self.performance:
                 self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
             return res
 
@@ -118,7 +118,7 @@ class AgoraProviderTopology(object):
                     write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
                 elapsed_time = time.time() - start_time  
-                if self.performance > 0:
+                if self.performance:
                     self.logger.info(f'run completed in {elapsed_time} seconds.')
                 self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
 

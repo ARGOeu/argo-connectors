@@ -32,7 +32,7 @@ class TaskVaporWeights(object):
                                                         feed_parts.netloc,
                                                         feed_parts.path))
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
@@ -63,7 +63,7 @@ class TaskVaporWeights(object):
                         date=self.fixed_date)
         await webapi.send(weights)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
@@ -98,7 +98,7 @@ class TaskVaporWeights(object):
                 for cust in custs:
                     jobs = [job for job, lcust in self.jobcust if cust == lcust]
                     elapsed_time = time.time() - start_time
-                    if self.performance > 0:
+                    if self.performance:
                         self.logger.info(f'run completed in {elapsed_time} seconds.')
                     self.logger.info('Customer:%s Jobs:%s Sites:%d' %
                                     (self.confcust.get_custname(cust), jobs[0]

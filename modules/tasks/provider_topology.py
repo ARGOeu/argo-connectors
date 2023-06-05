@@ -108,7 +108,7 @@ class TaskProviderTopology(object):
                         date=fixed_date)
         await webapi.send(data, topotype)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def fetch_data(self, feed, access_token, paginated):
@@ -156,7 +156,7 @@ class TaskProviderTopology(object):
 
                 await session.close()
                 elapsed_time = time.time() - start_time
-                if self.performance > 0:
+                if self.performance:
                     self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
                 return dict(results=fetched_results)
 
@@ -180,7 +180,7 @@ class TaskProviderTopology(object):
                                                                             headers=headers)           
                 await session.close()
                 elapsed_time = time.time() - start_time
-                if self.performance > 0:
+                if self.performance:
                     self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
                 return res
 
@@ -217,7 +217,7 @@ class TaskProviderTopology(object):
             raise ConnectorParseError(msg)
 
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'token_fetch completed in {elapsed_time} seconds.')
         return access_token
 
@@ -285,7 +285,7 @@ class TaskProviderTopology(object):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
             elapsed_time = time.time() - start_time
-            if self.performance > 0:
+            if self.performance:
                 self.logger.info(f'run completed in {elapsed_time} seconds.')
             self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
         

@@ -53,7 +53,7 @@ class TaskGocdbDowntimes(object):
                                                            start_fmt, end_fmt)
         res = await session.http_get(query_url)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
         return res
@@ -75,7 +75,7 @@ class TaskGocdbDowntimes(object):
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
@@ -99,7 +99,7 @@ class TaskGocdbDowntimes(object):
             if dts or write_empty:
                 cust = list(self.confcust.get_customers())[0]
                 elapsed_time = time.time() - start_time
-                if self.performance > 0:
+                if self.performance:
                     self.logger.info(f'run completed in {elapsed_time} seconds.')
                 self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
                             (self.confcust.get_custname(cust), self.targetdate, len(dts)))

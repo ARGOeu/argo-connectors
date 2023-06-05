@@ -35,7 +35,7 @@ class TaskCsvDowntimes(object):
         res = await session.http_get(self.feed)
 
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
@@ -56,7 +56,7 @@ class TaskCsvDowntimes(object):
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
@@ -87,7 +87,7 @@ class TaskCsvDowntimes(object):
                            self.confcust, dts, self.timestamp)
             
             elapsed_time = time.time() - start_time
-            if self.performance > 0:
+            if self.performance:
                 self.logger.info(f'run completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:

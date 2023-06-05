@@ -30,7 +30,7 @@ class TaskWebApiMetricProfile(object):
         res = await session.http_get('{}://{}{}'.format('https', host, API_PATH))
 
         elapsed_time = time.time() - start_time
-        if self.performance > 0:
+        if self.performance:
             self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
@@ -65,7 +65,7 @@ class TaskWebApiMetricProfile(object):
                     write_json(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
 
                 elapsed_time = time.time() - start_time
-                if self.performance > 0:
+                if self.performance:
                     self.logger.info(f'run completed in {elapsed_time} seconds.')
                 
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
