@@ -33,24 +33,26 @@ class TaskGocdbDowntimes(object):
     ###################################################################################
 
     def __init__(self, custname, start, end, timestamp):
+        self.config = ConfigClass()
         self.custname = custname
         self.start = start
         self.end = end
         self.timestamp = timestamp
-
+        self.args = self.config.parse_args()
         self.config = ConfigClass()
         self.loop = self.config.get_loop()
         asyncio.set_event_loop(self.loop)  
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
-        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
-        self.confcust = self.config.get_confcust(self.globopts)
-        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.cglob = self.config.get_cglob(self.args)
+        self.globopts= self.config.get_globopts(self.cglob)
+        self.confcust = self.config.get_confcust(self.globopts, self.args)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.cglob, self.logger)
         self.custname = self.config.custname_data(self.confcust)
-        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.cglob, self.custname)
         self.feed = self.config.get_downtime_feed(self.confcust)
         self.uidservtype = self.config.uidservendp_data(self.confcust)
-        self.targetdate = self.config.get_target_date()
+        self.targetdate = self.config.get_target_date(self.args)
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)

@@ -175,7 +175,10 @@ class ConfigClass(metaclass=Singleton):
         return feed
 
     def get_initsync(self, args):
-        return args.initsync
+        if hasattr(args, 'initsync') and args.initsync:
+            return True
+        else:
+            return False
 
     def get_downtime_feed(self, confcust):
         return confcust.get_downfeed()

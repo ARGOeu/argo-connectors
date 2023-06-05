@@ -32,13 +32,13 @@ def get_webapi_opts(cglob, confcust):
 
 
 def main():
-    global logger, globopts
-    parser = argparse.ArgumentParser(description='Fetch service types from GOCDB')
-    parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf', help='path to customer configuration file', type=str, required=False)
-    parser.add_argument('--initial', dest='initsync', help='initial sync of service types', action='store_true', default=False, required=False)
-    parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
-    parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
-    args = parser.parse_args()
+    # global logger, globopts
+    # parser = argparse.ArgumentParser(description='Fetch service types from GOCDB')
+    # parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf', help='path to customer configuration file', type=str, required=False)
+    # parser.add_argument('--initial', dest='initsync', help='initial sync of service types', action='store_true', default=False, required=False)
+    # parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
+    # parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
+    #args = parser.parse_args()
 
     # fixed_date = None
     # if args.date and date_check(args.date):
@@ -72,8 +72,7 @@ def main():
 
     ##########################################################################
 
-    config = ConfigClass(args)
-
+    config = ConfigClass()
     args = config.parse_args()
     cglob = config.get_cglob(args)
     globopts = config.get_globopts(cglob) 

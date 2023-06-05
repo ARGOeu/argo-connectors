@@ -55,9 +55,10 @@ def main():
         raise SystemExit(1)
 
     config = ConfigClass(args)
-
-    globopts, _, _ = config.get_globopts_n_pass_ext()
-    confcust = config.get_confcust(globopts)
+    args = config.parse_args()
+    cglob = config.get_cglob(args)
+    globopts = config.get_globopts(cglob)
+    confcust = config.get_confcust(globopts, args)
     logger = config.get_logger()
 
     loop = config.get_loop()
