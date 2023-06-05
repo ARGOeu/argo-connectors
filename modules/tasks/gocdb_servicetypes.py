@@ -39,18 +39,20 @@ class TaskGocdbServiceTypes(object):
 
     def __init__(self):
         self.config = ConfigClass()
+        self.args = self.config.parse_args()
         self.loop = self.config.get_loop()
         asyncio.set_event_loop(self.loop)
         self.logger = self.config.get_logger()
         self.connector_name = self.config.get_connector_name()
-        self.globopts, _, _ = self.config.get_globopts_n_pass_ext()
-        self.confcust = self.config.get_confcust(self.globopts)
-        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.cglob = self.config.get_cglob(self.args)
+        self.globopts= self.config.get_globopts(self.cglob)
+        self.confcust = self.config.get_confcust(self.globopts, self.args)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.cglob, self.logger)
         self.custname = self.config.custname_data(self.confcust)
-        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.cglob, self.custname)
         self.feed = self.config.get_feed(self.confcust)
-        self.timestamp = self.config.get_fixed_date()
-        self.initsync = self.config.get_initsync()
+        self.timestamp = self.config.get_fixed_date(self.args)
+        self.initsync = self.config.get_initsync(self.args)
 
 
 

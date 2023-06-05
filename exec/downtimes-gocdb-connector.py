@@ -43,31 +43,6 @@ def main():
                         help='path to global configuration file', type=str, required=False)
     args = parser.parse_args()
 
-    # logger = Logger(os.path.basename(sys.argv[0]))
-    # confpath = args.gloconf[0] if args.gloconf else None
-    # cglob = Global(sys.argv[0], confpath)
-    # globopts = cglob.parse()
-
-    # confpath = args.custconf[0] if args.custconf else None
-    # confcust = CustomerConf(sys.argv[0], confpath)
-    # confcust.parse()
-    # confcust.make_dirstruct()
-    # confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-
-    # logger.customer = confcust.get_custname()
-
-    # auth_custopts = confcust.get_authopts()
-    # auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
-    # auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
-    # if not auth_complete:
-    #     logger.error('%s options incomplete, missing %s' %
-    #                  ('authentication', ' '.join(missing)))
-    #     raise SystemExit(1)
-
-    # if len(args.date) == 0:
-    #     raise SystemExit(1)
-
-    #calculate start and end times
     try:
         start = datetime.datetime.strptime(args.date[0], '%Y-%m-%d')
         end = datetime.datetime.strptime(args.date[0], '%Y-%m-%d')
@@ -79,17 +54,6 @@ def main():
         logger.error(exc)
         raise SystemExit(1)
 
-    # downtime_feed = confcust.get_downfeed()
-
-    # uidservtype = confcust.get_uidserviceendpoints()
-    # webapi_opts = get_webapi_opts(cglob, confcust)
-
-    # loop = uvloop.new_event_loop()
-    # asyncio.set_event_loop(loop)
-
-
-    ##########################################################################
-
     config = ConfigClass(args)
 
     globopts, _, _ = config.get_globopts_n_pass_ext()
@@ -99,22 +63,11 @@ def main():
     loop = config.get_loop()
     asyncio.set_event_loop(loop)
 
-    ##########################################################################
-
     try:
         cust = list(confcust.get_customers())[0]
         cust = confcust.get_custname(cust)
 
-        # task = TaskGocdbDowntimes(loop, logger, sys.argv[0], globopts,
-        #                           auth_opts, webapi_opts, confcust,
-        #                           confcust.get_custname(cust), downtime_feed, start,
-        #                           end, uidservtype, args.date[0], timestamp)
-
-        ###################################################################################
-
         task = TaskGocdbDowntimes(cust, start, end, timestamp)
-
-        ###################################################################################
 
         loop.run_until_complete(task.run())
 

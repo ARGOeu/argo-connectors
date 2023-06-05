@@ -39,6 +39,8 @@ async def write_weights_metricprofile_state(connector_name, globopts, cust, job,
                           globopts['InputStateDays'.lower()])
 
 
+##################################################################################################################
+
 def write_metricprofile_json(logger, globopts, cust, job, confcust, fixed_date, fetched_profiles):
     jobdir = confcust.get_fulldir(cust, job)
     if fixed_date:
@@ -47,19 +49,20 @@ def write_metricprofile_json(logger, globopts, cust, job, confcust, fixed_date, 
     else:
         filename = filename_date(
             logger, globopts['OutputMetricProfile'.lower()], jobdir)
-    json_writer = JsonWriter(fetched_profiles, filename, globopts['generalcompressjson'])
+    json_writer = JsonWriter(fetched_profiles, filename)#, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:%s Job:%s %s' %
                      (logger.customer, logger.job, repr(excep)))
         raise SystemExit(1)
 
+##################################################################################################################
 
 def write_downtimes_json(logger, globopts, confcust, dts, timestamp):
     custdir = confcust.get_custdir()
     filename = filename_date(
         logger, globopts['OutputDowntimes'.lower()], custdir, stamp=timestamp)
-    json_writer = JsonWriter(dts, filename, globopts['generalcompressjson'])
+    json_writer = JsonWriter(dts, filename)#, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:{} {}'.format(logger.customer, repr(excep)))
