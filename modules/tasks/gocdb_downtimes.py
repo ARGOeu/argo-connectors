@@ -64,6 +64,8 @@ class TaskGocdbDowntimes(object):
                         int(self.globopts['ConnectionRetry'.lower()]),
                         int(self.globopts['ConnectionTimeout'.lower()]),
                         int(self.globopts['ConnectionSleepRetry'.lower()]),
+                        self.globopts['ConnectionRetryRandom'.lower()],
+                        int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
 

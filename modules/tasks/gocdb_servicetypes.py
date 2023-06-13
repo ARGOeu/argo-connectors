@@ -7,7 +7,7 @@ from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.gocdb_servicetypes import ParseGocdbServiceTypes
 from argo_connectors.parse.webapi_servicetypes import ParseWebApiServiceTypes
 from argo_connectors.io.webapi import WebAPI
-from argo_connectors.tasks.common import write_state, write_downtimes_json as write_avro
+from argo_connectors.tasks.common import write_state, write_downtimes_json as write_json
 from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
 
 
@@ -43,7 +43,6 @@ class TaskGocdbServiceTypes(object):
                                                            feed_parts.netloc,
                                                            feed_parts.path,
                                                            feed_parts.query))
-
         return res
 
     async def fetch_webapi(self):
@@ -52,6 +51,8 @@ class TaskGocdbServiceTypes(object):
                         int(self.globopts['ConnectionRetry'.lower()]),
                         int(self.globopts['ConnectionTimeout'.lower()]),
                         int(self.globopts['ConnectionSleepRetry'.lower()]),
+                        self.globopts['ConnectionRetryRandom'.lower()],
+                        int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.timestamp)
         return await webapi.get('service-types', jsonret=False)
 
@@ -61,6 +62,8 @@ class TaskGocdbServiceTypes(object):
                         int(self.globopts['ConnectionRetry'.lower()]),
                         int(self.globopts['ConnectionTimeout'.lower()]),
                         int(self.globopts['ConnectionSleepRetry'.lower()]),
+                        self.globopts['ConnectionRetryRandom'.lower()],
+                        int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.timestamp)
         await webapi.send(data, 'service-types')
 

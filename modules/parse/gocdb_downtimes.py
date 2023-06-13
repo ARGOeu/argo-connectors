@@ -1,7 +1,7 @@
 import datetime
-import xml.dom.minidom
+from lxml import etree
+from lxml.etree import XMLSyntaxError
 
-from xml.parsers.expat import ExpatError
 from argo_connectors.utils import module_class_name
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.parse.base import ParseHelpers
@@ -9,31 +9,49 @@ from argo_connectors.parse.base import ParseHelpers
 
 class ParseDowntimes(ParseHelpers):
     def __init__(self, logger, data, start, end, uid=False):
-        self.uid = uid
-        self.start = start
-        self.end = end
+
         self.logger = logger
         self.data = data
+        self.start = start
+        self.end = end
+        self.uid = uid
 
     def get_data(self):
         filtered_downtimes = list()
 
         try:
-            downtimes = self.parse_xml(self.data).getElementsByTagName('DOWNTIME')
+            doc = self.parse_xml(self.data)
+            xml_bytes = doc.encode("utf-8")
+            root = etree.fromstring(xml_bytes)
 
-            for downtime in downtimes:
-                classification = downtime.getAttributeNode('CLASSIFICATION').nodeValue
-                hostname = self.parse_xmltext(downtime.getElementsByTagName('HOSTNAME')[0].childNodes)
-                service_type = self.parse_xmltext(downtime.getElementsByTagName('SERVICE_TYPE')[0].childNodes)
-                start_str = self.parse_xmltext(downtime.getElementsByTagName('FORMATED_START_DATE')[0].childNodes)
-                end_str = self.parse_xmltext(downtime.getElementsByTagName('FORMATED_END_DATE')[0].childNodes)
-                severity = self.parse_xmltext(downtime.getElementsByTagName('SEVERITY')[0].childNodes)
+            for downtimes in root:
+                classification = downtimes.attrib['CLASSIFICATION']
+     
+                for downtime in downtimes.xpath('.//HOSTNAME'):
+                    hostname = downtime.text
+
+                for downtime in downtimes.xpath('.//SERVICE_TYPE'):
+                    service_type = downtime.text
+
+                for downtime in downtimes.xpath('.//FORMATED_START_DATE'):
+                    start_str = downtime.text
+
+                for downtime in downtimes.xpath('.//FORMATED_END_DATE'):
+                    end_str = downtime.text
+
+                for downtime in downtimes.xpath('.//SEVERITY'):
+                    severity = downtime.text
+
                 try:
-                    service_id = self.parse_xmltext(downtime.getElementsByTagName('PRIMARY_KEY')[0].childNodes)
-                except IndexError:
+                    for downtime in downtimes.xpath('.//PRIMARY_KEY'):
+                        service_id = downtime.text
+                except ImportError:
                     service_id = downtime.getAttribute('PRIMARY_KEY')
-                start_time = datetime.datetime.strptime(start_str, "%Y-%m-%d %H:%M")
-                end_time = datetime.datetime.strptime(end_str, "%Y-%m-%d %H:%M")
+
+                start_time = datetime.datetime.strptime(
+                    start_str, "%Y-%m-%d %H:%M")
+                end_time = datetime.datetime.strptime(
+                    end_str, "%Y-%m-%d %H:%M")
 
                 if start_time < self.start:
                     start_time = self.start
@@ -43,18 +61,22 @@ class ParseDowntimes(ParseHelpers):
                 if classification == 'SCHEDULED' and severity == 'OUTAGE':
                     downtime = dict()
                     if self.uid:
-                        downtime['hostname'] = '{0}_{1}'.format(hostname, service_id)
+                        downtime['hostname'] = '{0}_{1}'.format(
+                            hostname, service_id)
                     else:
                         downtime['hostname'] = hostname
                     downtime['service'] = service_type
-                    downtime['start_time'] = start_time.strftime('%Y-%m-%dT%H:%M:00Z')
-                    downtime['end_time'] = end_time.strftime('%Y-%m-%dT%H:%M:00Z')
+                    downtime['start_time'] = start_time.strftime(
+                        '%Y-%m-%dT%H:%M:00Z')
+                    downtime['end_time'] = end_time.strftime(
+                        '%Y-%m-%dT%H:%M:00Z')
                     filtered_downtimes.append(downtime)
 
             return filtered_downtimes
 
-        except (KeyError, IndexError, AttributeError, TypeError, AssertionError) as exc:
-            msg = '{} Customer:{} : Error parsing downtimes feed - {}'.format(module_class_name(self), self.logger.customer, repr(exc))
+        except (KeyError, IndexError, AttributeError, TypeError, AssertionError, XMLSyntaxError) as exc:
+            msg = '{} Customer:{} : Error parsing downtimes feed - {}'.format(
+                module_class_name(self), self.logger.customer, repr(exc))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:

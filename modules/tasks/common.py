@@ -36,7 +36,7 @@ def write_metricprofile_json(logger, globopts, cust, job, confcust, fixed_date, 
     else:
         filename = filename_date(
             logger, globopts['OutputMetricProfile'.lower()], jobdir)
-    json_writer = JsonWriter(fetched_profiles, filename)
+    json_writer = JsonWriter(fetched_profiles, filename, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:%s Job:%s %s' %
@@ -48,7 +48,7 @@ def write_downtimes_json(logger, globopts, confcust, dts, timestamp):
     custdir = confcust.get_custdir()
     filename = filename_date(
         logger, globopts['OutputDowntimes'.lower()], custdir, stamp=timestamp)
-    json_writer = JsonWriter(dts, filename)
+    json_writer = JsonWriter(dts, filename, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:{} {}'.format(logger.customer, repr(excep)))
@@ -64,7 +64,7 @@ def write_weights_json(logger, globopts, cust, job, confcust, fixed_date, weight
         filename = filename_date(
             logger, globopts['OutputWeights'.lower()], jobdir)
 
-    json_writer = JsonWriter(weights, filename)
+    json_writer = JsonWriter(weights, filename, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:%s Job:%s %s' %
@@ -80,7 +80,7 @@ def write_topo_json(logger, globopts, confcust, group_groups, group_endpoints, f
     else:
         filename = filename_date(
             logger, globopts['OutputTopologyGroupOfGroups'.lower()], custdir)
-    json_writer = JsonWriter(group_groups, filename)
+    json_writer = JsonWriter(group_groups, filename, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:%s : %s' % (logger.customer, repr(excep)))
@@ -92,7 +92,7 @@ def write_topo_json(logger, globopts, confcust, group_groups, group_endpoints, f
     else:
         filename = filename_date(
             logger, globopts['OutputTopologyGroupOfEndpoints'.lower()], custdir)
-    json_writer = JsonWriter(group_endpoints, filename)
+    json_writer = JsonWriter(group_endpoints, filename, globopts['generalcompressjson'])
     ret, excep = json_writer.write_json()
     if not ret:
         logger.error('Customer:%s : %s' % (logger.customer, repr(excep)))

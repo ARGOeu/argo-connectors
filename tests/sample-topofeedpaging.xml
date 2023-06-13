@@ -1,0 +1,56 @@
+<results>
+  <meta>
+    <link rel="self" href="https://goc-sdc.argo.grnet.gr/private/?method=get_site&amp;scope=&amp;next_cursor=0"/>
+    <link rel="next" href="https://goc-sdc.argo.grnet.gr/private/?method=get_site&amp;scope=&amp;next_cursor=134"/>
+    <link rel="prev" href="https://goc-sdc.argo.grnet.gr/private/?method=get_site&amp;scope=&amp;prev_cursor=13"/>
+    <link rel="start" href="https://goc-sdc.argo.grnet.gr/private/?method=get_site&amp;scope=&amp;next_cursor=0"/>
+    <count>95</count>
+    <max_page_size>100</max_page_size>
+  </meta>
+  <SITE ID="13" PRIMARY_KEY="2G0" NAME="FZ-JUELICH">
+    <PRIMARY_KEY>2G0</PRIMARY_KEY>
+    <SHORT_NAME>FZ-JUELICH</SHORT_NAME>
+    <SITE_DESCRIPTION>Authentication and authorization service</SITE_DESCRIPTION>
+    <GOCDB_PORTAL_URL>https://goc-sdc.mock.foo.foo/portal/index.php?Page_Type=Site&amp;id=13</GOCDB_PORTAL_URL>
+    <CONTACT_EMAIL>themis@foo.foo</CONTACT_EMAIL>
+    <CONTACT_TEL>+30111111111122</CONTACT_TEL>
+    <COUNTRY_CODE>DE</COUNTRY_CODE>
+    <COUNTRY>Germany</COUNTRY>
+    <ROC>SDC-ALL</ROC>
+    <PRODUCTION_INFRASTRUCTURE>Production</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Certified</CERTIFICATION_STATUS>
+    <TIMEZONE>Europe/Rome</TIMEZONE>
+    <NOTIFICATIONS>FALSE</NOTIFICATIONS>
+    <DOMAIN>
+      <DOMAIN_NAME>b2access.mock.foo</DOMAIN_NAME>
+    </DOMAIN>
+    <SCOPES>
+      <SCOPE>SDC</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SITE>
+  <SITE ID="14" PRIMARY_KEY="4G0" NAME="IGME-GR">
+    <PRIMARY_KEY>4G0</PRIMARY_KEY>
+    <SHORT_NAME>IGME-GR</SHORT_NAME>
+    <OFFICIAL_NAME>IGME-GR</OFFICIAL_NAME>
+    <SITE_DESCRIPTION>IGME-GR</SITE_DESCRIPTION>
+    <GOCDB_PORTAL_URL>https://goc-sdc.mock.foo.foo/portal/index.php?Page_Type=Site&amp;id=14</GOCDB_PORTAL_URL>
+    <HOME_URL>https://www.foo.foo</HOME_URL>
+    <CONTACT_EMAIL>izanan@foo.foo</CONTACT_EMAIL>
+    <CONTACT_TEL>1212232323</CONTACT_TEL>
+    <COUNTRY_CODE>GR</COUNTRY_CODE>
+    <COUNTRY>Greece</COUNTRY>
+    <ROC>SDC-ALL</ROC>
+    <PRODUCTION_INFRASTRUCTURE>Production</PRODUCTION_INFRASTRUCTURE>
+    <CERTIFICATION_STATUS>Certified</CERTIFICATION_STATUS>
+    <TIMEZONE>Europe/Athens</TIMEZONE>
+    <NOTIFICATIONS>FALSE</NOTIFICATIONS>
+    <DOMAIN>
+      <DOMAIN_NAME>igme.foo</DOMAIN_NAME>
+    </DOMAIN>
+    <SCOPES>
+      <SCOPE>SDC</SCOPE>
+    </SCOPES>
+    <EXTENSIONS/>
+  </SITE>
+</results>

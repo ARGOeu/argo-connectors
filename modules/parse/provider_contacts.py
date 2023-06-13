@@ -1,5 +1,5 @@
 from argo_connectors.parse.base import ParseHelpers
-from argo_connectors.utils import construct_fqdn
+from argo_connectors.utils import construct_fqdn, remove_non_utf
 from urllib.parse import urlparse
 
 
@@ -47,8 +47,7 @@ class ParseResourcesContacts(ParseHelpers):
             resource = feeddata['service']
             if not resource.get('webpage', False):
                 continue
-            key = '{}+{}'.format(construct_fqdn(resource['webpage']),
-                                 resource['id'])
+            key = '{}+{}'.format(construct_fqdn(resource['webpage']), remove_non_utf(resource['id']))
             contacts = [contact['email'] for contact in resource['publicContacts']]
             if contacts:
                 self._resource_contacts[key] = contacts

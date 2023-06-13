@@ -1,9 +1,10 @@
 [DEFAULT]
 
 [General]
-WriteAvro = True
+WriteJson = True
 PublishWebAPI = False
 PassExtensions = True
+CompressJson = True
 
 [Authentication]
 VerifyServerCert = False

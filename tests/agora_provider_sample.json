@@ -1,0 +1,120 @@
+[
+  {
+    "epp_oth_participating_countries": "Europe",
+    "epp_cli_tags": "Serbia, research institute, biology, biological sciences",
+    "epp_oth_esfri_type": null,
+    "epp_cli_scientific_subdomain": [
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/7e1f6beb-418d-42ea-96c0-3242432432dsfssd/",
+        "id": "7e1f6beb-418d-42ea-96c0-3242432432dsfssd",
+        "name": "Biological Sciences"
+      }
+    ],
+    "epp_coi_first_name": "Direktor",
+    "published_at": "2022-04-22T01:16:25",
+    "epp_oth_networks": [],
+    "epp_cli_scientific_domain": [
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "id": "5df3124a-b8af-44d3-9dbf-64f18022d8cd",
+        "name": "Natural Sciences"
+      }
+    ],
+    "id": "02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
+    "epp_mti_life_cycle_status": "Operational",
+    "epp_coi_position": "Director",
+    "epp_coi_last_name": "IBISS-a",
+    "epp_mri_description": "<p>The <a href=\"http://www.fooo.mock.ac.rs/index.php/en/\" rel=\"noopener\" target=\"_blank\">Institute for Biological Research Sinisa Stankovic, National Institute of Republic of Serbia, University of Belgrade</a> is the leading multidisciplinary scientific institution in Serbia in the field of biological sciences.</p>\n<p>Research at the Institute focuses on the following scientific disciplines: biochemistry, molecular biology, cytology, animal physiology, plant physiology, neurobiology, neurophysiology, immunology, genetics, aquatic and terrestrial ecosystem ecology, environmental protection, taxonomy and organic evolution. In addition to advancing scientific knowledge in these fields, all of the research is important for the development of other fields which have biology at their root (medicine, forestry, pharmacy, agriculture, biotechnology, etc.).</p>\n<p>The second important sphere of the Institute's activities is the continuous development and education of scientific research staff, which includes the advanced training of young researchers through various scientific activities. A large number of graduate, post-graduate and doctoral works are written at the Institute. As the Institute is a member of the University of Belgrade, its staff actively participate in teaching graduate, post-graduate and doctoral courses.</p>",
+    "epp_cli_structure_type": [],
+    "epp_loi_street_name_and_number": "Bulevar despota Stefana 142",
+    "epp_oth_areas_of_activity": [],
+    "epp_loi_country_or_territory": "Serbia  (RS)",
+    "epp_bai_website": "https://www.fooo.mock.ac.rs",
+    "epp_coi_email": "ibiss@ibiss.bg.ac.rs",
+    "epp_bai_abbreviation": "IBISS",
+    "epp_oth_esfri_domain": [],
+    "epp_loi_postal_code": "11060",
+    "epp_oth_meril_scientific_domain": [],
+    "epp_bai_id": "UoB_IBISS",
+    "updated_at": "2022-04-22T11:52:47",
+    "epp_oth_national_roadmaps": null,
+    "epp_bai_legal_entity": true,
+    "epp_loi_region": null,
+    "epp_bai_name": "Institute for Biological Research Sinisa Stankovic, University of Belgrade",
+    "epp_mri_logo": "https://www.fooo.mock.ac.rs/images/ibiss_logo75-godina.png",
+    "epp_oth_meril_scientific_subdomain": [],
+    "epp_oth_affiliations": [],
+    "epp_oth_societal_grand_challenges": [],
+    "created_at": "2022-04-22T01:07:51",
+    "epp_bai_legal_status": {
+      "href": "https://agora.ni4os.eu/api/v2/public/legalstatuses/ecee1088-bda1-4d46-a708-3423432432/",
+      "id": "ecee1088-bda1-4d46-a708-3423432432",
+      "name": "Public Legal Entity"
+    },
+    "epp_loi_city": "Belgrade",
+    "epp_mri_multimedia": null,
+    "epp_mti_certifications": null,
+    "epp_coi_phone": "+3899999999",
+    "epp_bai_hosting_legal_entity": null
+  },
+  {
+    "epp_oth_participating_countries": "Europe, Croatia (HR)",
+    "epp_cli_tags": "faculty, economics, business, marketing, finance, management, Croatia",
+    "epp_oth_esfri_type": null,
+    "epp_cli_scientific_subdomain": [
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/07d9ff9f-c639-4b4f-8918-32131refd/",
+        "id": "07d9ff9f-c639-4b4f-8918-32131refd",
+        "name": "Economics & Business"
+      }
+    ],
+    "epp_coi_first_name": "Boris",
+    "published_at": "2022-03-29T11:42:41",
+    "epp_oth_networks": [],
+    "epp_cli_scientific_domain": [
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "id": "befdbe50-8122-49aa-9d53-07f8a31c84ab",
+        "name": "Social Sciences"
+      }
+    ],
+    "id": "0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
+    "epp_mti_life_cycle_status": null,
+    "epp_coi_position": "Dean",
+    "epp_coi_last_name": "Crnkovic",
+    "epp_mri_description": "<p><span>Faculty of Eonomics in Osijek is a higher education and scientific institution, which through educational process and scientific-research work in the field of economics and business economics creates competent individuals capable of dealing with various challenges of the environment. We acquire and critically evaluate scientific knowledge, and gain new knowledge by conducting scientific research in the field of economics and related sciences and implement such new knowledge in the economy and the public sector with the aim of developing the environment. We are a socially responsible, innovative and open institution that encourages high academic values and ethical principles, which ensures equality and prosperity to its members, students and society in general.</span></p>",
+    "epp_cli_structure_type": [],
+    "epp_loi_street_name_and_number": "Trg Ljudevita Gaja 7",
+    "epp_oth_areas_of_activity": [],
+    "epp_loi_country_or_territory": "Croatia  (HR)",
+    "epp_bai_website": "http://www.efos.foo.mock.hr/",
+    "epp_coi_email": "ured.dekana@efos.hr",
+    "epp_bai_abbreviation": "UNIOS EFOS",
+    "epp_oth_esfri_domain": [],
+    "epp_loi_postal_code": "31000",
+    "epp_oth_meril_scientific_domain": [],
+    "epp_bai_id": "UNIOS-EFOS",
+    "updated_at": "2022-03-29T12:31:32",
+    "epp_oth_national_roadmaps": null,
+    "epp_bai_legal_entity": true,
+    "epp_loi_region": null,
+    "epp_bai_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek",
+    "epp_mri_logo": "https://repozitorij.com/sites/repozitorij.com/files/novi_logo.png",
+    "epp_oth_meril_scientific_subdomain": [],
+    "epp_oth_affiliations": [],
+    "epp_oth_societal_grand_challenges": [],
+    "created_at": "2022-03-29T11:39:51",
+    "epp_bai_legal_status": {
+      "href": "https://agora.ni4os.eu/api/v2/public/legalstatuses/ecee1088-bda1-4d46-a708-3423432432/",
+      "id": "ecee1088-bda1-4d46-a708-3423432432",
+      "name": "Public Legal Entity"
+    },
+    "epp_loi_city": "Osijek",
+    "epp_mri_multimedia": null,
+    "epp_mti_certifications": null,
+    "epp_coi_phone": "+3000000",
+    "epp_bai_hosting_legal_entity": null
+  }
+]

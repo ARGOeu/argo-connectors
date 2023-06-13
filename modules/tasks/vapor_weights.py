@@ -50,6 +50,8 @@ class TaskVaporWeights(object):
                         int(self.globopts['ConnectionRetry'.lower()]),
                         int(self.globopts['ConnectionTimeout'.lower()]),
                         int(self.globopts['ConnectionSleepRetry'.lower()]),
+                        self.globopts['ConnectionRetryRandom'.lower()],
+                        int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         report=self.confcust.get_jobdir(job), endpoints_group='SITES',
                         date=self.fixed_date)
         await webapi.send(weights)

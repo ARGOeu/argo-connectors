@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.2.3] - 2023-06-13
+
+### Added
+
+* ARGO-3665 Introduce random retry feature
+* ARGO-4169 Add agora topology connector
+* ARGO-4233 Implement gzip for jsonwrite
+
+### Changed
+
+* ARGO-4248 Remove handling of get_site_contacts and get_service_group_roles GOCDB PI methods
+
+### Fixed
+
+* ARGO-4212 Refactor argo-connectors by removing hardcoded urls
+* ARGO-4236 Handle hostnames with spaces and non-utf characters
+* ARGO-4317 Original hostname is missing in tags bucket when ID append is enabled for GOCDB tenants
+
 ## [2.2.2] - 2023-02-01
 
 ### Fixed

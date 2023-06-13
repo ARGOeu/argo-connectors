@@ -47,6 +47,7 @@ setup(name=NAME,
                       'exec/topology-gocdb-connector.py',
                       'exec/topology-json-connector.py',
                       'exec/topology-provider-connector.py',
+                      'exec/topology-agora-connector.py',
                       'exec/weights-vapor-connector.py',
                   ])
                 ])

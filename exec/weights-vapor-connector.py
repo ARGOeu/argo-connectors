@@ -18,7 +18,6 @@ from argo_connectors.utils import date_check
 globopts = {}
 logger = None
 
-VAPORPI = 'https://operations-portal.egi.eu/vapor/downloadLavoisier/option/json/view/VAPOR_Ngi_Sites_Info'
 
 def main():
     global logger, globopts
@@ -47,6 +46,8 @@ def main():
     confcust.parse()
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
+
+    VAPORPI = confcust.get_vaporpi()
     feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed=VAPORPI)
 
     loop = uvloop.new_event_loop()

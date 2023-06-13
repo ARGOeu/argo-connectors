@@ -4,6 +4,7 @@ from argo_connectors.log import Logger
 from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
 from argo_connectors.parse.flat_topology import ParseFlatEndpoints
 from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
+from argo_connectors.parse.agora_topology import ParseAgoraTopo
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 
@@ -91,6 +92,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
                     'info_service_endpoint_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
                     'monitored': '1',
                     'production': '1',
+                    'hostname': 'ce.physics.science.az',
                     'scope': 'EGI, wlcg, atlas'
                 },
                 'type': 'SITES'
@@ -108,6 +110,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
                                                 'https://aai.egi.eu/auth/realms/egi/protocol/openid-connect/auth',
                     'monitored': '1',
                     'production': '1',
+                    'hostname': 'aai.egi.eu',
                     'scope': 'EGI'
                 },
                 'type': 'SITES'},
@@ -117,6 +120,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
                 'service': 'CE',
                 'tags': {
                     'info_ID': '14G0',
+                    'hostname': 'grid13.gsi.de',
                     'monitored': '0',
                     'production': '0',
                     'scope': 'EGI, wlcg, tier2, alice'
@@ -131,6 +135,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
                     'info_HOSTDN': '/C=UK/O=eScience/OU=CLRC/L=RAL/CN=arc-ce01.gridpp.rl.ac.uk',
                     'info_ID': '782G0',
                     'info_ext_InformationSystem': 'https://www.gridpp.rl.ac.uk/RAL-LCG2/RAL-LCG2_CE.json',
+                    'hostname': 'arc-ce01.gridpp.rl.ac.uk',
                     'monitored': '1',
                     'production': '1',
                     'scope': 'EGI, wlcg, tier1, alice, atlas, cms, lhcb'
@@ -158,8 +163,8 @@ class ParseServiceEndpointsTest(unittest.TestCase):
         with self.assertRaises(ConnectorParseError) as cm:
             ParseServiceEndpoints(logger, '', 'CUSTOMERFOO', uid=True, pass_extensions=True)
         excep = cm.exception
-        self.assertTrue('XML feed' in excep.msg)
-        self.assertTrue('ExpatError' in excep.msg)
+        self.assertTrue('endpoint feed' in excep.msg)
+        self.assertTrue('XMLSyntaxError' in excep.msg)
 
 
 class MeshSitesAndContacts(unittest.TestCase):
@@ -647,6 +652,7 @@ class ParseServiceEndpointsBiomed(unittest.TestCase):
         )
 
 
+
 class ParseSitesBiomed(unittest.TestCase):
     def setUp(self):
         with open('tests/sample-sites_biomed.xml') as feed_file:
@@ -962,6 +968,130 @@ class ParseEoscProvider(unittest.TestCase):
                 'type': 'SERVICEGROUPS'
             }
         ])
+
+
+class ParseAgoraTopology(unittest.TestCase):
+    def setUp(self):
+        with open('tests/agora_resource_sample.json', encoding='utf-8') as feed_file:
+            resources = feed_file.read()
+        with open('tests/agora_provider_sample.json', encoding='utf-8') as feed_file:
+            providers = feed_file.read()
+        logger.customer = CUSTOMER_NAME
+        self.maxDiff = None
+        agora_topo = ParseAgoraTopo(logger, providers, resources, False)
+        self.group_groups = agora_topo.get_group_groups()
+        self.group_endpoints = agora_topo.get_group_endpoints()
+
+    def test_groupGroups(self):
+        self.assertEqual(self.group_groups, [
+                {
+                "group": "NI4OS Providers",
+                "type": "PROVIDERS",
+                "subgroup": "UoB_IBISS",
+                "tags": {
+                    "info_ext_catalog_id": "02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
+                    "info_ext_catalog_type": "provider",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
+                    "info_ext_name": "Institute for Biological Research Sinisa Stankovic, University of Belgrade"
+                }
+            },
+            {
+                "group": "NI4OS Providers",
+                "type": "PROVIDERS",
+                "subgroup": "UNIOS-EFOS",
+                "tags": {
+                    "info_ext_catalog_id": "0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
+                    "info_ext_catalog_type": "provider",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
+                    "info_ext_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek"
+                    }
+                }
+            ]
+        )
+
+    def test_groupEndpoints(self):
+        self.assertEqual(self.group_endpoints, [
+                {
+                "group": "UoB-RCUB",
+                "type": "SERVICEGROUPS",
+                "service": "catalog.service.entry",
+                "hostname": "agora.ni4os.eu_uob_nardus",
+                "tags": {
+                    "hostname": "agora.ni4os.eu",
+                    "info_ID": "uob_nardus",
+                    "info_ext_catalog_id": "01426fe3-8783-47f2-97e6-757bcd70e1be",
+                    "info_ext_catalog_type": "resource",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/resources/01426fe3-8783-47f2-97e6-757bcd70e1be",
+                    "info_ext_name": "Repository of Faculty of Science, University of Zagreb"
+                }
+            },
+            {
+                "group": "SRCE",
+                "type": "SERVICEGROUPS",
+                "service": "catalog.service.entry",
+                "hostname": "agora.ni4os.eu_uob_nardus",
+                "tags": {
+                    "hostname": "agora.ni4os.eu",
+                    "info_ID": "uob_nardus",
+                    "info_ext_catalog_id": "01426fe3-8783-47f2-97e6-757bcd70e1be",
+                    "info_ext_catalog_type": "resource",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/resources/01426fe3-8783-47f2-97e6-757bcd70e1be",
+                    "info_ext_name": "Repository of Faculty of Science, University of Zagreb"
+                }
+            },
+            {
+                "group": "CING",
+                "type": "SERVICEGROUPS",
+                "service": "catalog.service.entry",
+                "hostname": "agora.ni4os.eu_melgene_cy",
+                "tags": {
+                    "hostname": "agora.ni4os.eu",
+                    "info_ID": "melgene_cy",
+                    "info_ext_catalog_id": "04b06b6f-e3a1-490b-94ea-8a1ab0309213",
+                    "info_ext_catalog_type": "resource",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/resources/04b06b6f-e3a1-490b-94ea-8a1ab0309213",
+                    "info_ext_name": "MelGene"
+                }
+            },
+            {
+                "group": "UoB_IBISS",
+                "type": "SERVICEGROUPS",
+                "service": "catalog.provider.entry",
+                "hostname": "agora.ni4os.eu_uob_ibiss",
+                "tags": {
+                    "hostname": "agora.ni4os.eu",
+                    "info_ID": "uob_ibiss",
+                    "info_ext_catalog_id": "02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
+                    "info_ext_catalog_type": "provider",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
+                    "info_ext_name": "Institute for Biological Research Sinisa Stankovic, University of Belgrade"
+                }
+            },
+            {
+                "group": "UNIOS-EFOS",
+                "type": "SERVICEGROUPS",
+                "service": "catalog.provider.entry",
+                "hostname": "agora.ni4os.eu_unios-efos",
+                "tags": {
+                    "hostname": "agora.ni4os.eu",
+                    "info_ID": "unios-efos",
+                    "info_ext_catalog_id": "0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
+                    "info_ext_catalog_type": "provider",
+                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
+                    "info_ext_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek"
+                }
+                }
+            ]
+        )
+
+    def test_FailedParseAgoraTopology(self):
+        with self.assertRaises(ConnectorParseError) as cm:
+            agora_topo = ParseAgoraTopo(logger, 'FAILED_DATA', 'FAILED_DATA', False)
+            self.group_groups = agora_topo.get_group_groups()
+            self.group_endpoints = agora_topo.get_group_endpoints()
+        excep = cm.exception
+        self.assertTrue('Providers feed' in excep.msg)
+        self.assertTrue('JSONDecodeError' in excep.msg)
 
 
 if __name__ == '__main__':

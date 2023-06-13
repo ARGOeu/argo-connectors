@@ -1,6 +1,7 @@
 import datetime
 import re
 from urllib.parse import urlparse
+from unidecode import unidecode
 
 strerr = ''
 num_excp_expand = 0
@@ -43,3 +44,19 @@ def module_class_name(obj):
     name = repr(obj.__class__.__name__)
 
     return name.replace("'", '')
+
+
+def remove_non_utf(string):
+    if '+' in string:
+        string = string.replace("+", '_plus_')
+    
+    if '@' in string:
+        string = string.replace('@', '_at_')
+
+    if ' ' in string:
+        string = string.replace(' ', '_')
+
+    if '"' in string:
+        string = string.replace('"', '')
+
+    return unidecode(string)

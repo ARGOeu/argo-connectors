@@ -12,11 +12,11 @@ class Global(object):
     """
     # options common for all connectors
     conf_general = {'General': ['WriteJson',
-                                'PublishWebAPI', 'PassExtensions']}
+                                'PublishWebAPI', 'PassExtensions', 'CompressJson']}
     conf_auth = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'CAFile',
                                     'VerifyServerCert', 'UsePlainHttpAuth',
                                     'HttpUser', 'HttpPass']}
-    conf_conn = {'Connection': ['Timeout', 'Retry', 'SleepRetry']}
+    conf_conn = {'Connection': ['Timeout', 'Retry', 'SleepRetry', 'RetryRandom', 'SleepRandomRetryMax']}
     conf_state = {'InputState': ['SaveDir', 'Days']}
     conf_webapi = {'WebAPI': ['Token', 'Host']}
 
@@ -50,6 +50,9 @@ class Global(object):
             self._merge_dict(self.shared_secopts,
                              self.conf_topo_output),
             'topology-provider-connector.py':
+            self._merge_dict(self.shared_secopts,
+                             self.conf_topo_output),
+            'topology-agora-connector.py':
             self._merge_dict(self.shared_secopts,
                              self.conf_topo_output),
             'downtimes-csv-connector.py':
@@ -202,6 +205,7 @@ class CustomerConf(object):
                     'topology-json-connector.py': [''],
                     'topology-csv-connector.py': [''],
                     'topology-provider-connector.py': [''],
+                    'topology-agora-connector.py': [''],
                     'metricprofile-webapi-connector.py': ['MetricProfileNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
                     'downtimes-csv-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
@@ -257,7 +261,8 @@ class CustomerConf(object):
                     custdir = config.get(section, 'OutputDir')
                     custname = config.get(section, 'Name')
                     topofetchtype = config.get(section, 'TopoFetchType')
-                    topofeed = config.get(section, 'TopoFeed')
+                    topofeed = config.get(section, 'TopoFeed', fallback=None)
+                    vaporpi = config.get(section, 'Vaporpi', fallback=None)
                     topotype = config.get(section, 'TopoType')
                     topouidservendpoints = config.get(
                         section, 'TopoUIDServiceEndpoints', fallback=False)
@@ -308,6 +313,7 @@ class CustomerConf(object):
                                              'DowntimesFeed': downtimesfeed,
                                              'ServiceTypesFeed': servicetypesfeed,
                                              'TopoFeed': topofeed,
+                                             'Vaporpi': vaporpi,
                                              'TopoFeedEndpoints': topofeedendpoints,
                                              'TopoFeedEndpointsExtensions': topofeedendpointsextensions,
                                              'TopoFeedPaging': topofeedpaging,
@@ -542,6 +548,9 @@ class CustomerConf(object):
 
     def get_downfeed(self):
         return self._get_cust_options('DowntimesFeed')
+
+    def get_vaporpi(self):
+        return self._get_cust_options('Vaporpi')
 
     def get_topofeed(self):
         return self._get_cust_options('TopoFeed')

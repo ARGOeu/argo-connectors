@@ -1,6 +1,7 @@
 import ssl
 import asyncio
 import aiohttp
+import random
 
 from aiohttp import client_exceptions, http_exceptions, ClientSession
 from argo_connectors.utils import module_class_name
@@ -18,7 +19,6 @@ def build_ssl_settings(globopts):
 
     except KeyError:
         return None
-
 
 def build_connection_retry_settings(globopts):
     retry = int(globopts['ConnectionRetry'.lower()])
@@ -61,7 +61,11 @@ class SessionWithRetry(object):
                 'Accept': 'application/json'
             })
         try:
-            sleepsecs = float(self.globopts['ConnectionSleepRetry'.lower()])
+            connct_rty_rnd = self.globopts['ConnectionRetryRandom'.lower()]
+            if connct_rty_rnd == 'True':
+                sleepsecs =  float(random.randint(0, float(self.globopts['ConnectionSleepRandomRetryMax'.lower()])))
+            else:
+                sleepsecs = float(self.globopts['ConnectionSleepRetry'.lower()])
 
             while n <= self.n_try:
                 if n > 1:

@@ -1,39 +1,28 @@
-import xml.dom.minidom
-
-from xml.parsers.expat import ExpatError
+import csv
+import json
 from io import StringIO
+from lxml.etree import XMLSyntaxError
 
 from argo_connectors.utils import module_class_name
 from argo_connectors.exceptions import ConnectorParseError
-
-import json
-import csv
 
 
 class ParseHelpers(object):
     def __init__(self, logger, *args, **kwargs):
         self.logger = logger
 
-    def parse_xmltext(self, nodelist):
-        rc = []
-        for node in nodelist:
-            if node.nodeType == node.TEXT_NODE:
-                rc.append(node.data)
-        return ''.join(rc)
-
     def parse_extensions(self, extensions_node):
         extensions_dict = dict()
 
         for extension in extensions_node:
-            if extension.nodeName == 'EXTENSION':
-                key, value = None, None
-                for ext_node in extension.childNodes:
-                    if ext_node.nodeName == 'KEY':
-                        key = ext_node.childNodes[0].nodeValue
-                    if ext_node.nodeName == 'VALUE':
-                        value = ext_node.childNodes[0].nodeValue
-                    if key and value:
-                        extensions_dict.update({key: value})
+            key, value = None, None
+            for ext_node in extension:
+                if ext_node.tag == 'KEY':
+                    key = ext_node.text
+                if ext_node.tag == 'VALUE':
+                    value = ext_node.text
+                if key and value:
+                    extensions_dict.update({key: value})
 
         return extensions_dict
 
@@ -41,16 +30,14 @@ class ParseHelpers(object):
         endpoints_urls = list()
 
         for endpoint in endpoints_node:
-            if endpoint.nodeName == 'ENDPOINT':
-                url = None
-                for endpoint_node in endpoint.childNodes:
-                    if endpoint_node.nodeName == 'ENDPOINT_MONITORED':
-                        value = endpoint_node.childNodes[0].nodeValue
-                        if value.lower() == 'y':
-                            for url_node in endpoint.childNodes:
-                                if url_node.nodeName == 'URL' and url_node.childNodes:
-                                    url = url_node.childNodes[0].nodeValue
-                                    endpoints_urls.append(url)
+            for endpoint_monitored in endpoint.iterchildren():
+                if endpoint_monitored.tag == 'ENDPOINT_MONITORED':
+                    value = endpoint_monitored.text
+                    if value.lower() == 'y':
+                        for url_node in endpoint.iterchildren():
+                            if url_node.tag == 'URL':
+                                url = url_node.text
+                                endpoints_urls.append(url)
 
         if endpoints_urls:
             return ', '.join(endpoints_urls)
@@ -58,51 +45,67 @@ class ParseHelpers(object):
             return None
 
     def parse_scopes(self, xml_node):
-        scopes = list()
+        scopes_list = list()
 
-        for elem in xml_node.childNodes:
-            if elem.nodeName == 'SCOPES':
-                for subelem in elem.childNodes:
-                    if subelem.nodeName == 'SCOPE':
-                        scopes.append(subelem.childNodes[0].nodeValue)
+        scopes = xml_node.find('SCOPES')
+        if scopes != None:
+            for scope in scopes.iterchildren():
+                scopes_list.append(scope.text)
 
-        return scopes
+        return scopes_list
 
-    def parse_json(self, data):
+    def parse_xmltext(self, node):
         try:
-            if data is None:
-                if getattr(self.logger, 'job', False):
-                    raise ConnectorParseError("{} Customer:{} Job:{} : No JSON data fetched".format(module_class_name(self), self.logger.customer, self.logger.job))
-                else:
-                    raise ConnectorParseError("{} Customer:{} : No JSON data fetched".format(module_class_name(self), self.logger.customer))
-
-            return json.loads(data)
-
-        except ValueError as exc:
-            msg = '{} Customer:{} : Error parsing JSON feed - {}'.format(module_class_name(self), self.logger.customer, repr(exc))
-            raise ConnectorParseError(msg)
-
-        except Exception as exc:
-            msg = '{} Customer:{} : Error - {}'.format(module_class_name(self), self.logger.customer, repr(exc))
-            raise ConnectorParseError(msg)
+            value = node.text
+            if value is not None:
+                return value
+            else:
+                return ''
+        except AttributeError:
+            return ''
 
     def parse_xml(self, data):
         try:
             if data is None:
                 if getattr(self.logger, 'job', False):
-                    raise ConnectorParseError("{} Customer:{} Job:{} : No XML data fetched".format(module_class_name(self), self.logger.customer, self.logger.job))
+                    raise ConnectorParseError("{} Customer:{} Job:{} : No XML data fetched".format(
+                        module_class_name(self), self.logger.customer, self.logger.job))
                 else:
-                    raise ConnectorParseError("{} Customer:{} : No XML data fetched".format(module_class_name(self), self.logger.customer))
+                    raise ConnectorParseError("{} Customer:{} : No XML data fetched".format(
+                        module_class_name(self), self.logger.customer))
 
+            return data
 
-            return xml.dom.minidom.parseString(data)
-
-        except ExpatError as exc:
-            msg = '{} Customer:{} : Error parsing XML feed - {}'.format(module_class_name(self), self.logger.customer, repr(exc))
+        except XMLSyntaxError:
+            msg = '{} Customer:{} : Error parsing XML feed - {}'.format(
+                module_class_name(self), self.logger.customer, repr(exc))
             raise ConnectorParseError(msg)
 
         except Exception as exc:
-            msg = '{} Customer:{} : Error - {}'.format(module_class_name(self), self.logger.customer, repr(exc))
+            msg = '{} Customer:{} : Error - {}'.format(
+                module_class_name(self), self.logger.customer, repr(exc))
+            raise ConnectorParseError(msg)
+
+    def parse_json(self, data):
+        try:
+            if data is None:
+                if getattr(self.logger, 'job', False):
+                    raise ConnectorParseError("{} Customer:{} Job:{} : No JSON data fetched".format(
+                        module_class_name(self), self.logger.customer, self.logger.job))
+                else:
+                    raise ConnectorParseError("{} Customer:{} : No JSON data fetched".format(
+                        module_class_name(self), self.logger.customer))
+
+            return json.loads(data)
+
+        except ValueError as exc:
+            msg = '{} Customer:{} : Error parsing JSON feed - {}'.format(
+                module_class_name(self), self.logger.customer, repr(exc))
+            raise ConnectorParseError(msg)
+
+        except Exception as exc:
+            msg = '{} Customer:{} : Error - {}'.format(
+                module_class_name(self), self.logger.customer, repr(exc))
             raise ConnectorParseError(msg)
 
     def csv_to_json(self, data):
@@ -125,6 +128,7 @@ class ParseHelpers(object):
             results.append(datum)
 
         if not results:
-            msg = '{} Customer:{} : Error parsing CSV feed - empty data'.format(module_class_name(self), self.logger.customer)
+            msg = '{} Customer:{} : Error parsing CSV feed - empty data'.format(
+                module_class_name(self), self.logger.customer)
             raise ConnectorParseError(msg)
         return results

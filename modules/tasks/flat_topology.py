@@ -66,6 +66,8 @@ class TaskFlatTopology(object):
                         int(self.globopts['ConnectionRetry'.lower()]),
                         int(self.globopts['ConnectionTimeout'.lower()]),
                         int(self.globopts['ConnectionSleepRetry'.lower()]),
+                        self.globopts['ConnectionRetryRandom'.lower()],
+                        int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.fixed_date)
         await webapi.send(data, topotype)
 

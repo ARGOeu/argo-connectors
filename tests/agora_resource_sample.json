@@ -1,0 +1,678 @@
+[
+  {
+    "erp_gla_geographical_availability": "Europe",
+    "erp_cli_category": [
+      {
+        "supercategory": "https://agora.ni4os.eu/api/v2/public/supercategories/6c609f4c-22ea-44ae-967f-c8921cbf84b0/",
+        "href": "https://agora.ni4os.eu/api/v2/public/categories/09148c1e-775a-4925-9e5c-3df2375cb9d8/",
+        "id": "09148c1e-775a-4925-9e5c-3df2375cb9d8",
+        "name": "Data"
+      },
+      {
+        "supercategory": "https://agora.ni4os.eu/api/v2/public/supercategories/6c609f4c-22ea-44ae-967f-c8921cbf84b0/",
+        "href": "https://agora.ni4os.eu/api/v2/public/categories/1abceb33-321b-479d-ba0a-0c05c5b6012e/",
+        "id": "1abceb33-321b-479d-ba0a-0c05c5b6012e",
+        "name": "Scholarly Communication"
+      }
+    ],
+    "erp_cli_target_users": [
+      {
+        "description": "A research group is a group of researchers working together on a particular issue or topic. Research groups may be composed of researchers all from the same subject/discipline or from different subjects/disciplines.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/3d840ff1-d5dc-496b-a10f-1c23a1bac49b/",
+        "id": "3d840ff1-d5dc-496b-a10f-1c23a1bac49b",
+        "user": "Research Groups"
+      },
+      {
+        "description": "Someone in an organization whose job is to manage a research initiative aiming to the development of new scientific results, products or ideas.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/47568a8b-b704-4f3b-940e-afe03a87fb86/",
+        "id": "47568a8b-b704-4f3b-940e-afe03a87fb86",
+        "user": "Research Managers"
+      },
+      {
+        "description": "An organization or economic system where goods and services are exchanged for one another or for money. Businesses can be privately owned, not-for-profit or state-owned.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/5be9b0f5-5921-482f-a6bf-c617d47a006b/",
+        "id": "5be9b0f5-5921-482f-a6bf-c617d47a006b",
+        "user": "Businesses"
+      },
+      {
+        "description": "Individual or organization financing a part or all of a project's cost as a grant, investment, or loan.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/5dd014bb-0cb9-44a0-92e3-48b0d6c1117f/",
+        "id": "5dd014bb-0cb9-44a0-92e3-48b0d6c1117f",
+        "user": "Funders"
+      },
+      {
+        "description": "The group or individual which is the first to try new ideas, processes, goods and services. Innovators are followed by early adopters, early majority, late majority, and laggards, in that order.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/87c613d3-d8fd-4581-a079-c3b5ac6e7408/",
+        "id": "87c613d3-d8fd-4581-a079-c3b5ac6e7408",
+        "user": "Innovators"
+      },
+      {
+        "description": "A person who is studying at a university or other place of higher education.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/9507c6c6-beee-4bc5-b61b-eb3bd1066d5f/",
+        "id": "9507c6c6-beee-4bc5-b61b-eb3bd1066d5f",
+        "user": "Students"
+      },
+      {
+        "description": "Individuals (usually members of the board of directors) who have the authority to set the policy framework of an organization.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/9fb6605f-cf3e-468d-9355-0c44c7fe4c8f/",
+        "id": "9fb6605f-cf3e-468d-9355-0c44c7fe4c8f",
+        "user": "Policy Makers"
+      },
+      {
+        "description": "A privately or publicly funded project on a research topic.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/a3a799bc-1d78-4b76-9542-3651a69573b3/",
+        "id": "a3a799bc-1d78-4b76-9542-3651a69573b3",
+        "user": "Research Projects"
+      },
+      {
+        "description": "Someone who conducts scientific research, i.e., an organized and systematic investigation by using scientific methods.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/ae6bdfd4-95f5-4019-8fa9-1bae6c59d4fa/",
+        "id": "ae6bdfd4-95f5-4019-8fa9-1bae6c59d4fa",
+        "user": "Researchers"
+      },
+      {
+        "description": "A public or private legal entity (e.g. academia, business, industry, public services, etc.) representing the User.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/f16ba466-da13-4de6-8c76-0c5b5f2a013f/",
+        "id": "f16ba466-da13-4de6-8c76-0c5b5f2a013f",
+        "user": "Research Organisations"
+      },
+      {
+        "description": "Research networks aim to stimulate interaction between researchers and promote information exchange.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/f4203822-4607-4241-ba6c-079eb3e4256e/",
+        "id": "f4203822-4607-4241-ba6c-079eb3e4256e",
+        "user": "Research Networks"
+      },
+      {
+        "description": "Research communities provide an infrastructure through which scientists of discipline-specific scientific areas are able to advance their research goals, reaching out to other researchers.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/fccaedbc-85b6-46b0-9767-bc03bab46924/",
+        "id": "fccaedbc-85b6-46b0-9767-bc03bab46924",
+        "user": "Research Communities"
+      }
+    ],
+    "erp_coi_organisation": "Ministry of Education, Science and Technological Development of the Republic of Serbia",
+    "erp_cli_scientific_subdomain": [
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/003605bd-5252-4258-8d45-6356667b66fa/",
+        "id": "003605bd-5252-4258-8d45-6356667b66fa",
+        "name": "Electrical, Electronic & Information Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/07d9ff9f-c639-4b4f-8918-dc2ce93a019c/",
+        "id": "07d9ff9f-c639-4b4f-8918-dc2ce93a019c",
+        "name": "Economics & Business"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/082da865-0c69-48d4-83c4-094a2cd65e43/",
+        "id": "082da865-0c69-48d4-83c4-094a2cd65e43",
+        "name": "Chemical Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/0dd7c087-ce08-4567-8d3d-3457929cf758/",
+        "id": "0dd7c087-ce08-4567-8d3d-3457929cf758",
+        "name": "Other Social Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/e6f133ff-d47b-4586-a1d2-b401751ab3d3/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/109c8a27-ba5c-4692-aa14-e26150fa20e8/",
+        "id": "109c8a27-ba5c-4692-aa14-e26150fa20e8",
+        "name": "Other Humanities"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/e6f133ff-d47b-4586-a1d2-b401751ab3d3/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/139fe4a8-f456-401a-9442-9760c12f9298/",
+        "id": "139fe4a8-f456-401a-9442-9760c12f9298",
+        "name": "History & Archaeology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/06b02ff3-16d9-4c9f-a078-37c366e4f15c/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/26ef3ed0-15e3-49e9-ab57-5a8cf6a19639/",
+        "id": "26ef3ed0-15e3-49e9-ab57-5a8cf6a19639",
+        "name": "Veterinary Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/2831e229-a1ae-40a9-9915-a6448b48d337/",
+        "id": "2831e229-a1ae-40a9-9915-a6448b48d337",
+        "name": "Other Engineering & Technology Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/e6f133ff-d47b-4586-a1d2-b401751ab3d3/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/35dc8d76-a7fe-4728-b368-26322888325c/",
+        "id": "35dc8d76-a7fe-4728-b368-26322888325c",
+        "name": "Languages & Literature"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/3991313f-523a-474e-b693-bac3d9199539/",
+        "id": "3991313f-523a-474e-b693-bac3d9199539",
+        "name": "Medical Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/e6f133ff-d47b-4586-a1d2-b401751ab3d3/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/39fb6be5-a178-426c-a3d6-8036f629b907/",
+        "id": "39fb6be5-a178-426c-a3d6-8036f629b907",
+        "name": "Arts"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/3a3abc8a-66d2-44a1-bbfb-3482c24c9a0e/",
+        "id": "3a3abc8a-66d2-44a1-bbfb-3482c24c9a0e",
+        "name": "Media & Communications"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/3ead21d6-f477-44d7-bc56-4173c84ea9a9/",
+        "id": "3ead21d6-f477-44d7-bc56-4173c84ea9a9",
+        "name": "Social & Economic Geography"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/4221c0d2-2048-4306-ba0b-81fa124da656/",
+        "id": "4221c0d2-2048-4306-ba0b-81fa124da656",
+        "name": "Civil Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/96823e1d-77fb-4aa6-80a3-8ffe317112c4/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/42225365-e8be-4ab2-b5fb-9df15c8a767d/",
+        "id": "42225365-e8be-4ab2-b5fb-9df15c8a767d",
+        "name": "Other"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/4c33e554-16ba-47e8-9f7e-d433c557e258/",
+        "id": "4c33e554-16ba-47e8-9f7e-d433c557e258",
+        "name": "Political Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/06b02ff3-16d9-4c9f-a078-37c366e4f15c/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/55e0e478-b60b-4d87-b078-7e59b4a73ce4/",
+        "id": "55e0e478-b60b-4d87-b078-7e59b4a73ce4",
+        "name": "Animal & Dairy Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/06b02ff3-16d9-4c9f-a078-37c366e4f15c/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/614c9030-ff4b-41e0-9664-bc5c7ee0751b/",
+        "id": "614c9030-ff4b-41e0-9664-bc5c7ee0751b",
+        "name": "Other Agricultural Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/63639c10-7cee-4ef0-891c-88a8c9e3d822/",
+        "id": "63639c10-7cee-4ef0-891c-88a8c9e3d822",
+        "name": "Physical Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/06b02ff3-16d9-4c9f-a078-37c366e4f15c/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/7646fe9c-6a8e-423e-802c-aed77510a002/",
+        "id": "7646fe9c-6a8e-423e-802c-aed77510a002",
+        "name": "Agricultural Biotechnology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/7e1f6beb-418d-42ea-96c0-c343fd1b71d5/",
+        "id": "7e1f6beb-418d-42ea-96c0-c343fd1b71d5",
+        "name": "Biological Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/825ea804-e436-4aaf-aca4-965738d2e556/",
+        "id": "825ea804-e436-4aaf-aca4-965738d2e556",
+        "name": "Environmental Biotechnology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/82e0a8d8-5e8b-4a25-bb5b-a98d7afa3b7d/",
+        "id": "82e0a8d8-5e8b-4a25-bb5b-a98d7afa3b7d",
+        "name": "Clinical Medicine"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/8507f5ed-013e-4f47-afc3-e4b5be50947e/",
+        "id": "8507f5ed-013e-4f47-afc3-e4b5be50947e",
+        "name": "Law"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/8f354dcf-0f2a-4e3a-9a3e-3d47b9fe0ea9/",
+        "id": "8f354dcf-0f2a-4e3a-9a3e-3d47b9fe0ea9",
+        "name": "Mathematics"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/91874997-84ac-4ac2-8d30-54b2ddc1fd21/",
+        "id": "91874997-84ac-4ac2-8d30-54b2ddc1fd21",
+        "name": "Other Natural Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/98678f0b-dafd-44ae-8144-27f9522daffc/",
+        "id": "98678f0b-dafd-44ae-8144-27f9522daffc",
+        "name": "Materials Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/9a3350f4-2980-4c8a-b5e4-2650a849c0ea/",
+        "id": "9a3350f4-2980-4c8a-b5e4-2650a849c0ea",
+        "name": "Basic Medicine"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/9e360b60-537d-431b-8004-d3717b586c3f/",
+        "id": "9e360b60-537d-431b-8004-d3717b586c3f",
+        "name": "Psychology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/a00b5c2d-94dc-4c26-a5ab-c94984773142/",
+        "id": "a00b5c2d-94dc-4c26-a5ab-c94984773142",
+        "name": "Sociology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/a5e49dec-047b-42d3-be70-9967618a1b0a/",
+        "id": "a5e49dec-047b-42d3-be70-9967618a1b0a",
+        "name": "Chemical Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/a68a80c8-dec1-4b36-8525-f7a69ff7cbf6/",
+        "id": "a68a80c8-dec1-4b36-8525-f7a69ff7cbf6",
+        "name": "Computer & Information Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/aa07bd1f-8d45-47e0-b1b4-a3b895417fb4/",
+        "id": "aa07bd1f-8d45-47e0-b1b4-a3b895417fb4",
+        "name": "Educational Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/06b02ff3-16d9-4c9f-a078-37c366e4f15c/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/b6c63b2f-a246-4b69-b8c6-21ac3e5a38b9/",
+        "id": "b6c63b2f-a246-4b69-b8c6-21ac3e5a38b9",
+        "name": "Agriculture, Forestry & Fisheries"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/ba016a0c-0ea4-4e60-ac34-ee9035f6e4f2/",
+        "id": "ba016a0c-0ea4-4e60-ac34-ee9035f6e4f2",
+        "name": "Environmental Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/c0de3fce-2a56-4b87-bfc9-8294131a0fc1/",
+        "id": "c0de3fce-2a56-4b87-bfc9-8294131a0fc1",
+        "name": "Industrial Biotechnology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/d4ae31dd-26ce-4c5b-98ac-1ac69300fbf3/",
+        "id": "d4ae31dd-26ce-4c5b-98ac-1ac69300fbf3",
+        "name": "Nanotechnology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/e6f133ff-d47b-4586-a1d2-b401751ab3d3/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/dc1d68d4-df34-4aa5-adab-01f1289d7fc8/",
+        "id": "dc1d68d4-df34-4aa5-adab-01f1289d7fc8",
+        "name": "Philosophy, Ethics & Religion"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/de7a7a22-62b1-4ef1-b10f-faf7f41d0644/",
+        "id": "de7a7a22-62b1-4ef1-b10f-faf7f41d0644",
+        "name": "Other Medical Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/ef1a7b03-0dbc-4fd2-8333-b35f3f6628c3/",
+        "id": "ef1a7b03-0dbc-4fd2-8333-b35f3f6628c3",
+        "name": "Medical Biotechnology"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/f1735c04-37d4-4bfd-a7fd-d6113c4eece8/",
+        "id": "f1735c04-37d4-4bfd-a7fd-d6113c4eece8",
+        "name": "Health Sciences"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/f6dad43f-47f5-498c-b704-118b0ea697fb/",
+        "id": "f6dad43f-47f5-498c-b704-118b0ea697fb",
+        "name": "Mechanical Engineering"
+      },
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/fe3bfb21-a082-4390-89d1-852d6b4e3e36/",
+        "id": "fe3bfb21-a082-4390-89d1-852d6b4e3e36",
+        "name": "Earth & Related Environmental Sciences"
+      }
+    ],
+    "erp_mti_last_update": null,
+    "erp_bai_webpage": "https://foo.foo2.gov.rs/",
+    "erp_bai_abbreviation": "",
+    "erp_mgi_privacy_policy": null,
+    "erp_bai_name": "Repository of Faculty of Science, University of Zagreb",
+    "published_at": "2021-02-15T22:22:13",
+    "erp_mgi_sla_specification": null,
+    "erp_mri_multimedia": null,
+    "erp_mti_technology_readiness_level": {
+      "description": "Actual system proven in operational environment (competitive manufacturing in the case of key enabling technologies; or in space)",
+      "href": "https://agora.ni4os.eu/api/v2/public/trls/5af323ad-f244-415e-9cd0-9367e7948300/",
+      "id": "5af323ad-f244-415e-9cd0-9367e7948300",
+      "name": "TRL9"
+    },
+    "erp_mti_changelog": null,
+    "erp_mti_version": null,
+    "id": "01426fe3-8783-47f2-97e6-757bcd70e1be",
+    "erp_mri_logo": "https://foo.foo2.gov.rs/themes/MirageNardus//images/nardus.png",
+    "erp_bai_providers_public": [
+      {
+        "epp_bai_name": "University of Belgrade Computer Centre",
+        "href": "https://agora.ni4os.eu/api/v2/public/providers/801e9d68-8df2-43ae-a2cc-4dbb14317cea/",
+        "id": "801e9d68-8df2-43ae-a2cc-4dbb14317cea",
+        "epp_bai_id": "UoB-RCUB"
+      },
+      {
+        "epp_bai_name": "University of Zagreb, University Computing Centre (SRCE)",
+        "href": "https://agora.ni4os.eu/api/v2/public/providers/801e9d68-8df2-43ae-a2cc-4dbb14317cea/",
+        "id": "801e9d68-8df2-43ae-a2cc-4dbb14317cea",
+        "epp_bai_id": "SRCE"
+        
+      }
+    ],
+    "erp_mti_open_source_technologies": "Linux\nApache\nPostgreSQL\nDSpace\nXML",
+    "erp_gla_language": "en, sr",
+    "erp_coi_first_name": "NaRDuS",
+    "erp_coi_helpdesk_email": "info.nardus@mpn.gov.rs",
+    "erp_mri_use_cases": null,
+    "erp_mgi_helpdesk_webpage": "https://catalogue.ni4os.eu/?_=/helpdesk/Repositories/NaRDuS%20-%20National%20Repository%20of%20Dissertations%20in%20Serbia",
+    "erp_cli_scientific_domain": [
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/06b02ff3-16d9-4c9f-a078-37c366e4f15c/",
+        "id": "06b02ff3-16d9-4c9f-a078-37c366e4f15c",
+        "name": "Agricultural Sciences"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "id": "5df3124a-b8af-44d3-9dbf-64f18022d8cd",
+        "name": "Natural Sciences"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "id": "81e63d47-85b2-422c-a5d4-ad33b803768b",
+        "name": "Medical & Health Sciences"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/844384cf-e7bf-4166-a233-d5020e483fe7/",
+        "id": "844384cf-e7bf-4166-a233-d5020e483fe7",
+        "name": "Engineering & Technology"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/96823e1d-77fb-4aa6-80a3-8ffe317112c4/",
+        "id": "96823e1d-77fb-4aa6-80a3-8ffe317112c4",
+        "name": "Other"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/befdbe50-8122-49aa-9d53-07f8a31c84ab/",
+        "id": "befdbe50-8122-49aa-9d53-07f8a31c84ab",
+        "name": "Social Sciences"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/e6f133ff-d47b-4586-a1d2-b401751ab3d3/",
+        "id": "e6f133ff-d47b-4586-a1d2-b401751ab3d3",
+        "name": "Humanities"
+      }
+    ],
+    "erp_cli_subcategory": [
+      {
+        "category": "https://agora.ni4os.eu/api/v2/public/categories/1abceb33-321b-479d-ba0a-0c05c5b6012e/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subcategories/4f1e3596-c1ec-46b9-bb6b-4e657f92af8b/",
+        "id": "4f1e3596-c1ec-46b9-bb6b-4e657f92af8b",
+        "name": "Discovery"
+      },
+      {
+        "category": "https://agora.ni4os.eu/api/v2/public/categories/1abceb33-321b-479d-ba0a-0c05c5b6012e/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subcategories/e1fb1b4f-2d2b-4cdb-a42b-9f55646d80c5/",
+        "id": "e1fb1b4f-2d2b-4cdb-a42b-9f55646d80c5",
+        "name": "Publication"
+      }
+    ],
+    "erp_ati_funding_body": [],
+    "erp_coi_phone": "+381113031257",
+    "erp_rli_geographic_location": "Serbia (RS)",
+    "erp_fni_payment_model": null,
+    "erp_mgi_maintenance": null,
+    "erp_coi_email": "info.nardus@mpn.gov.rs",
+    "erp_mgi_training_information": "https://training.ni4os.eu/course/view.php?id=107",
+    "erp_coi_security_contact_email": "info.nardus@mpn.gov.rs",
+    "updated_at": "2022-04-22T13:43:55",
+    "erp_dei_required_resources_public": [],
+    "erp_cli_access_mode": [
+      {
+        "description": "Users can freely access the Resource provided, registration may be needed.",
+        "href": "https://agora.ni4os.eu/api/v2/public/access-modes/39d6b1b9-5a28-4dec-a7d9-4c229e962a73/",
+        "id": "39d6b1b9-5a28-4dec-a7d9-4c229e962a73",
+        "name": "Free"
+      }
+    ],
+    "erp_aoi_order": null,
+    "erp_mgi_status_monitoring": "https://argo.ni4os.eu/ni4os/report-status/Critical/SITES/RCUB/eu.ni4os.repo.publication/foo.foo2.gov.rs",
+    "erp_cli_access_type": [
+      {
+        "description": "The Resource is delivered through a virtual infrastructure that the use may access virtually through the web or an intranet.",
+        "href": "https://agora.ni4os.eu/api/v2/public/access-types/a99e4c27-e504-496f-83d8-2283a0a3c367/",
+        "id": "a99e4c27-e504-496f-83d8-2283a0a3c367",
+        "name": "Virtual"
+      }
+    ],
+    "erp_mri_description": "<p>NaRDuS (National Repository of Dissertations in Serbia) is a common portal of PhD dissertations and thesis evaluation reports from all Serbian universities. It is based on the Law on Higher Education (Amendments, Sept. 2014).</p>\n<p>All universities are obliged to deposit basic information about the dissertation - together with the thesis evaluation report and dissertation itself - to NaRDuS within three months period starting from the date of PhD dissertation defense.</p>\n<p><a href=\"http://v2.sherpa.ac.uk/id/repository/3965\" rel=\"noopener\" target=\"_blank\">OpenDOAR</a></p>\n<p><a href=\"https://www.openaire.eu/search/dataprovider?datasourceId=openaire____::c9d2209ecc4d45ba7b4ca7597acb88a2\" rel=\"noopener\" target=\"_blank\">OpenAIRE</a></p>\n<p><a href=\"http://roar.eprints.org/14162/\" rel=\"noopener\" target=\"_blank\">ROAR</a></p>\n<p><a href=\"https://www.base-search.net/Search/Results?q=dccoll:ftnardus&amp;refid=dctableen\" rel=\"noopener\" target=\"_blank\">BASE</a></p>\n<p><a href=\"https://core.ac.uk/search?q=repositories.id:(4820)\" rel=\"noopener\" target=\"_blank\">CORE</a></p>\n<p><a href=\"https://www.worldcat.org/search?q=on%3ADGCNT+http%3A%2F%2Ffoo.foo2.gov.rs%2Foai%2F&amp;qt=results_page\" rel=\"noopener\" target=\"_blank\">WorldCat</a></p>",
+    "erp_mti_life_cycle_status": "https://agora.ni4os.eu/api/v2/resource-lifecycle-statuses/431f335f-7416-4be2-9c79-5908fdc09cc0/",
+    "erp_bai_organisation_public": "https://agora.ni4os.eu/api/v2/public/providers/fa9acbfa-f983-4ebb-a0ac-4d7ab2a3c8ba/",
+    "erp_dei_related_platforms": "",
+    "erp_mti_standards": null,
+    "created_at": "2021-02-15T22:19:12",
+    "erp_aoi_order_type": {
+      "description": "No ordering procedure necessary to access the resource but requires user authentication",
+      "href": "https://agora.ni4os.eu/api/v2/public/order-types/3608d14c-ffaa-4423-a592-53ebc83a1e77/",
+      "id": "3608d14c-ffaa-4423-a592-53ebc83a1e77",
+      "name": "Open Access"
+    },
+    "erp_cli_tags": "national repository, PhD theses, Serbia",
+    "erp_coi_position": "Repository manager",
+    "erp_mri_tagline": "National repository of PhD theses",
+    "erp_mgi_user_manual": "https://foo.foo2.gov.rs/Files/uputstvo/",
+    "erp_bai_id": "UoB_NARDUS",
+    "erp_mti_certifications": null,
+    "erp_dei_related_resources_public": [],
+    "erp_mgi_terms_of_use": null,
+    "erp_ati_grant_project_name": null,
+    "erp_ati_funding_program": [],
+    "erp_fni_pricing": null,
+    "erp_mgi_access_policy": "https://foo.foo2.gov.rs/contact",
+    "erp_coi_last_name": "National Repository of Dissertations in Serbia"
+  },
+  {
+    "erp_gla_geographical_availability": "Europe",
+    "erp_cli_category": [
+      {
+        "supercategory": "https://agora.ni4os.eu/api/v2/public/supercategories/6c609f4c-22ea-44ae-967f-c8921cbf84b0/",
+        "href": "https://agora.ni4os.eu/api/v2/public/categories/09148c1e-775a-4925-9e5c-3df2375cb9d8/",
+        "id": "09148c1e-775a-4925-9e5c-3df2375cb9d8",
+        "name": "Data"
+      },
+      {
+        "supercategory": "https://agora.ni4os.eu/api/v2/public/supercategories/6c609f4c-22ea-44ae-967f-c8921cbf84b0/",
+        "href": "https://agora.ni4os.eu/api/v2/public/categories/a05700b7-81a8-476c-9ba3-c3952092280a/",
+        "id": "a05700b7-81a8-476c-9ba3-c3952092280a",
+        "name": "Software"
+      },
+      {
+        "supercategory": "https://agora.ni4os.eu/api/v2/public/supercategories/ef1e6a6b-22f3-48d7-8386-d66ab524d784/",
+        "href": "https://agora.ni4os.eu/api/v2/public/categories/ee0c7cb0-e861-4de3-9319-074015419d4f/",
+        "id": "ee0c7cb0-e861-4de3-9319-074015419d4f",
+        "name": "Compute"
+      }
+    ],
+    "erp_cli_target_users": [
+      {
+        "description": "A person who is studying at a university or other place of higher education.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/9507c6c6-beee-4bc5-b61b-eb3bd1066d5f/",
+        "id": "9507c6c6-beee-4bc5-b61b-eb3bd1066d5f",
+        "user": "Students"
+      },
+      {
+        "description": "A privately or publicly funded project on a research topic.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/a3a799bc-1d78-4b76-9542-3651a69573b3/",
+        "id": "a3a799bc-1d78-4b76-9542-3651a69573b3",
+        "user": "Research Projects"
+      },
+      {
+        "description": "Someone who conducts scientific research, i.e., an organized and systematic investigation by using scientific methods.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/ae6bdfd4-95f5-4019-8fa9-1bae6c59d4fa/",
+        "id": "ae6bdfd4-95f5-4019-8fa9-1bae6c59d4fa",
+        "user": "Researchers"
+      },
+      {
+        "description": "A public or private legal entity (e.g. academia, business, industry, public services, etc.) representing the User.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/f16ba466-da13-4de6-8c76-0c5b5f2a013f/",
+        "id": "f16ba466-da13-4de6-8c76-0c5b5f2a013f",
+        "user": "Research Organisations"
+      },
+      {
+        "description": "Research communities provide an infrastructure through which scientists of discipline-specific scientific areas are able to advance their research goals, reaching out to other researchers.",
+        "href": "https://agora.ni4os.eu/api/v2/public/target-users/fccaedbc-85b6-46b0-9767-bc03bab46924/",
+        "id": "fccaedbc-85b6-46b0-9767-bc03bab46924",
+        "user": "Research Communities"
+      }
+    ],
+    "erp_coi_organisation": "The Cyprus Institute of Neurology and Genetics",
+    "erp_cli_scientific_subdomain": [
+      {
+        "domain": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subdomains/7e1f6beb-418d-42ea-96c0-c343fd1b71d5/",
+        "id": "7e1f6beb-418d-42ea-96c0-c343fd1b71d5",
+        "name": "Biological Sciences"
+      }
+    ],
+    "erp_mti_last_update": null,
+    "erp_bai_webpage": "https://bioinformatics.cing.ac.cy/MelGene/",
+    "erp_bai_abbreviation": "",
+    "erp_mgi_privacy_policy": null,
+    "erp_bai_name": "MelGene",
+    "published_at": "2021-03-30T10:49:22",
+    "erp_mgi_sla_specification": null,
+    "erp_mri_multimedia": null,
+    "erp_mti_technology_readiness_level": {
+      "description": "System prototype demonstration in operational environment",
+      "href": "https://agora.ni4os.eu/api/v2/public/trls/8050357e-2d36-40e3-9e77-d7813919659b/",
+      "id": "8050357e-2d36-40e3-9e77-d7813919659b",
+      "name": "TRL7"
+    },
+    "erp_mti_changelog": null,
+    "erp_mti_version": null,
+    "id": "04b06b6f-e3a1-490b-94ea-8a1ab0309213",
+    "erp_mri_logo": null,
+    "erp_bai_providers_public": [
+      {
+        "epp_bai_name": "The Cyprus Institute of Neurology and Genetics",
+        "href": "https://agora.ni4os.eu/api/v2/public/providers/9d9f482f-e151-4658-91bd-f30966851d0e/",
+        "id": "9d9f482f-e151-4658-91bd-f30966851d0e",
+        "epp_bai_id": "CING"
+      }
+    ],
+    "erp_mti_open_source_technologies": null,
+    "erp_gla_language": "en",
+    "erp_coi_first_name": "George",
+    "erp_coi_helpdesk_email": "georges@cing.ac.cy",
+    "erp_mri_use_cases": null,
+    "erp_mgi_helpdesk_webpage": "https://bioinformatics.cing.ac.cy/MelGene/contact_us.html",
+    "erp_cli_scientific_domain": [
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/5df3124a-b8af-44d3-9dbf-64f18022d8cd/",
+        "id": "5df3124a-b8af-44d3-9dbf-64f18022d8cd",
+        "name": "Natural Sciences"
+      },
+      {
+        "href": "https://agora.ni4os.eu/api/v2/public/domains/81e63d47-85b2-422c-a5d4-ad33b803768b/",
+        "id": "81e63d47-85b2-422c-a5d4-ad33b803768b",
+        "name": "Medical & Health Sciences"
+      }
+    ],
+    "erp_cli_subcategory": [
+      {
+        "category": "https://agora.ni4os.eu/api/v2/public/categories/3ddaf0af-4e7e-4c23-86ef-d5db4ae5312c/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subcategories/396a64ce-d3d1-4b40-8456-04ec31355254/",
+        "id": "396a64ce-d3d1-4b40-8456-04ec31355254",
+        "name": "Data"
+      },
+      {
+        "category": "https://agora.ni4os.eu/api/v2/public/categories/09148c1e-775a-4925-9e5c-3df2375cb9d8/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subcategories/7063c781-2c9f-44cd-a393-24054f398f1b/",
+        "id": "7063c781-2c9f-44cd-a393-24054f398f1b",
+        "name": "Scientific/Research Data"
+      },
+      {
+        "category": "https://agora.ni4os.eu/api/v2/public/categories/94d4e542-f996-4bb1-b4de-d57d2430e7fb/",
+        "href": "https://agora.ni4os.eu/api/v2/public/subcategories/b2c67027-351b-4244-9680-61d506b72fbb/",
+        "id": "b2c67027-351b-4244-9680-61d506b72fbb",
+        "name": "Visualization"
+      }
+    ],
+    "erp_ati_funding_body": [],
+    "erp_coi_phone": "+35722358600",
+    "erp_rli_geographic_location": "Cyprus (CY)",
+    "erp_fni_payment_model": null,
+    "erp_mgi_maintenance": null,
+    "erp_coi_email": "georges@cing.ac.cy",
+    "erp_mgi_training_information": null,
+    "erp_coi_security_contact_email": "georges@cing.ac.cy",
+    "updated_at": "2022-01-21T22:41:42",
+    "erp_dei_required_resources_public": [],
+    "erp_cli_access_mode": [
+      {
+        "description": "Users can freely access the Resource provided, registration may be needed.",
+        "href": "https://agora.ni4os.eu/api/v2/public/access-modes/39d6b1b9-5a28-4dec-a7d9-4c229e962a73/",
+        "id": "39d6b1b9-5a28-4dec-a7d9-4c229e962a73",
+        "name": "Free"
+      }
+    ],
+    "erp_aoi_order": null,
+    "erp_mgi_status_monitoring": null,
+    "erp_cli_access_type": [
+      {
+        "description": "The Resource is delivered through a virtual infrastructure that the use may access virtually through the web or an intranet.",
+        "href": "https://agora.ni4os.eu/api/v2/public/access-types/a99e4c27-e504-496f-83d8-2283a0a3c367/",
+        "id": "a99e4c27-e504-496f-83d8-2283a0a3c367",
+        "name": "Virtual"
+      }
+    ],
+    "erp_mri_description": "<p>The MelGene database provides a comprehensive and regularly updated field synopsis and meta-analysis of all published genetic association studies performed in Cutaneous Melanoma (CM). In addition, dozens of up-to-date meta-analyses are available for all eligible polymorphisms with sufficient data.</p>",
+    "erp_mti_life_cycle_status": null,
+    "erp_bai_organisation_public": "https://agora.ni4os.eu/api/v2/public/providers/9d9f482f-e151-4658-91bd-f30966851d0e/",
+    "erp_dei_related_platforms": null,
+    "erp_mti_standards": null,
+    "created_at": "2021-02-22T14:28:53",
+    "erp_aoi_order_type": {
+      "description": "No ordering procedure necessary to access the resource but requires user authentication",
+      "href": "https://agora.ni4os.eu/api/v2/public/order-types/3608d14c-ffaa-4423-a592-53ebc83a1e77/",
+      "id": "3608d14c-ffaa-4423-a592-53ebc83a1e77",
+      "name": "Open Access"
+    },
+    "erp_cli_tags": "bioinformatics",
+    "erp_coi_position": "Head of the Bioinformatics Department",
+    "erp_mri_tagline": "The MelGene database provides a comprehensive and regularly updated field synopsis and meta-analysis of all published genetic association studies performed in Cutaneous Melanoma (CM).",
+    "erp_mgi_user_manual": "https://bioinformatics.cing.ac.cy/MelGene/Help.html",
+    "erp_bai_id": "MELGENE_CY",
+    "erp_mti_certifications": null,
+    "erp_dei_related_resources_public": [],
+    "erp_mgi_terms_of_use": null,
+    "erp_ati_grant_project_name": null,
+    "erp_ati_funding_program": [],
+    "erp_fni_pricing": null,
+    "erp_mgi_access_policy": null,
+    "erp_coi_last_name": "Spyrou"
+  }
+]

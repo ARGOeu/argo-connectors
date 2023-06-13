@@ -1,13 +1,12 @@
 from urllib.parse import urlparse
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.parse.base import ParseHelpers
-from argo_connectors.utils import filename_date, module_class_name, construct_fqdn
+from argo_connectors.utils import filename_date, module_class_name, construct_fqdn, remove_non_utf
 
 import uuid
 import json
 
-
-SERVICE_NAME_WEBPAGE='eu.eosc.portal.services.url'
+SERVICE_NAME_WEBPAGE = 'eu.eosc.portal.services.url'
 
 
 def buildmap_id2groupname(resources):
@@ -23,7 +22,7 @@ def build_urlpath_id(http_endpoint):
         return uuid.uuid3(uuid.NAMESPACE_URL, path)
     else:
         return None
-
+    
 
 class ParseResources(ParseHelpers):
     def __init__(self, logger, data=None, keys=[], custname=None):
@@ -63,7 +62,8 @@ class ParseResources(ParseHelpers):
             self.data = self._resources
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
-            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Resources feed - %s' % (self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Resources feed - %s' % (
+                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -99,7 +99,8 @@ class ParseProviders(ParseHelpers):
             self.data = self._providers
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
-            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Providers feed - %s' % (self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Providers feed - %s' % (
+                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -144,9 +145,11 @@ class ParseExtensions(ParseHelpers):
                         if not hostname:
                             hostname = group['endpoint']
                         if urlpath_id:
-                            gee['hostname'] = '{}_{}_{}'.format(hostname, extension['id'], urlpath_id)
+                            gee['hostname'] = '{}_{}_{}'.format(
+                                hostname, extension['id'], urlpath_id)
                         else:
-                            gee['hostname'] = '{}_{}'.format(hostname, extension['id'])
+                            gee['hostname'] = '{}_{}'.format(
+                                hostname, extension['id'])
                     else:
                         hostname = construct_fqdn(group['endpoint'])
                         if not hostname:
@@ -154,7 +157,8 @@ class ParseExtensions(ParseHelpers):
                         gee['hostname'] = hostname
                     gee['tags'] = dict(
                         info_URL=group['endpoint'],
-                        info_ID='{}_{}'.format(extension['id'], urlpath_id) if urlpath_id else extension['id'],
+                        info_ID='{}_{}'.format(
+                            extension['id'], urlpath_id) if urlpath_id else extension['id'],
                         info_monitored_by=extension['monitoredBy'],
                         info_groupname=self.groupnames[extension['serviceId']]
                     )
@@ -166,7 +170,8 @@ class ParseExtensions(ParseHelpers):
                     self._extensions.append(gee)
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
-            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Resources Extensions feed - %s' % (self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Resources Extensions feed - %s' % (
+                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -180,7 +185,8 @@ class ParseTopo(object):
     def __init__(self, logger, providers, resources, uidservendp, custname):
         self.uidservendp = uidservendp
         self.providers = ParseProviders(logger, providers, custname)
-        self.resources = ParseResources(logger, resources, ['horizontalService'], custname)
+        self.resources = ParseResources(
+            logger, resources, ['horizontalService'], custname)
         self.maxDiff = None
 
     def get_group_groups(self):
@@ -194,18 +200,22 @@ class ParseTopo(object):
             for resource in resource_from_provider:
                 gge = dict()
                 if (providers_added.get(provider['id'], False) and
-                    providers_added[provider['id']] == resource['id']):
+                        providers_added[provider['id']] == resource['id']):
                     continue
                 gge['type'] = 'PROJECT'
                 gge['group'] = provider['id']
                 gge['subgroup'] = resource['id']
                 if provider.get('provider_tag', False):
-                    provider_tags = [tag.strip() for tag in provider['provider_tag']]
-                    gge['tags'] = dict(provider_tags=', '.join(provider_tags), info_projectname=provider['abbr'])
+                    provider_tags = [tag.strip()
+                                     for tag in provider['provider_tag']]
+                    gge['tags'] = dict(provider_tags=', '.join(
+                        provider_tags), info_projectname=provider['abbr'])
                 else:
-                    gge['tags'] = dict(info_projectname=provider['abbr'].strip())
+                    gge['tags'] = dict(
+                        info_projectname=provider['abbr'].strip())
                 gg.append(gge)
-                providers_added.update({provider['id'].strip(): resource['id'].strip()})
+                providers_added.update(
+                    {provider['id'].strip(): resource['id'].strip()})
 
         return gg
 
@@ -220,11 +230,12 @@ class ParseTopo(object):
             gee['service'] = resource['hardcoded_service']
             gee['group'] = resource['id']
             if self.uidservendp:
-                gee['hostname'] = '{}_{}'.format(construct_fqdn(resource['webpage']), resource['id'])
+                gee['hostname'] = '{}_{}'.format(construct_fqdn(resource['webpage']), remove_non_utf(resource['id']))
             else:
                 gee['hostname'] = construct_fqdn(resource['webpage'])
             if resource.get('resource_tag', False):
-                resource_tags = [tag.strip() for tag in resource['resource_tag']]
+                resource_tags = [tag.strip()
+                                 for tag in resource['resource_tag']]
                 if not resource.get('webpage', False):
                     continue
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
@@ -236,7 +247,8 @@ class ParseTopo(object):
                                    info_ID=resource['id'].strip(),
                                    info_groupname=resource['name'].strip())
             if self.uidservendp:
-                gee['tags'].update(dict(hostname=construct_fqdn(resource['webpage'].strip())))
+                gee['tags'].update(
+                    dict(hostname=construct_fqdn(resource['webpage'].strip())))
             ge.append(gee)
 
         return ge
