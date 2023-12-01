@@ -1,0 +1,28 @@
+{
+  "status": {
+    "message": "Success",
+    "code": "200"
+  },
+  "data": [
+    {
+      "id": "010091erw3-f8wer4-44321b47a6",
+      "date": "2020-06-20",
+      "name": "MOCK_DATA",
+      "description": "",
+      "services": [
+        {
+          "service": "foo.access.unity",
+          "metrics": [
+            "foo.access.login-certificate",
+            "foo.access.login-local",
+            "generic.tcp.connect"
+          ]
+        },
+        {
+          "service": "safe.irods",
+          "metrics": ["mock.safe.irod-crud"]
+        }
+      ]
+    }
+  ]
+}
