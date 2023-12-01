@@ -30,7 +30,7 @@ class Global(object):
     def __init__(self, caller, confpath=None, **kwargs):
         self.optional = dict()
 
-        self.logger = Logger(str(self.__class__))
+        self.logger = Logger(str(self.__class__), tenant_name=None)
         self._filename = '/etc/argo-connectors/global.conf' if not confpath else confpath
         self._checkpath = kwargs['checkpath'] if 'checkpath' in kwargs.keys(
         ) else False
@@ -228,7 +228,7 @@ class CustomerConf(object):
     deftopofeed = 'https://goc.egi.eu/gocdbpi/'
 
     def __init__(self, caller, confpath, **kwargs):
-        self.logger = Logger(str(self.__class__))
+        self.logger = Logger(str(self.__class__), tenant_name=None)
         self._filename = '/etc/argo-connectors/customer.conf' if not confpath else confpath
         if not kwargs:
             self._jobattrs = self._defjobattrs[os.path.basename(caller)]

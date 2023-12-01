@@ -8,7 +8,7 @@ from argo_connectors.parse.agora_topology import ParseAgoraTopo
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 
-logger = Logger('test_topofeed.py')
+logger = Logger('test_topofeed.py', 'foo_tenant')
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
 # Help function - check if any of endpoints contains extensions

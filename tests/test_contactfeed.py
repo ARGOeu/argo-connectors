@@ -9,7 +9,7 @@ from argo_connectors.parse.flat_contacts import ParseContacts as ParseFlatContac
 from argo_connectors.parse.provider_contacts import ParseResourcesContacts, ParseProvidersContacts
 
 
-logger = Logger('test_contactfeed.py')
+logger = Logger('test_contactfeed.py', 'foo_tenant')
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
 

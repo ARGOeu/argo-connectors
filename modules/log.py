@@ -2,16 +2,19 @@ import logging
 import logging.handlers
 import sys
 import socket
-
-LOGFILE = "/var/log/argo-connectors/connectors.log"
+import os
 
 
 class Logger:
-    def __init__(self, connector):
+    def __init__(self, connector, tenant_name):
         lfs = '%(name)s[%(process)s]: %(levelname)s %(message)s'
         logformat = logging.Formatter(lfs)
         logverbose = logging.INFO
         self.connector = connector
+        self.tenant_name = tenant_name
+
+        if self.tenant_name is not None:
+            LOGFILE = f"/var/log/argo-connectors/connectors-{self.tenant_name}.log"
 
         logging.basicConfig(format=lfs, level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger(connector)

@@ -12,6 +12,7 @@ from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
 from argo_connectors.tasks.gocdb_downtimes import TaskGocdbDowntimes
 from argo_connectors.tasks.common import write_state
+from argo_connectors.utils import parse_conf_path
 
 from argo_connectors.config import Global, CustomerConf
 
@@ -42,13 +43,16 @@ def main():
                         help='path to global configuration file', type=str, required=False)
     args = parser.parse_args()
 
-    logger = Logger(os.path.basename(sys.argv[0]))
     confpath = args.gloconf[0] if args.gloconf else None
     cglob = Global(sys.argv[0], confpath)
     globopts = cglob.parse()
 
     confpath = args.custconf[0] if args.custconf else None
     confcust = CustomerConf(sys.argv[0], confpath)
+    tenant_name = parse_conf_path(confpath)
+
+    logger = Logger(os.path.basename(sys.argv[0]), tenant_name)
+    
     confcust.parse()
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
