@@ -1,4 +1,5 @@
 import os
+import time
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.io.http import SessionWithRetry
@@ -10,7 +11,7 @@ API_PATH = '/api/v2/metric_profiles'
 
 class TaskWebApiMetricProfile(object):
     def __init__(self, loop, logger, connector_name, globopts, cglob, confcust,
-                 cust, fixed_date):
+                 cust, fixed_date, performance):
         self.loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -19,12 +20,18 @@ class TaskWebApiMetricProfile(object):
         self.confcust = confcust
         self.cglob = cglob
         self.fixed_date = fixed_date
+        self.performance = performance
 
     async def fetch_data(self, host, token):
+        start_time = time.time()
         session = SessionWithRetry(self.logger,
                                    os.path.basename(self.connector_name),
                                    self.globopts, token=token)
         res = await session.http_get('{}://{}{}'.format('https', host, API_PATH))
+
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source(self, res, profiles):
@@ -32,20 +39,22 @@ class TaskWebApiMetricProfile(object):
         return metric_profiles
 
     async def run(self):
-        for job in self.confcust.get_jobs(self.cust):
-            self.logger.customer = self.confcust.get_custname(self.cust)
-            self.logger.job = job
+        try:
+            start_time = time.time()
+            
+            for job in self.confcust.get_jobs(self.cust):
+                self.logger.customer = self.confcust.get_custname(self.cust)
+                self.logger.job = job
 
-            profiles = self.confcust.get_profiles(job)
-            webapi_custopts = self.confcust.get_webapiopts(self.cust)
-            webapi_opts = self.cglob.merge_opts(webapi_custopts, 'webapi')
-            webapi_complete, missopt = self.cglob.is_complete(webapi_opts, 'webapi')
+                profiles = self.confcust.get_profiles(job)
+                webapi_custopts = self.confcust.get_webapiopts(self.cust)
+                webapi_opts = self.cglob.merge_opts(webapi_custopts, 'webapi')
+                webapi_complete, missopt = self.cglob.is_complete(webapi_opts, 'webapi')
 
-            if not webapi_complete:
-                self.logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (self.logger.customer, self.logger.job, 'webapi', ' '.join(missopt)))
-                continue
+                if not webapi_complete:
+                    self.logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (self.logger.customer, self.logger.job, 'webapi', ' '.join(missopt)))
+                    continue
 
-            try:
                 res = await self.fetch_data(webapi_opts['webapihost'], webapi_opts['webapitoken'])
 
                 fetched_profiles = self.parse_source(res, profiles)
@@ -55,8 +64,13 @@ class TaskWebApiMetricProfile(object):
                 if eval(self.globopts['GeneralWriteJson'.lower()]):
                     write_json(self.logger, self.globopts, self.cust, job, self.confcust, self.fixed_date, fetched_profiles)
 
+                elapsed_time = time.time() - start_time
+                if self.performance:
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
+                
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
 
-            except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
-                self.logger.error(repr(exc))
-                await write_state(self.connector_name, self.globopts, self.cust, job, self.confcust, self.fixed_date, False)
+
+        except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.cust, job, self.confcust, self.fixed_date, False)

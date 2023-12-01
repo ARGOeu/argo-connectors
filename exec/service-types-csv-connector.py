@@ -37,6 +37,7 @@ def main():
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     parser.add_argument('--initial', dest='initsync', help='initial sync of service types', action='store_true', default=False, required=False)
+    parser.add_argument('-v', '--verbose', dest="performance", help='Set verbosity level', action='count', default=0)
     args = parser.parse_args()
 
     fixed_date = None
@@ -44,6 +45,7 @@ def main():
         fixed_date = args.date
 
     logger = Logger(os.path.basename(sys.argv[0]))
+    performance = args.performance
     confpath = args.gloconf[0] if args.gloconf else None
     cglob = Global(sys.argv[0], confpath)
     globopts = cglob.parse()
@@ -72,7 +74,7 @@ def main():
     try:
         task = TaskFlatServiceTypes(
             loop, logger, sys.argv[0], globopts, auth_opts, webapi_opts,
-            confcust, custname, feed, fixed_date, is_csv=True,
+            confcust, custname, feed, fixed_date, performance, is_csv=True,
             initsync=args.initsync
         )
         loop.run_until_complete(task.run())

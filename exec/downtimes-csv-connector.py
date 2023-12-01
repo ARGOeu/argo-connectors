@@ -35,9 +35,11 @@ def main():
     parser.add_argument('-d', dest='date', nargs=1, metavar='YEAR-MONTH-DAY', required=True)
     parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf', help='path to customer configuration file', type=str, required=False)
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
+    parser.add_argument('-v', '--verbose', dest="performance", help='Set verbosity level', action='count', default=0)
     args = parser.parse_args()
 
     logger = Logger(os.path.basename(sys.argv[0]))
+    performance = args.performance
     confpath = args.gloconf[0] if args.gloconf else None
     cglob = Global(sys.argv[0], confpath)
     globopts = cglob.parse()
@@ -77,7 +79,7 @@ def main():
                                 webapi_opts, confcust,
                                 confcust.get_custname(cust), feed,
                                 current_date, uidservtype, args.date[0],
-                                timestamp)
+                                timestamp, performance)
         loop.run_until_complete(task.run())
 
     except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
