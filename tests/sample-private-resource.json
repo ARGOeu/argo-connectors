@@ -650,6 +650,172 @@
             "pricing": null
         },
         "id": "openaire.validator"
+    },
+    {
+      "metadata": {
+        "registeredBy": "Ixxxxxx Kxxxxxxxxx",
+        "registeredAt": "1652777979850",
+        "modifiedBy": "Ixxxxxx Kxxxxxxxxx",
+        "modifiedAt": "1652943494220",
+        "terms": null,
+        "published": false
+      },
+      "active": true,
+      "suspended": false,
+      "identifiers": null,
+      "migrationStatus": null,
+      "loggingInfo": null,
+      "latestAuditInfo": null,
+      "latestOnboardingInfo": null,
+      "latestUpdateInfo": null,
+      "status": "approved resource",
+      "resourceExtras": {
+        "eoscIFGuidelines": null
+      },
+      "id": "riga_stradins_university.rsu_dataverse",
+      "service": {
+        "id": "riga_stradins_university.rsu_dataverse",
+        "abbreviation": "RSU Dataverse",
+        "name": "RSU Dataverse",
+        "resourceOrganisation": "riga_stradins_university",
+        "resourceProviders": [],
+        "webpage": "https://dataverse.rsu.lv/",
+        "alternativeIdentifiers": null,
+        "description": "RSU Dataverse is an institutional repository created based on open source code software provided by Harvard Dataverse. RSU Dataverse is registered in the Registry of Research Data Repositories. RSU Dataverse is created for RSU researchers to deposit their data there after the end of research projects or other research activities, especially in cases when there are no trusted field specific repositories. Data sets deposited in RSU Dataverse can be openly accessible or with restricted or closed access. It is always possible to contact authors of data sets for cooperation and sharing data sets. RSU Dataverse includes three verses - Medicine, Public Health and Social Sciences. It is possible to deposit data up to 50 GB.\n",
+        "tagline": "RSU Dataverse is created to enable researchers to deposit and publish their data according to FAIR principles, at the same time ensuring security of the data.",
+        "logo": "https://www.rsu.lv/sites/default/files/imce/rsu_logo_en.png",
+        "multimedia": [],
+        "useCases": [],
+        "scientificDomains": [
+          {
+            "scientificDomain": "scientific_domain-medical_and_health_sciences",
+            "scientificSubdomain": "scientific_subdomain-medical_and_health_sciences-basic_medicine"
+          },
+          {
+            "scientificDomain": "scientific_domain-medical_and_health_sciences",
+            "scientificSubdomain": "scientific_subdomain-medical_and_health_sciences-health_sciences"
+          },
+          {
+            "scientificDomain": "scientific_domain-medical_and_health_sciences",
+            "scientificSubdomain": "scientific_subdomain-medical_and_health_sciences-medical_biotechnology"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-economics_and_business"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-educational_sciences"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-law"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-media_and_communications"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-political_sciences"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-psychology"
+          },
+          {
+            "scientificDomain": "scientific_domain-social_sciences",
+            "scientificSubdomain": "scientific_subdomain-social_sciences-sociology"
+          }
+        ],
+        "categories": [
+          {
+            "category": "category-access_physical_and_eInfrastructures-data_storage",
+            "subcategory": "subcategory-access_physical_and_eInfrastructures-data_storage-data"
+          }
+        ],
+        "targetUsers": [
+          "target_user-research_communities",
+          "target_user-research_groups",
+          "target_user-research_managers",
+          "target_user-research_networks",
+          "target_user-research_organisations",
+          "target_user-research_projects",
+          "target_user-researchers"
+        ],
+        "accessTypes": [
+          "access_type-remote"
+        ],
+        "accessModes": [
+          "access_mode-free_conditionally"
+        ],
+        "tags": [
+          "e-INFRA non-commercial"
+        ],
+        "horizontalService": true,
+        "serviceCategories": [
+          "service_category-storage"
+        ],
+        "marketplaceLocations": [
+          "marketplace_location-publish_research_outputs",
+          "marketplace_location-publish_research_outputs"
+        ],
+        "geographicalAvailabilities": [
+          "WW"
+        ],
+        "languageAvailabilities": [
+          "en"
+        ],
+        "resourceGeographicLocations": [],
+        "mainContact": {
+          "firstName": "Ixxxxxx",
+          "lastName": "Kxxxxxxxxx",
+          "email": "Ixxxxxx.Kxxxxxxxxx@xxx.xx",
+          "phone": null,
+          "position": "Research project coordinator",
+          "organisation": "riga_stradins_university"
+        },
+        "publicContacts": [
+          {
+            "firstName": null,
+            "lastName": null,
+            "email": "dataxxxxx@xxx.xx",
+            "phone": null,
+            "position": null,
+            "organisation": "riga_stradins_university"
+          }
+        ],
+        "helpdeskEmail": "dataxxxxx@xxx.xx",
+        "securityContactEmail": "dataxxxxx@xxx.xx",
+        "trl": "trl-9",
+        "lifeCycleStatus": null,
+        "certifications": [],
+        "standards": [],
+        "openSourceTechnologies": [],
+        "version": null,
+        "lastUpdate": null,
+        "changeLog": [],
+        "requiredResources": [],
+        "relatedResources": [],
+        "relatedPlatforms": [],
+        "catalogueId": "eosc",
+        "fundingBody": [],
+        "fundingPrograms": [],
+        "grantProjectNames": [],
+        "helpdeskPage": null,
+        "userManual": null,
+        "termsOfUse": "https://wiki.eoscfuture.eu/display/PUBLIC/About+ToU+and+PP",
+        "privacyPolicy": "https://wiki.eoscfuture.eu/display/PUBLIC/About+ToU+and+PP",
+        "accessPolicy": null,
+        "resourceLevel": null,
+        "trainingInformation": null,
+        "statusMonitoring": null,
+        "maintenance": null,
+        "orderType": "order_type-open_access",
+        "order": null,
+        "paymentModel": null,
+        "pricing": null
+      }
     }
   ]
 }

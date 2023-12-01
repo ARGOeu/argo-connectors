@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.4] - 2023-12-01
+
+### Changed
+
+* ARGO-4428 Parse horizontalService flag now under main service bucket
+
 ## [2.2.3] - 2023-06-13
 
 ### Added

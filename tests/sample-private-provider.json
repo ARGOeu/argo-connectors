@@ -248,6 +248,101 @@
         ]
       },
       "id": "openaire"
+    },
+    {
+      "metadata": {
+        "registeredBy": "Sxxxxx Uxxxx",
+        "registeredAt": "1626436442264",
+        "modifiedBy": "Axxxxxxx Gxxxxxxxxx",
+        "modifiedAt": "1655453425739",
+        "terms": [
+          "sxxxxx.uxxxx@xxx.xx",
+          "axxxxxxx.gxxxxxxxxx@xxxxxxxx.xx"
+        ],
+        "published": false
+      },
+      "active": true,
+      "suspended": false,
+      "identifiers": null,
+      "migrationStatus": null,
+      "loggingInfo": null,
+      "latestAuditInfo": null,
+      "latestOnboardingInfo": null,
+      "latestUpdateInfo": null,
+      "status": "approved provider",
+      "templateStatus": "approved template",
+      "provider": {
+        "id": "riga_stradins_university",
+        "abbreviation": "RIga Stradins University",
+        "name": "Riga Stradins University",
+        "website": "https://www.rsu.lv/",
+        "legalEntity": true,
+        "legalStatus": "provider_legal_status-public_legal_entity",
+        "hostingLegalEntity": null,
+        "alternativeIdentifiers": null,
+        "description": "Riga Stradins University from Riga, Latvia is one of the leading and most advanced higher education teaching institutions in the Baltic region. The RSU research and teaching staff are professionals in their areas of expertise and are opinion leaders in the society. RSUs mission is to train highly qualified experts in the field of healthcare and social sciences, so they can serve the society of Latvia, the European Union, as well as the world. ",
+        "logo": "https://www.rsu.lv/sites/default/files/imce/rsu_alternate_logo_en.png",
+        "multimedia": [],
+        "scientificDomains": [
+          {
+            "scientificDomain": "scientific_domain-medical_and_health_sciences",
+            "scientificSubdomain": "scientific_subdomain-medical_and_health_sciences-health_sciences"
+          }
+        ],
+        "tags": [
+          "university",
+          "Latvia",
+          "Health",
+          "Medicine"
+        ],
+        "structureTypes": [],
+        "location": {
+          "streetNameAndNumber": "16 Dzirciema Street",
+          "postalCode": " LV-1007",
+          "city": "Riga",
+          "region": "Riga",
+          "country": "LV"
+        },
+        "mainContact": {
+          "firstName": "Ixxxxxx",
+          "lastName": "Kxxxxxxxxx",
+          "email": "Ixxxxxx.Kxxxxxxxxx@rsu.lv",
+          "phone": "+37167455586",
+          "position": "Science project coordinator"
+        },
+        "publicContacts": [
+          {
+            "firstName": "Ixxxxxx",
+            "lastName": "Kxxxxxxxxx",
+            "email": "Ixxxxxx.Kxxxxxxxxx@xxx.xx",
+            "phone": "+xxxxxxxxxxx",
+            "position": "Science project coordinator"
+          }
+        ],
+        "lifeCycleStatus": "provider_life_cycle_status-operational",
+        "certifications": [],
+        "participatingCountries": [
+          "LV"
+        ],
+        "affiliations": [],
+        "networks": [],
+        "catalogueId": "eosc",
+        "esfriDomains": [],
+        "esfriType": null,
+        "merilScientificDomains": [],
+        "areasOfActivity": [],
+        "societalGrandChallenges": [],
+        "nationalRoadmaps": [],
+        "users": [
+          {
+            "id": "",
+            "email": "Ixxxxxx.Kxxxxxxxxx@xxx.xx",
+            "name": "Ixxxxxx",
+            "surname": "Kxxxxxxxxx"
+          }
+        ]
+      },
+      "id": "riga_stradins_university"
     }
   ]
 }

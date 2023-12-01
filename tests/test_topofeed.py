@@ -813,6 +813,15 @@ class ParseEoscProvider(unittest.TestCase):
                     'provider_tags': 'Open Science'
                 },
                 'type': 'PROJECT'
+            },
+            {
+                'group': 'riga_stradins_university',
+                'subgroup': 'riga_stradins_university.rsu_dataverse',
+                'tags': {
+                    'info_projectname': 'RIga Stradins University',
+                    'provider_tags': 'university, Latvia, Health, Medicine'
+                },
+                'type': 'PROJECT'
             }
         ])
 
@@ -903,11 +912,26 @@ class ParseEoscProvider(unittest.TestCase):
                     'info_groupname': 'OpenAIRE Validator',
                     'service_tags': 'OAI-PMH protocol, horizontalService'
                 },
-                'type': 'SERVICEGROUPS'}
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'riga_stradins_university.rsu_dataverse',
+                'hostname': 'dataverse.rsu.lv_riga_stradins_university.rsu_dataverse',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'dataverse.rsu.lv',
+                    'info_ID': 'riga_stradins_university.rsu_dataverse',
+                    'info_URL': 'https://dataverse.rsu.lv/',
+                    'info_groupname': 'RSU Dataverse',
+                    'service_tags': 'e-INFRA non-commercial, horizontalService'
+                },
+                'type': 'SERVICEGROUPS'
+            }
         ])
 
     def test_idGroupname(self):
         self.assertEqual(self.id_groupname, {
+            'riga_stradins_university.rsu_dataverse': 'RSU Dataverse',
             'openaire.validator': 'OpenAIRE Validator',
             'srce.3dbionotes': '3DBionotes-WS-TEST',
             'srce.poem': 'POEM',

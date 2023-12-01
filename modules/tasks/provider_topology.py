@@ -42,7 +42,7 @@ class find_next_paging_cursor_count(ParseHelpers, Callable):
         total = doc['total']
         from_index = doc['from']
         to_index = doc['to']
- 
+
         return total, from_index, to_index
 
 
@@ -88,7 +88,7 @@ class TaskProviderTopology(object):
         resources_extended = ParseExtensions(self.logger, extensions, groupnames, self.uidservendp, self.logger.customer)
 
         return resources_extended.get_extensions()
-    
+
     def parse_source_topo(self, resources, providers):
         topo = ParseTopo(self.logger, providers, resources, self.uidservendp, self.logger.customer)
 
@@ -167,7 +167,7 @@ class TaskProviderTopology(object):
                                                                             remote_topo.path,
                                                                             from_index,
                                                                             num),
-                                                                            headers=headers)           
+                                                                            headers=headers)
                 await session.close()
                 return res
 

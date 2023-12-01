@@ -122,6 +122,7 @@ class ParseHelpers(object):
                 continue
             num_item = 0
             datum = {}
+
             for item in header:
                 datum[item] = row[num_item]
                 num_item = num_item + 1

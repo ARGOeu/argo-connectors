@@ -2,7 +2,7 @@
 %global __python /usr/bin/python3
 
 Name:    argo-connectors
-Version: 2.2.3
+Version: 2.2.4
 Release: 1%{?dist}
 Group:   EGI/SA4
 License: ASL 2.0

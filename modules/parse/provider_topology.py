@@ -22,7 +22,7 @@ def build_urlpath_id(http_endpoint):
         return uuid.uuid3(uuid.NAMESPACE_URL, path)
     else:
         return None
-    
+
 
 class ParseResources(ParseHelpers):
     def __init__(self, logger, data=None, keys=[], custname=None):
@@ -48,6 +48,10 @@ class ParseResources(ParseHelpers):
                         key_true = extras.get(key, False)
                         if key_true:
                             tags.append(key)
+                for key in self._keys:
+                    key_true = resource.get(key, False)
+                    if key_true:
+                        tags.append(key)
                 if not resource.get('name', False):
                     continue
                 self._resources.append({
