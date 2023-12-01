@@ -7,6 +7,7 @@ import sys
 import asyncio
 import uvloop
 
+from argo_connectors.singleton_config import ConfigClass#, EventLoopSingleton
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.tasks.vapor_weights import TaskVaporWeights
 from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state
@@ -20,7 +21,7 @@ logger = None
 
 
 def main():
-    global logger, globopts
+    #global logger, globopts
     parser = argparse.ArgumentParser(description="""Fetch weights information from Gstat provider
                                                     for every job listed in customer.conf""")
     parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf',
@@ -29,29 +30,46 @@ def main():
                         help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY',
                         help='write data for this date', type=str, required=False)
-    args = parser.parse_args()
+    #args = parser.parse_args()
 
-    logger = Logger(os.path.basename(sys.argv[0]))
+    # logger = Logger(os.path.basename(sys.argv[0]))
 
-    fixed_date = None
-    if args.date and date_check(args.date):
-        fixed_date = args.date
+    # fixed_date = None
+    # if args.date and date_check(args.date):
+    #     fixed_date = args.date
 
-    confpath = args.gloconf[0] if args.gloconf else None
-    cglob = Global(sys.argv[0], confpath)
-    globopts = cglob.parse()
+    # confpath = args.gloconf[0] if args.gloconf else None
+    # cglob = Global(sys.argv[0], confpath)
+    # globopts = cglob.parse()
 
-    confpath = args.custconf[0] if args.custconf else None
-    confcust = CustomerConf(sys.argv[0], confpath)
-    confcust.parse()
-    confcust.make_dirstruct()
-    confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
+    # confpath = args.custconf[0] if args.custconf else None
+    # confcust = CustomerConf(sys.argv[0], confpath)
+    # confcust.parse()
+    # confcust.make_dirstruct()
+    # confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
 
-    VAPORPI = confcust.get_vaporpi()
-    feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed=VAPORPI)
+    # VAPORPI = confcust.get_vaporpi()
+    # feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed=VAPORPI)
 
-    loop = uvloop.new_event_loop()
+    #####################################################################
+
+    config = ConfigClass()#args)
+    
+    args = config.parse_args()
+    logger = config.get_logger()
+    fixed_date = config.get_fixed_date(args)
+    cglob = config.get_cglob(args)
+    globopts = config.get_globopts(cglob)
+    confcust = config.get_confcust(globopts, args)
+    VAPORPI = config.vaporrpi_data(confcust)
+    feeds = config.get_feeds(confcust, VAPORPI)
+
+    loop = config.get_loop()
     asyncio.set_event_loop(loop)
+
+
+
+    #####################################################################
 
     for feed, jobcust in feeds.items():
         customers = set(map(lambda jc: confcust.get_custname(jc[1]), jobcust))
@@ -64,9 +82,16 @@ def main():
         logger.customer = customers
 
         try:
-            task = TaskVaporWeights(loop, logger, sys.argv[0], globopts,
-                                    confcust, VAPORPI, jobcust, cglob,
-                                    fixed_date)
+            # task = TaskVaporWeights(loop, logger, sys.argv[0], globopts,
+            #                         confcust, VAPORPI, jobcust, cglob,
+            #                         fixed_date)
+            
+            ###############################################################
+
+            task = TaskVaporWeights(jobcust)
+
+            ###############################################################
+
             loop.run_until_complete(task.run())
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:

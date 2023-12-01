@@ -3,6 +3,7 @@ import asyncio
 
 from urllib.parse import urlparse
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.flat_servicetypes import ParseFlatServiceTypes
 from argo_connectors.parse.webapi_servicetypes import ParseWebApiServiceTypes
@@ -20,21 +21,41 @@ def contains_exception(list):
 
 
 class TaskFlatServiceTypes(object):
-    def __init__(self, loop, logger, connector_name, globopts, auth_opts,
-                 webapi_opts, confcust, custname, feed, timestamp,
-                 is_csv=False, initsync=False):
-        self.logger = logger
-        self.loop = loop
-        self.connector_name = connector_name
-        self.auth_opts = auth_opts
-        self.globopts = globopts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
-        self.custname = custname
-        self.feed = feed
-        self.timestamp = timestamp
-        self.is_csv = is_csv
+    # def __init__(self, loop, logger, connector_name, globopts, auth_opts,
+    #              webapi_opts, confcust, custname, feed, timestamp,
+    #              is_csv=False, initsync=False):
+    #     self.logger = logger
+    #     self.loop = loop
+    #     self.connector_name = connector_name
+    #     self.auth_opts = auth_opts
+    #     self.globopts = globopts
+    #     self.webapi_opts = webapi_opts
+    #     self.confcust = confcust
+    #     self.custname = custname
+    #     self.feed = feed
+    #     self.timestamp = timestamp
+    #     self.is_csv = is_csv
+    #     self.initsync = initsync
+    #     print("self.initsync: ", self.initsync)
+
+    #########################################################################
+
+    def __init__(self, initsync=False):
         self.initsync = initsync
+        self.config = ConfigClass()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, self.pass_extensions, self.cglob = self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.custname = self.config.custname_data(self.confcust)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.auth_opts = self.config.get_auth_opts(self.confcust, self.logger)
+        self.feed = self.config.get_feed(self.confcust)
+        self.timestamp = self.config.get_fixed_date()
+        self.is_csv = self.config.is_csv()
+
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)

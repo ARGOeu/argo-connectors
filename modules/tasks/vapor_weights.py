@@ -1,7 +1,9 @@
 import os
 
 from urllib.parse import urlparse
+import asyncio
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.vapor import ParseWeights
@@ -9,17 +11,34 @@ from argo_connectors.tasks.common import write_weights_metricprofile_state as wr
 
 
 class TaskVaporWeights(object):
-    def __init__(self, loop, logger, connector_name, globopts, confcust, feed,
-                 jobcust, cglob, fixed_date):
-        self.event_loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.confcust = confcust
-        self.feed = feed
+    # def __init__(self, loop, logger, connector_name, globopts, confcust, feed,
+    #             jobcust, cglob, fixed_date):
+    #     self.event_loop = loop
+    #     self.logger = logger
+    #     self.connector_name = connector_name
+    #     self.globopts = globopts
+    #     self.confcust = confcust
+    #     self.feed = feed
+    #     self.jobcust = jobcust
+    #     self.cglob = cglob
+    #     self.fixed_date = fixed_date
+
+    ########################################################
+
+    def __init__(self, jobcust):
         self.jobcust = jobcust
-        self.cglob = cglob
-        self.fixed_date = fixed_date
+        self.config = ConfigClass()
+        self.args = self.config.parse_args()
+        self.loop = self.config.get_loop()
+        asyncio.set_event_loop(self.loop)     
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.cglob = self.config.get_cglob(self.args)
+        self.globopts = self.config.get_globopts(self.cglob)
+        self.confcust = self.config.get_confcust(self.globopts, self.args)
+        self.feed = self.config.vaporrpi_data(self.confcust)
+        self.fixed_date = self.config.get_fixed_date(self.args)
+
 
     async def fetch_data(self):
         feed_parts = urlparse(self.feed)

@@ -3,6 +3,7 @@ import asyncio
 
 from urllib.parse import urlparse
 
+from argo_connectors.singleton_config import ConfigClass
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.flat_topology import ParseFlatEndpoints
 from argo_connectors.parse.flat_contacts import ParseContacts
@@ -12,21 +13,40 @@ from argo_connectors.tasks.common import write_state, write_topo_json as write_j
 
 
 class TaskFlatTopology(object):
-    def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, custname, topofeed, fetchtype, fixed_date,
-                 uidservendp, is_csv=False):
-        self.event_loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
-        self.custname = custname
-        self.topofeed = topofeed
-        self.fetchtype = fetchtype
-        self.fixed_date = fixed_date
-        self.uidservendp = uidservendp
-        self.is_csv = is_csv
+    # def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
+    #              confcust, custname, topofeed, fetchtype, fixed_date,
+    #              uidservendp, is_csv=False):
+    #     self.event_loop = loop
+    #     self.logger = logger
+    #     self.connector_name = connector_name
+    #     self.globopts = globopts
+    #     self.webapi_opts = webapi_opts
+    #     self.confcust = confcust
+    #     self.custname = custname
+    #     self.topofeed = topofeed
+    #     self.fetchtype = fetchtype
+    #     self.fixed_date = fixed_date
+    #     self.uidservendp = uidservendp
+    #     self.is_csv = is_csv
+
+    ############################################################################
+
+    def __init__(self):
+        self.config = ConfigClass()
+        self.event_loop = self.config.get_loop()
+        asyncio.set_event_loop(self.event_loop)
+        self.logger = self.config.get_logger()
+        self.connector_name = self.config.get_connector_name()
+        self.globopts, _, _= self.config.get_globopts_n_pass_ext()
+        self.confcust = self.config.get_confcust(self.globopts)
+        self.custname = self.config.custname_data(self.confcust)
+        self.webapi_opts = self.config.get_webapi_opts_data(self.confcust, self.custname)
+        self.topofeed = self.config.topofeed_data(self.confcust)
+        self.fetchtype = self.config.topofetchtype_data(self.confcust)[0]
+        self.fixed_date = self.config.get_fixed_date()
+        self.uidservendp = self.config.uidservendp_data(self.confcust)
+        self.is_csv = self.config.is_csv()
+
 
     def _is_feed(self, feed):
         data = urlparse(feed)
@@ -84,7 +104,7 @@ class TaskFlatTopology(object):
                     js = json.load(fp)
                     group_groups, group_endpoints = self.parse_source_topo(js)
             except IOError as exc:
-                self.logger.error('Customer:%s : Problem opening %s - %s' % (self.logger.customer, self.topofeed, repr(exc)))
+                self.logger.error('Customer:%s : Problem opening %s - %s' % (self.custname, self.topofeed, repr(exc)))
 
         await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
