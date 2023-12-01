@@ -6,7 +6,7 @@ from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.vapor import ParseWeights
 from argo_connectors.tasks.common import write_weights_metricprofile_state as write_state, write_weights_json as write_json
-
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 
 class TaskVaporWeights(object):
     def __init__(self, loop, logger, connector_name, globopts, confcust, feed,
@@ -57,35 +57,40 @@ class TaskVaporWeights(object):
         await webapi.send(weights)
 
     async def run(self):
-        for job, cust in self.jobcust:
-            self.logger.customer = self.confcust.get_custname(cust)
-            self.logger.job = job
+        try:
+            for job, cust in self.jobcust:
+                self.logger.customer = self.confcust.get_custname(cust)
+                self.logger.job = job
 
-            write_empty = self.confcust.send_empty(self.connector_name, cust)
+                write_empty = self.confcust.send_empty(self.connector_name, cust)
 
-            if write_empty:
-                weights = []
-            else:
-                res = await self.fetch_data()
-                weights = self.parse_source(res)
+                if write_empty:
+                    weights = []
+                else:
+                    res = await self.fetch_data()
+                    weights = self.parse_source(res)
 
-            webapi_opts = self.get_webapi_opts(cust, job)
+                webapi_opts = self.get_webapi_opts(cust, job)
 
-            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-                await self.send_webapi(weights, webapi_opts, job)
+                if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                    await self.send_webapi(weights, webapi_opts, job)
 
-            if eval(self.globopts['GeneralWriteJson'.lower()]):
-                write_json(self.logger, self.globopts, cust, job,
-                           self.confcust, self.fixed_date, weights)
+                if eval(self.globopts['GeneralWriteJson'.lower()]):
+                    write_json(self.logger, self.globopts, cust, job,
+                            self.confcust, self.fixed_date, weights)
 
-            await write_state(self.connector_name, self.globopts, cust, job, self.confcust, self.fixed_date, True)
+                await write_state(self.connector_name, self.globopts, cust, job, self.confcust, self.fixed_date, True)
 
-        if weights or write_empty:
-            custs = set([cust for job, cust in self.jobcust])
-            for cust in custs:
-                jobs = [job for job, lcust in self.jobcust if cust == lcust]
-                self.logger.info('Customer:%s Jobs:%s Sites:%d' %
-                                 (self.confcust.get_custname(cust), jobs[0]
-                                     if len(jobs) == 1 else
-                                     '({0})'.format(','.join(jobs)),
-                                     len(weights)))
+            if weights or write_empty:
+                custs = set([cust for job, cust in self.jobcust])
+                for cust in custs:
+                    jobs = [job for job, lcust in self.jobcust if cust == lcust]
+                    self.logger.info('Customer:%s Jobs:%s Sites:%d' %
+                                    (self.confcust.get_custname(cust), jobs[0]
+                                        if len(jobs) == 1 else
+                                        '({0})'.format(','.join(jobs)),
+                                        len(weights)))
+
+        except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, cust, job, self.confcust, self.fixed_date, False)
