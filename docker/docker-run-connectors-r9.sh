@@ -15,6 +15,7 @@ docker run \
 --mount type=bind,src="${SSH_AUTH_SOCK}",target="${SSH_AUTH_SOCK}" \
 \
 -v "${HOME}":/mnt/ \
+-v "${HOME}/.docker_zsh_history":/home/user/.zsh_history \
 -v "${CONNECTORS_SOURCE}":/home/user/connectors-source \
 \
 -h docker-rocky9 \
