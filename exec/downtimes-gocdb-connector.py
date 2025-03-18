@@ -80,8 +80,10 @@ def main():
 
     downtime_feed = confcust.get_downfeed()
     toposcope = confcust.get_toposcope()
-    if toposcope:
+    if toposcope and '&scope=' not in toposcope:
         downtime_feed += '&scope={}'.format(toposcope)
+    elif toposcope and '&scope=' in toposcope:
+        downtime_feed += toposcope
 
     uidservtype = confcust.get_uidserviceendpoints()
     webapi_opts = get_webapi_opts(cglob, confcust)
