@@ -26,6 +26,12 @@ docker run \
 -v "${CONNECTORS_SOURCE}"/modules:${VENV}/lib/python3.9/site-packages/argo_connectors/:ro \
 -v "${CONNECTORS_SOURCE}"/docker/egi-customer.conf:${VENV}/etc/egi-customer.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/global.conf:${VENV}/etc/global.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/eosc-customer-lot1prod.conf:${VENV}/etc/eosc-customer-lot1prod.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/eosc-customer-lot1stg.conf:${VENV}/etc/eosc-customer-lot1stg.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/eosccore-customer-lot1prod.conf:${VENV}/etc/eosccore-customer-lot1prod.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/eosccore-customer-lot1stg.conf:${VENV}/etc/eosccore-customer-lot1stg.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/global-lot1prod.conf:${VENV}/etc/global-lot1prod.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/global-lot1stg.conf:${VENV}/etc/global-lot1stg.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/hostcert.pem:/etc/grid-security/hostcert.pem:ro \
 -v "${CONNECTORS_SOURCE}"/docker/hostkey.pem:/etc/grid-security/hostkey.pem:ro \
 \
