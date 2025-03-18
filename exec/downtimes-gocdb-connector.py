@@ -31,6 +31,7 @@ def get_webapi_opts(cglob, confcust):
 
 def main():
     global logger, globopts
+
     parser = argparse.ArgumentParser(
         description='Fetch downtimes from GOCDB for given date')
     parser.add_argument('-d', dest='date', nargs=1,
@@ -78,6 +79,9 @@ def main():
         raise SystemExit(1)
 
     downtime_feed = confcust.get_downfeed()
+    toposcope = confcust.get_toposcope()
+    if toposcope:
+        downtime_feed += '&scope={}'.format(toposcope)
 
     uidservtype = confcust.get_uidserviceendpoints()
     webapi_opts = get_webapi_opts(cglob, confcust)
