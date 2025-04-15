@@ -115,6 +115,7 @@ class ParseEoscContacts(unittest.TestCase):
                 '3dbionotes.cnb.csic.es+srce.3dbionotes': ['kzailac@srce.hr'],
                 'poem.devel.argo.grnet.gr+srce.poem': ['Emir.Imamagic@srce.hr'],
                 'webodv-egi-ace.cloud.ba.infn.it+srce.webodv': ['Emir.Imamagic@srce.hr'],
+                'dataverse.rsu.lv+riga_stradins_university.rsu_dataverse': ['dataxxxxx@xxx.xx'],
                 'www.openaire.eu+openaire.validator': ['info@openaire.eu'],
                 'www.srce.unizg.hr+srce.srceweb': ['Emir.Imamagic@srce.hr']
             }
@@ -128,6 +129,9 @@ class ParseEoscContacts(unittest.TestCase):
                 },
                 {
                     'contacts': ['info@openaire.eu'], 'name': 'OpenAIRE'
+                },
+                {
+                    'contacts': ['Ixxxxxx.Kxxxxxxxxx@xxx.xx'], 'name': 'RIga Stradins University'
                 }
             ]
         )

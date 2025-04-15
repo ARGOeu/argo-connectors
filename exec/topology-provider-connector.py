@@ -1,11 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import os
 import sys
 import json
 
-import uvloop
 import asyncio
 
 from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
@@ -60,7 +59,7 @@ def main():
     custname = confcust.get_custname()
 
     # safely assume here one customer defined in customer file
-    cust = list(confcust.get_customers())[0] 
+    cust = list(confcust.get_customers())[0]
     jobstatedir = confcust.get_fullstatedir(globopts['InputStateSaveDir'.lower()], cust)
     fetchtype = confcust.get_topofetchtype()[0]
 
@@ -72,8 +71,7 @@ def main():
     topofeed = confcust.get_topofeed()
     topofeedpaging = confcust.get_topofeedpaging()
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     try:
         task = TaskProviderTopology(

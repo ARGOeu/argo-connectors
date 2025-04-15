@@ -1,6 +1,9 @@
+[DEFAULT]
+VENV = /opt/argo-connectors/
+
 [CUSTOMER_EGI]
 Name = EGI
-OutputDir = /var/lib/argo-connectors/EGI/
+OutputDir = %(VENV)s/var/lib/argo-connectors/EGI/
 Jobs = Critical
 AuthenticationUsePlainHttpAuth = False
 AuthenticationHttpUser = xxxx

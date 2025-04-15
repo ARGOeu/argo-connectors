@@ -6,6 +6,8 @@ import re
 from .log import Logger
 
 
+
+
 class Global(object):
     """
        Class represents parser for global.conf
@@ -31,7 +33,8 @@ class Global(object):
         self.optional = dict()
 
         self.logger = Logger(str(self.__class__))
-        self._filename = '/etc/argo-connectors/global.conf' if not confpath else confpath
+        self._filename = f"{os.environ['VIRTUAL_ENV']}/etc/global.conf" if not confpath else confpath
+
         self._checkpath = kwargs['checkpath'] if 'checkpath' in kwargs.keys(
         ) else False
 
@@ -229,7 +232,7 @@ class CustomerConf(object):
 
     def __init__(self, caller, confpath, **kwargs):
         self.logger = Logger(str(self.__class__))
-        self._filename = '/etc/argo-connectors/customer.conf' if not confpath else confpath
+        self._filename = f"{os.environ['VIRTUAL_ENV']}/etc/customer.conf" if not confpath else confpath
         if not kwargs:
             self._jobattrs = self._defjobattrs[os.path.basename(caller)]
         else:

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import datetime
@@ -6,7 +6,6 @@ import os
 import sys
 
 import asyncio
-import uvloop
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
@@ -32,6 +31,7 @@ def get_webapi_opts(cglob, confcust):
 
 def main():
     global logger, globopts
+
     parser = argparse.ArgumentParser(
         description='Fetch downtimes from GOCDB for given date')
     parser.add_argument('-d', dest='date', nargs=1,
@@ -79,12 +79,16 @@ def main():
         raise SystemExit(1)
 
     downtime_feed = confcust.get_downfeed()
+    toposcope = confcust.get_toposcope()
+    if toposcope and '&scope=' not in toposcope:
+        downtime_feed += '&scope={}'.format(toposcope)
+    elif toposcope and '&scope=' in toposcope:
+        downtime_feed += toposcope
 
     uidservtype = confcust.get_uidserviceendpoints()
     webapi_opts = get_webapi_opts(cglob, confcust)
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     try:
         cust = list(confcust.get_customers())[0]

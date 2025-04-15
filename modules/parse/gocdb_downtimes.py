@@ -26,7 +26,7 @@ class ParseDowntimes(ParseHelpers):
 
             for downtimes in root:
                 classification = downtimes.attrib['CLASSIFICATION']
-     
+
                 for downtime in downtimes.xpath('.//HOSTNAME'):
                     hostname = downtime.text
 

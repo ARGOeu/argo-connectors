@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.3.0] - 2025-04-15
+
+### Fixed
+
+* ARGO-4440 Contactfeed test fix
+* ARGO-4817 Fix log message write in separate logfile
+
+### Changed
+
+* ARGO-4556 argo-connectors wheel packing and Poetry dependency handling
+* ARGO-4690 Ditch uvloop and rely on default asyncio event loop
+* ARGO-4691 Refine Jenkinsfile to execute test with Poetry and epel-9-ams
+
+### Added
+
+* ARGO-4689 Connectors Rocky 9 development container
+* ARGO-4792 Local flake8 linting settings
+* ARGO-4945 Extend GOCDB downtimes connector to fetch scoped entries
+
 ## [2.2.4] - 2023-12-01
 
 ### Changed

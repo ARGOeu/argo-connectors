@@ -1,4 +1,5 @@
 [DEFAULT]
+VENV = /opt/argo-connectors/
 
 [General]
 WriteJson = True
@@ -26,7 +27,7 @@ Retry = 3
 SleepRetry = 60
 
 [InputState]
-SaveDir = /var/lib/argo-connectors/states/
+SaveDir = %(VENV)s/var/lib/argo-connectors/states/
 Days = 3
 
 [Output]

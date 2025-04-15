@@ -10,48 +10,25 @@ pipeline {
         GIT_COMMIT_DATE=sh(script: "date -d \"\$(cd ${WORKSPACE}/$PROJECT_DIR && git show -s --format=%ci ${GIT_COMMIT_HASH})\" \"+%Y%m%d%H%M%S\"",returnStdout: true).trim()
     }
     stages {
-        stage ('Build'){
-            parallel {
-                stage ('Build Centos 7 RPM') {
-                    agent {
-                        docker {
-                            image 'argo.registry:5000/epel-7-ams'
-                            args '-u jenkins:jenkins'
-                        }
-                    }
-                    steps {
-                        echo 'Building Rpm...'
-                        withCredentials(bindings: [sshUserPrivateKey(credentialsId: 'jenkins-rpm-repo', usernameVariable: 'REPOUSER', \
-                                                                    keyFileVariable: 'REPOKEY')]) {
-                            sh "/home/jenkins/build-rpm.sh -w ${WORKSPACE} -b ${BRANCH_NAME} -d centos7 -p ${PROJECT_DIR} -s ${REPOKEY}"
-                        }
-                        archiveArtifacts artifacts: '**/*.rpm', fingerprint: true
-                    }
-                    post {
-                        always {
-                            cleanWs()
-                        }
-                    }
+        stage ('Execute tests') {
+            agent {
+                docker {
+                    image 'argo.registry:5000/epel-9-ams'
+                    alwaysPull true
+                    args '-u jenkins:jenkins -v /dev/log:/dev/log'
                 }
-                stage ('Execute tests') {
-                    agent {
-                        docker {
-                            image 'argo.registry:5000/epel-7-ams'
-                            args '-u jenkins:jenkins -v /dev/log:/dev/log'
-                        }
-                    }
-                    steps {
-                        sh '''
-                            cd $WORKSPACE/$PROJECT_DIR/
-                            rm -f tests/argo_connectors
-                            ln -s $PWD/modules/ tests/argo_connectors
-                            coverage run -m xmlrunner discover --output-file junit.xml -v tests/
-                            coverage xml
-                        '''
-                        cobertura coberturaReportFile: '**/coverage.xml'
-                        junit '**/junit.xml'
-                    }
-                }
+            }
+            steps {
+                sh '''
+                    cd $WORKSPACE/$PROJECT_DIR/
+                    make wheel-devel
+                    make clean
+                    poetry run pip install *.whl
+                    poetry run coverage run -m xmlrunner discover --output-file junit.xml -v tests/
+                    poetry run coverage xml
+                '''
+                cobertura coberturaReportFile: '**/coverage.xml'
+                junit '**/junit.xml'
             }
         }
     }

@@ -1,10 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import os
 import sys
 
-import uvloop
 import asyncio
 
 from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
@@ -47,7 +46,7 @@ def main():
     confpath = args.gloconf[0] if args.gloconf else None
     cglob = Global(sys.argv[0], confpath)
     globopts = cglob.parse()
-    
+
     confpath = args.custconf[0] if args.custconf else None
     confcust = CustomerConf(sys.argv[0], confpath)
     confcust.parse()
@@ -60,8 +59,7 @@ def main():
     logger.customer = custname
     uidservendp = confcust.get_uidserviceendpoints()
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     try:
         task = TaskProviderTopology(

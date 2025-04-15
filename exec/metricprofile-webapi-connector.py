@@ -1,11 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import os
 import sys
 
 import asyncio
-import uvloop
 
 from argo_connectors.config import CustomerConf, Global
 from argo_connectors.log import Logger
@@ -42,8 +41,7 @@ def main():
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     for cust in confcust.get_customers():
         try:

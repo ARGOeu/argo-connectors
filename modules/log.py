@@ -2,8 +2,9 @@ import logging
 import logging.handlers
 import sys
 import socket
+import os
 
-LOGFILE = "/var/log/argo-connectors/connectors.log"
+LOGFILE = f"{os.environ['VIRTUAL_ENV']}/var/log/connectors.log"
 
 
 class Logger:

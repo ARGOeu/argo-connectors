@@ -1,11 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import os
 import sys
 
 import asyncio
-import uvloop
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.tasks.vapor_weights import TaskVaporWeights
@@ -50,8 +49,7 @@ def main():
     VAPORPI = confcust.get_vaporpi()
     feeds = confcust.get_mapfeedjobs(sys.argv[0], deffeed=VAPORPI)
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     for feed, jobcust in feeds.items():
         customers = set(map(lambda jc: confcust.get_custname(jc[1]), jobcust))

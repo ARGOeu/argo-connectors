@@ -322,6 +322,7 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
 
         # parse topology depend on configured components fetch. we can fetch
         # only sites, only servicegroups or both.
+
         if fetched_servicegroups and fetched_sites:
             parse_workers.append(
                 self.loop.run_in_executor(executor, exe_parse_source_endpoints)

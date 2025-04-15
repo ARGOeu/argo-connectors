@@ -1,25 +1,31 @@
-PKGNAME=argo-connectors
-SPECFILE=${PKGNAME}.spec
+wheel-prod: clean
+	poetry install --no-root --with devel; \
+	poetry run python3 -m build -w
 
-PKGVERSION=$(shell grep -s '^Version:' $(SPECFILE) | sed -e 's/Version: *//')
 
-srpm: dist
-	rpmbuild -ts --define='dist .el7' ${PKGNAME}-${PKGVERSION}.tar.gz
+wheel-devel: clean
+	@if [ -z "$$BUILD_VER" ]; then \
+        export BUILD_VER=$$(grep "VERSION.=" version.py \
+			| awk '{print $$3}' \
+			| sed 's/\"//g')".dev"$$(date +%Y%m%d); \
+		[ -z "$$BUILD_CANDIDATE" ] && \
+		export BUILD_VER=$$BUILD_VER"01" || \
+		export BUILD_VER=$$BUILD_VER$$BUILD_CANDIDATE; \
+    fi; \
+	echo "Version $$BUILD_VER"; \
+	poetry install --no-root --with devel; \
+    poetry run python3 -m build -w
+	mv -f dist/*.whl .
 
-rpm: dist
-	rpmbuild -ta ${PKGNAME}-${PKGVERSION}.tar.gz
-
-dist:
-	rm -rf dist
-	python3 setup.py sdist
-	mv dist/${PKGNAME}-${PKGVERSION}.tar.gz .
-	rm -rf dist
-
-sources: dist
 
 clean:
-	rm -rf ${PKGNAME}-${PKGVERSION}.tar.gz
 	rm -f MANIFEST
-	rm -rf dist
+	rm -rf dist build
 	rm -rf **/*.pyc
 	rm -rf **/*.pyo
+	rm -rf **/*.pyo
+	rm -rf *.egg-info/
+	rm -rf **/*__pycache__*
+
+
+.PHONY: clean wheel-devel wheel-prod

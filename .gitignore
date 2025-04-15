@@ -1,3 +1,9 @@
 __pycache__/
 .coverage
-conf-files/
+*.conf
+*.pem
+*.whl
+.ropeproject
+tags
+*.egg-info
+junit.xml

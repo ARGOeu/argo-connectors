@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import datetime
@@ -6,7 +6,6 @@ import os
 import sys
 
 import asyncio
-import uvloop
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
@@ -66,8 +65,7 @@ def main():
 
     webapi_opts = get_webapi_opts(cglob, confcust)
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     try:
         task = TaskGocdbServiceTypes(

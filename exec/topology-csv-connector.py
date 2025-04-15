@@ -1,11 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import argparse
 import os
 import sys
 
 import asyncio
-import uvloop
 
 from argo_connectors.config import Global, CustomerConf
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
@@ -71,8 +70,7 @@ def main():
         logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
         raise SystemExit(1)
 
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.get_event_loop()
 
     try:
         task = TaskFlatTopology(

@@ -1,0 +1,67 @@
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aiofiles = "*"
+aiohttp = "*"
+bonsai = "*"
+lxml = "*"
+requests = "*"
+unidecode = "*"
+
+[tool.poetry.group.devel]
+optional = true
+
+[tool.poetry.group.devel.dependencies]
+build = "*"
+mock = "*"
+ipdb = "*"
+coverage = "*"
+unittest-xml-reporting = "*"
+pudb = "*"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argo-connectors"
+dynamic = ["version"]
+authors = [
+	{ name = "Daniel Vrcic", email = "dvrcic@srce.hr" }
+]
+description = "Components generate input data for ARGO Compute Engine"
+classifiers = [
+	"Development Status :: 5 - Production/Stable",
+	"License :: OSI Approved :: Apache Software License",
+	"Operating System :: POSIX",
+	"Programming Language :: Python :: 3.9",
+	"Intended Audience :: Developers",
+]
+
+[tool.setuptools]
+packages = [
+	'argo_connectors',
+	'argo_connectors.io',
+	'argo_connectors.parse',
+	'argo_connectors.mesh',
+	'argo_connectors.tasks'
+]
+include-package-data = true
+
+[tool.setuptools.package-dir]
+argo_connectors = "modules"
+"argo_connectors.io" = "modules/io"
+"argo_connectors.parse" = "modules/parse"
+"argo_connectors.mesh" = "modules/mesh"
+"argo_connectors.tasks" = "modules/tasks"
+
+[tool.setuptools.data-files]
+"" = ["pyproject.toml", "poetry.lock"]
+"etc" = ["etc/*.conf.template"]
+"usr/bin" = ["exec/*.py"]
+"var/log/" = ["helpers/empty"]
+
+[tool.setuptools.dynamic]
+version = { attr = "version.vernum" }

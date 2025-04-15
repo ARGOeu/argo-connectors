@@ -325,7 +325,7 @@ class ServiceTypesGocdb(unittest.TestCase):
         self.assertFalse(mock_writestate.call_args[0][4])
         self.assertTrue(self.services_gocdb.logger.error.called)
         self.assertEqual(self.services_gocdb.logger.error.call_args[0][0], repr(
-            ConnectorError("ConnectorHttpError('fetch_data failed',)")))
+            ConnectorError("ConnectorHttpError('fetch_data failed')")))
         self.assertFalse(self.services_gocdb.send_webapi.called)
 
         self.services_gocdb.fetch_data = mock.AsyncMock()
@@ -345,7 +345,7 @@ class ServiceTypesGocdb(unittest.TestCase):
         self.assertFalse(mock_writestate.call_args[0][4])
         self.assertTrue(self.services_gocdb.logger.error.called)
         self.assertEqual(self.services_gocdb.logger.error.call_args[0][0], repr(
-            ConnectorError("ConnectorHttpError('fetch_webapi_data failed',)")))
+            ConnectorError("ConnectorHttpError('fetch_webapi_data failed')")))
         self.assertFalse(self.services_gocdb.send_webapi.called)
 
 
