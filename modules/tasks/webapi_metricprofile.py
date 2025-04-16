@@ -32,20 +32,20 @@ class TaskWebApiMetricProfile(object):
         return metric_profiles
 
     async def run(self):
-        for job in self.confcust.get_jobs(self.cust):
-            self.logger.customer = self.confcust.get_custname(self.cust)
-            self.logger.job = job
+        try:
+            for job in self.confcust.get_jobs(self.cust):
+                self.logger.customer = self.confcust.get_custname(self.cust)
+                self.logger.job = job
 
-            profiles = self.confcust.get_profiles(job)
-            webapi_custopts = self.confcust.get_webapiopts(self.cust)
-            webapi_opts = self.cglob.merge_opts(webapi_custopts, 'webapi')
-            webapi_complete, missopt = self.cglob.is_complete(webapi_opts, 'webapi')
+                profiles = self.confcust.get_profiles(job)
+                webapi_custopts = self.confcust.get_webapiopts(self.cust)
+                webapi_opts = self.cglob.merge_opts(webapi_custopts, 'webapi')
+                webapi_complete, missopt = self.cglob.is_complete(webapi_opts, 'webapi')
 
-            if not webapi_complete:
-                self.logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (self.logger.customer, self.logger.job, 'webapi', ' '.join(missopt)))
-                continue
+                if not webapi_complete:
+                    self.logger.error('Customer:%s Job:%s %s options incomplete, missing %s' % (self.logger.customer, self.logger.job, 'webapi', ' '.join(missopt)))
+                    continue
 
-            try:
                 res = await self.fetch_data(webapi_opts['webapihost'], webapi_opts['webapitoken'])
 
                 fetched_profiles = self.parse_source(res, profiles)
@@ -57,6 +57,6 @@ class TaskWebApiMetricProfile(object):
 
                 self.logger.info('Customer:' + self.logger.customer + ' Job:' + job + ' Profiles:%s Tuples:%d' % (', '.join(profiles), len(fetched_profiles)))
 
-            except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
-                self.logger.error(repr(exc))
-                await write_state(self.connector_name, self.globopts, self.cust, job, self.confcust, self.fixed_date, False)
+        except (ConnectorHttpError, KeyboardInterrupt, ConnectorParseError) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.cust, job, self.confcust, self.fixed_date, False)
