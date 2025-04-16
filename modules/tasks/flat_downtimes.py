@@ -1,5 +1,5 @@
 import os
-
+import time
 from urllib.parse import urlparse
 
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
@@ -12,7 +12,7 @@ from argo_connectors.tasks.common import write_state, write_downtimes_json as wr
 class TaskCsvDowntimes(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, custname, feed, current_date,
-                 uidservtype, targetdate, timestamp):
+                 uidservtype, targetdate, timestamp, performance):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -25,13 +25,18 @@ class TaskCsvDowntimes(object):
         self.uidservtype = uidservtype
         self.targetdate = targetdate
         self.timestamp = timestamp
+        self.performance = performance
 
     async def fetch_data(self):
+        start_time = time.time()
         session = SessionWithRetry(self.logger,
                                    os.path.basename(self.connector_name),
                                    self.globopts)
         res = await session.http_get(self.feed)
 
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source(self, res):
@@ -40,6 +45,7 @@ class TaskCsvDowntimes(object):
         return csv_downtimes.get_data()
 
     async def send_webapi(self, dts):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -49,9 +55,14 @@ class TaskCsvDowntimes(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             write_empty = self.confcust.send_empty(self.connector_name)
             if not write_empty:
                 res = await self.fetch_data()
@@ -74,6 +85,10 @@ class TaskCsvDowntimes(object):
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts,
                            self.confcust, dts, self.timestamp)
+            
+            elapsed_time = time.time() - start_time
+            if self.performance:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

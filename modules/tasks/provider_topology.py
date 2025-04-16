@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 
 from collections import Callable
 from urllib.parse import urlparse
@@ -72,7 +73,7 @@ def join_resources(left, right):
 
 class TaskProviderTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, topofeedpaging, uidservendp, fetchtype, fixed_date):
+                 confcust, topofeedpaging, uidservendp, fetchtype, fixed_date, performance):
         self.loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -83,6 +84,7 @@ class TaskProviderTopology(object):
         self.uidservendp = uidservendp
         self.fixed_date = fixed_date
         self.fetchtype = fetchtype
+        self.performance = performance
 
     def parse_source_extensions(self, extensions, groupnames):
         resources_extended = ParseExtensions(self.logger, extensions, groupnames, self.uidservendp, self.logger.customer)
@@ -95,6 +97,7 @@ class TaskProviderTopology(object):
         return topo.get_group_groups(), topo.get_group_endpoints()
 
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
                         webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -104,8 +107,12 @@ class TaskProviderTopology(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=fixed_date)
         await webapi.send(data, topotype)
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def fetch_data(self, feed, access_token, paginated):
+        start_time = time.time()
         fetched_data = list()
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
@@ -148,6 +155,9 @@ class TaskProviderTopology(object):
                     from_index = to_index
 
                 await session.close()
+                elapsed_time = time.time() - start_time
+                if self.performance:
+                    self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
                 return dict(results=fetched_results)
 
             except ConnectorParseError as exc:
@@ -169,6 +179,9 @@ class TaskProviderTopology(object):
                                                                             num),
                                                                             headers=headers)
                 await session.close()
+                elapsed_time = time.time() - start_time
+                if self.performance:
+                    self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
                 return res
 
             except ConnectorParseError as exc:
@@ -176,6 +189,7 @@ class TaskProviderTopology(object):
                 raise exc
 
     async def token_fetch(self, oidcclientid, oidctoken, oidcapi):
+        start_time = time.time()
         token_endpoint = urlparse(oidcapi)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
 
@@ -202,9 +216,14 @@ class TaskProviderTopology(object):
             msg = "Could not extract OIDC Access token: {}".format(repr(exc))
             raise ConnectorParseError(msg)
 
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'token_fetch completed in {elapsed_time} seconds.')
         return access_token
 
     async def run(self):
+        start_time = time.time()
+        
         topofeedextensions = self.confcust.get_topofeedendpointsextensions()
         topofeedproviders = self.confcust.get_topofeedservicegroups()
         topofeedresources = self.confcust.get_topofeedendpoints()
@@ -265,4 +284,8 @@ class TaskProviderTopology(object):
             if eval(self.globopts['GeneralWriteJson'.lower()]):
                 write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
+            elapsed_time = time.time() - start_time
+            if self.performance:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
             self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+        

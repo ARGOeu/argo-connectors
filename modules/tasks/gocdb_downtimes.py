@@ -1,17 +1,17 @@
 import os
-
+import time
 from urllib.parse import urlparse
 
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.parse.gocdb_downtimes import ParseDowntimes
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.tasks.common import write_state, write_downtimes_json as write_json
-
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 
 class TaskGocdbDowntimes(object):
     def __init__(self, loop, logger, connector_name, globopts, auth_opts,
                  webapi_opts, confcust, custname, feed, start, end,
-                 uidservtype, targetdate, timestamp):
+                 uidservtype, targetdate, timestamp, performance):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -26,8 +26,10 @@ class TaskGocdbDowntimes(object):
         self.uidservtype = uidservtype
         self.targetdate = targetdate
         self.timestamp = timestamp
+        self.performance = performance
 
     async def fetch_data(self):
+        start_time = time.time()
         feed_parts = urlparse(self.feed)
         start_fmt = self.start.strftime("%Y-%m-%d")
         end_fmt = self.end.strftime("%Y-%m-%d")
@@ -50,6 +52,9 @@ class TaskGocdbDowntimes(object):
                                                            feed_parts.path,
                                                            start_fmt, end_fmt)
         res = await session.http_get(query_url)
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
         return res
 
@@ -59,6 +64,7 @@ class TaskGocdbDowntimes(object):
         return gocdb.get_data()
 
     async def send_webapi(self, dts):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -68,26 +74,40 @@ class TaskGocdbDowntimes(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.targetdate)
         await webapi.send(dts, downtimes_component=True)
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
-        # we don't have multiple tenant definitions in one
-        # customer file so we can safely assume one tenant/customer
-        write_empty = self.confcust.send_empty(self.connector_name)
-        if not write_empty:
-            res = await self.fetch_data()
-            dts = self.parse_source(res)
-        else:
-            dts = []
+        try:
+            start_time = time.time()
+            
+            # we don't have multiple tenant definitions in one
+            # customer file so we can safely assume one tenant/customer
+            write_empty = self.confcust.send_empty(self.connector_name)
+            if not write_empty:
+                res = await self.fetch_data()
+                dts = self.parse_source(res)
+            else:
+                dts = []
 
-        await write_state(self.connector_name, self.globopts, self.confcust, self.timestamp, True)
+            await write_state(self.connector_name, self.globopts, self.confcust, self.timestamp, True)
 
-        if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-            await self.send_webapi(dts)
+            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                await self.send_webapi(dts)
 
-        if dts or write_empty:
-            cust = list(self.confcust.get_customers())[0]
-            self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
-                        (self.confcust.get_custname(cust), self.targetdate, len(dts)))
+            if dts or write_empty:
+                cust = list(self.confcust.get_customers())[0]
+                elapsed_time = time.time() - start_time
+                if self.performance:
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
+                self.logger.info('Customer:%s Fetched Date:%s Endpoints:%d' %
+                            (self.confcust.get_custname(cust), self.targetdate, len(dts)))
 
-        if eval(self.globopts['GeneralWriteJson'.lower()]):
-            write_json(self.logger, self.globopts, self.confcust, dts, self.timestamp)
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts, self.confcust, dts, self.timestamp)
+                
+        
+        except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.confcust, self.timestamp, False)

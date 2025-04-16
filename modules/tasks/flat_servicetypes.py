@@ -1,5 +1,6 @@
 import os
 import asyncio
+import time
 
 from urllib.parse import urlparse
 
@@ -21,7 +22,7 @@ def contains_exception(list):
 
 class TaskFlatServiceTypes(object):
     def __init__(self, loop, logger, connector_name, globopts, auth_opts,
-                 webapi_opts, confcust, custname, feed, timestamp,
+                 webapi_opts, confcust, custname, feed, timestamp, performance,
                  is_csv=False, initsync=False):
         self.logger = logger
         self.loop = loop
@@ -33,10 +34,12 @@ class TaskFlatServiceTypes(object):
         self.custname = custname
         self.feed = feed
         self.timestamp = timestamp
+        self.performance = performance
         self.is_csv = is_csv
         self.initsync = initsync
 
     async def fetch_data(self):
+        start_time = time.time()
         feed_parts = urlparse(self.feed)
         session = SessionWithRetry(self.logger,
                                    os.path.basename(self.connector_name),
@@ -45,10 +48,14 @@ class TaskFlatServiceTypes(object):
                                                            feed_parts.netloc,
                                                            feed_parts.path,
                                                            feed_parts.query))
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
 
         return res
 
     async def fetch_webapi(self):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -57,9 +64,15 @@ class TaskFlatServiceTypes(object):
                         self.globopts['ConnectionRetryRandom'.lower()],
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.timestamp)
+
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'fetch_webapi completed in {elapsed_time} seconds.')
+        
         return await webapi.get('service-types', jsonret=False)
 
     async def send_webapi(self, data):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -69,6 +82,9 @@ class TaskFlatServiceTypes(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.timestamp)
         await webapi.send(data, 'service-types')
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     def parse_webapi_poem(self, res):
         webapi = ParseWebApiServiceTypes(self.logger, res)
@@ -80,6 +96,8 @@ class TaskFlatServiceTypes(object):
 
     async def run(self):
         try:
+            start_time = time.time()
+            
             coros = [self.fetch_data()]
 
             if not self.initsync:
@@ -108,7 +126,12 @@ class TaskFlatServiceTypes(object):
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await self.send_webapi(service_types)
 
+            elapsed_time = time.time() - start_time
+            if self.performance:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')  
             self.logger.info('Customer:' + self.custname + ' Fetched Flat ServiceTypes:%d' % (len(service_types)))
+            
+        
 
         except (ConnectorError, ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
             self.logger.error(repr(exc))

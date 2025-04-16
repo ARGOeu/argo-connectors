@@ -1,11 +1,12 @@
 import asyncio
 from urllib.parse import urlparse
+import time
 
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.parse.agora_topology import ParseAgoraTopo
 from argo_connectors.tasks.common import write_topo_json as write_json, write_state
-from argo_connectors.exceptions import ConnectorError, ConnectorHttpError
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError, ConnectorError
 
 
 def contains_exception(list):
@@ -16,9 +17,9 @@ def contains_exception(list):
     return (False, None)
 
 
-class TaskProviderTopology(object):
+class AgoraProviderTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, uidservendp, fetchtype, fixed_date):
+                 confcust, uidservendp, fetchtype, fixed_date, performance):
         self.loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -28,7 +29,7 @@ class TaskProviderTopology(object):
         self.uidservendp = uidservendp
         self.fixed_date = fixed_date
         self.fetchtype = fetchtype
-
+        self.performance = performance
 
     def parse_source_topo(self, resources, providers):
         topo = ParseAgoraTopo(self.logger, providers, resources, self.uidservendp)
@@ -37,6 +38,7 @@ class TaskProviderTopology(object):
 
 
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
                         webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -47,9 +49,13 @@ class TaskProviderTopology(object):
                         date=fixed_date)
 
         await webapi.send(data, topotype)
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
 
     async def fetch_data(self, feed):
+        start_time = time.time()
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
         headers = {
@@ -63,6 +69,9 @@ class TaskProviderTopology(object):
                                                             headers=headers)
 
             await session.close()
+            elapsed_time = time.time() - start_time
+            if self.performance:
+                self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
             return res
 
         except ConnectorHttpError as exc:
@@ -71,39 +80,52 @@ class TaskProviderTopology(object):
 
 
     async def run(self):
-        topofeedproviders = self.confcust.get_topofeedservicegroups()
-        topofeedresources = self.confcust.get_topofeedendpoints()
+        try:
+            start_time = time.time()
+            
+            topofeedproviders = self.confcust.get_topofeedservicegroups()
+            topofeedresources = self.confcust.get_topofeedendpoints()
 
-        coros = [
-            self.fetch_data(topofeedresources),
-            self.fetch_data(topofeedproviders),
-        ]
+            coros = [
+                self.fetch_data(topofeedresources),
+                self.fetch_data(topofeedproviders),
+            ]
 
-        # fetch topology data concurrently in coroutines
-        fetched_data = await asyncio.gather(*coros, return_exceptions=True)
+            # fetch topology data concurrently in coroutines
+            fetched_data = await asyncio.gather(*coros, return_exceptions=True)
 
-        exc_raised, exc = contains_exception(fetched_data)
-        if exc_raised:
-            raise ConnectorError(repr(exc))
+            exc_raised, exc = contains_exception(fetched_data)            
+            if exc_raised:
+                raise ConnectorError(repr(exc))
 
-        fetched_resources, fetched_providers = fetched_data
-        if fetched_resources and fetched_providers:
-            group_providers, group_resources = self.parse_source_topo(fetched_resources, fetched_providers)
+            fetched_resources, fetched_providers = fetched_data
+            if fetched_resources and fetched_providers:
+                group_providers, group_resources = self.parse_source_topo(fetched_resources, fetched_providers)
 
-            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
+                await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
-            numgg = len(group_providers)
-            numge = len(group_resources)
+                numgg = len(group_providers)
+                numge = len(group_resources)
 
-            # send concurrently to WEB-API in coroutines
-            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-                await asyncio.gather(
-                        self.send_webapi(self.webapi_opts, group_resources, 'endpoints', self.fixed_date),
-                        self.send_webapi(self.webapi_opts, group_providers, 'groups', self.fixed_date),
-                        loop=self.loop
-                )
+                # send concurrently to WEB-API in coroutines
+                if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                    await asyncio.gather(
+                            self.send_webapi(self.webapi_opts, group_resources, 'endpoints', self.fixed_date),
+                            self.send_webapi(self.webapi_opts, group_providers, 'groups', self.fixed_date),
+                    )
 
-            if eval(self.globopts['GeneralWriteJson'.lower()]):
-                write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
+                if eval(self.globopts['GeneralWriteJson'.lower()]):
+                    write_json(self.logger, self.globopts, self.confcust, group_providers, group_resources, self.fixed_date)
 
-            self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+                elapsed_time = time.time() - start_time  
+                if self.performance:
+                    self.logger.info(f'run completed in {elapsed_time} seconds.')
+                self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+
+        
+                
+        except (ConnectorHttpError, ConnectorParseError, ConnectorError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, False)
+
+  

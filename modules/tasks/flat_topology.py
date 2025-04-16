@@ -1,5 +1,6 @@
 import json
 import asyncio
+import time
 
 from urllib.parse import urlparse
 
@@ -9,12 +10,13 @@ from argo_connectors.parse.flat_contacts import ParseContacts
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 from argo_connectors.tasks.common import write_state, write_topo_json as write_json
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 
 
 class TaskFlatTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, custname, topofeed, fetchtype, fixed_date,
-                 uidservendp, is_csv=False):
+                 uidservendp, performance, is_csv=False):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -26,6 +28,7 @@ class TaskFlatTopology(object):
         self.fetchtype = fetchtype
         self.fixed_date = fixed_date
         self.uidservendp = uidservendp
+        self.performance = performance
         self.is_csv = is_csv
 
     def _is_feed(self, feed):
@@ -37,6 +40,7 @@ class TaskFlatTopology(object):
             return True
 
     async def fetch_data(self):
+        start_time = time.time()
         remote_topo = urlparse(self.topofeed)
         session = SessionWithRetry(self.logger, self.custname, self.globopts)
         if remote_topo.query:
@@ -49,6 +53,10 @@ class TaskFlatTopology(object):
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
                                                             remote_topo.netloc,
                                                             remote_topo.path))
+            
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'fetch_data completed in {elapsed_time} seconds.')
         return res
 
     def parse_source_topo(self, res):
@@ -61,6 +69,7 @@ class TaskFlatTopology(object):
         return group_groups, group_endpoints
 
     async def send_webapi(self, data, topotype):
+        start_time = time.time()
         webapi = WebAPI(self.connector_name, self.webapi_opts['webapihost'],
                         self.webapi_opts['webapitoken'], self.logger,
                         int(self.globopts['ConnectionRetry'.lower()]),
@@ -70,35 +79,50 @@ class TaskFlatTopology(object):
                         int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
                         date=self.fixed_date)
         await webapi.send(data, topotype)
+        elapsed_time = time.time() - start_time
+        if self.performance:
+            self.logger.info(f'send_webapi completed in {elapsed_time} seconds.')
 
     async def run(self):
-        if self._is_feed(self.topofeed):
-            res = await self.fetch_data()
-            group_groups, group_endpoints = self.parse_source_topo(res)
-            contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
-            attach_contacts_topodata(self.logger, contacts, group_endpoints)
+        try:
+            start_time = time.time()
+            
+            if self._is_feed(self.topofeed):
+                res = await self.fetch_data()
+                group_groups, group_endpoints = self.parse_source_topo(res)
+                contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
+                attach_contacts_topodata(self.logger, contacts, group_endpoints)
 
-        elif not self._is_feed(self.topofeed) and not self.is_csv:
-            try:
-                with open(self.topofeed) as fp:
-                    js = json.load(fp)
-                    group_groups, group_endpoints = self.parse_source_topo(js)
-            except IOError as exc:
-                self.logger.error('Customer:%s : Problem opening %s - %s' % (self.logger.customer, self.topofeed, repr(exc)))
+            elif not self._is_feed(self.topofeed) and not self.is_csv:
+                try:
+                    with open(self.topofeed) as fp:
+                        js = json.load(fp)
+                        group_groups, group_endpoints = self.parse_source_topo(js)
+                except IOError as exc:
+                    self.logger.error('Customer:%s : Problem opening %s - %s' % (self.logger.customer, self.topofeed, repr(exc)))
 
-        await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
+            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
-        numge = len(group_endpoints)
-        numgg = len(group_groups)
+            numge = len(group_endpoints)
+            numgg = len(group_groups)
 
-        # send concurrently to WEB-API in coroutines
-        if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-            await asyncio.gather(
-                self.send_webapi(group_groups, 'groups'),
-                self.send_webapi(group_endpoints,'endpoints')
-            )
+            # send concurrently to WEB-API in coroutines
+            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
+                await asyncio.gather(
+                    self.send_webapi(group_groups, 'groups'),
+                    self.send_webapi(group_endpoints,'endpoints')
+                )
 
-        if eval(self.globopts['GeneralWriteJson'.lower()]):
-            write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
+            if eval(self.globopts['GeneralWriteJson'.lower()]):
+                write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
 
-        self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            elapsed_time = time.time() - start_time
+            if self.performance:
+                self.logger.info(f'run completed in {elapsed_time} seconds.')
+            
+            self.logger.info('Customer:' + self.custname + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            
+        
+        except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+            self.logger.error(repr(exc))
+            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, False)
