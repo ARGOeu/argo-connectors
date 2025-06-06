@@ -72,19 +72,12 @@ class TaskLot1Topology(object):
         await webapi.send(data, topotype)
 
     async def run(self):
-        if self._is_feed(self.topofeed):
-            res = await self.fetch_data()
-            group_groups, group_endpoints = self.parse_source_topo(res)
-            contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
-            attach_contacts_topodata(self.logger, contacts, group_endpoints)
+        import ipdb; ipdb.set_trace()
 
-        elif not self._is_feed(self.topofeed) and not self.is_csv:
-            try:
-                with open(self.topofeed) as fp:
-                    js = json.load(fp)
-                    group_groups, group_endpoints = self.parse_source_topo(js)
-            except IOError as exc:
-                self.logger.error('Customer:%s : Problem opening %s - %s' % (self.logger.customer, self.topofeed, repr(exc)))
+        res = await self.fetch_data()
+        group_groups, group_endpoints = self.parse_source_topo(res)
+        contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
+        attach_contacts_topodata(self.logger, contacts, group_endpoints)
 
         await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
