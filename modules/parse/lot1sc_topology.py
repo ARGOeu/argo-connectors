@@ -3,7 +3,7 @@ from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import construct_fqdn
 
 
-class ParseFlatEndpoints(ParseHelpers):
+class ParseLot1ScEndpoints(ParseHelpers):
     def __init__(self, logger, data, project, uidservendp=False,
                  fetchtype='ServiceGroups'):
         self.uidservendp = uidservendp

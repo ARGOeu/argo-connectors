@@ -4,14 +4,13 @@ import asyncio
 from urllib.parse import urlparse
 
 from argo_connectors.io.http import SessionWithRetry
-from argo_connectors.parse.flat_topology import ParseFlatEndpoints
-from argo_connectors.parse.flat_contacts import ParseContacts
+from argo_connectors.parse.lot1sc_topology import ParseLot1ScEndpoints
 from argo_connectors.io.webapi import WebAPI
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 from argo_connectors.tasks.common import write_state, write_topo_json as write_json
 
 
-class TaskLot1Topology(object):
+class TaskLot1ScTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, custname, topofeed, fetchtype, fixed_date,
                  uidservendp, is_csv=False):
@@ -76,8 +75,6 @@ class TaskLot1Topology(object):
 
         res = await self.fetch_data()
         group_groups, group_endpoints = self.parse_source_topo(res)
-        contacts = ParseContacts(self.logger, res, self.uidservendp, self.is_csv).get_contacts()
-        attach_contacts_topodata(self.logger, contacts, group_endpoints)
 
         await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
 
