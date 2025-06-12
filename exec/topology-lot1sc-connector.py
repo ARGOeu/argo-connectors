@@ -75,8 +75,7 @@ def main():
     try:
         task = TaskLot1Topology(
             loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
-            custname, topofeed, topofetchtype, fixed_date, uidservendp,
-            is_csv=True
+            custname, topofeed, topofetchtype, fixed_date, uidservendp
         )
         loop.run_until_complete(task.run())
 

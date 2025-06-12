@@ -13,7 +13,7 @@ from argo_connectors.tasks.common import write_state, write_topo_json as write_j
 class TaskLot1ScTopology(object):
     def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
                  confcust, custname, topofeed, fetchtype, fixed_date,
-                 uidservendp, is_csv=False):
+                 uidservendp):
         self.event_loop = loop
         self.logger = logger
         self.connector_name = connector_name
@@ -25,15 +25,6 @@ class TaskLot1ScTopology(object):
         self.fetchtype = fetchtype
         self.fixed_date = fixed_date
         self.uidservendp = uidservendp
-        self.is_csv = is_csv
-
-    def _is_feed(self, feed):
-        data = urlparse(feed)
-
-        if not data.netloc:
-            return False
-        else:
-            return True
 
     async def fetch_data(self):
         remote_topo = urlparse(self.topofeed)
@@ -51,9 +42,8 @@ class TaskLot1ScTopology(object):
         return res
 
     def parse_source_topo(self, res):
-        topo = ParseFlatEndpoints(self.logger, res, self.custname,
-                                  self.uidservendp, self.fetchtype,
-                                  self.is_csv, scope=self.custname)
+        topo = ParseLot1ScEndpoints(self.logger, res, self.custname,
+                                    self.uidservendp, self.fetchtype)
         group_groups = topo.get_groupgroups()
         group_endpoints = topo.get_groupendpoints()
 
