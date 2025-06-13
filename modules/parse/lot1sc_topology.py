@@ -4,15 +4,14 @@ from argo_connectors.utils import construct_fqdn
 
 
 class ParseLot1ScEndpoints(ParseHelpers):
-    def __init__(self, logger, data, project, uidservendp=False,
+    def __init__(self, logger, data, uidservendp=False,
                  fetchtype='ServiceGroups'):
         self.uidservendp = uidservendp
         self.fetchtype = fetchtype
         self.logger = logger
-        self.project = project
 
-    def get_groupgroups(self):
+    def get_group_groups(self):
         pass
 
-    def get_groupendpoints(self):
+    def get_group_endpoints(self):
         pass
