@@ -1135,7 +1135,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [])
 
-    def test_FailedParseAgoraTopology(self):
+    def test_FailedParseLot1ScTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
             lot1sc_topo = ParseLot1ScEndpoints(logger, 'FAILED_DATA', 'FAILED_DATA', False)
             self.group_groups = lot1sc_topo.get_group_groups()
