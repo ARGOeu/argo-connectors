@@ -20,6 +20,7 @@ def build_ssl_settings(globopts):
     except KeyError:
         return None
 
+
 def build_connection_retry_settings(globopts):
     retry = int(globopts['ConnectionRetry'.lower()])
     timeout = int(globopts['ConnectionTimeout'.lower()])
@@ -63,7 +64,7 @@ class SessionWithRetry(object):
         try:
             connct_rty_rnd = self.globopts['ConnectionRetryRandom'.lower()]
             if connct_rty_rnd == 'True':
-                sleepsecs =  float(random.randint(0, float(self.globopts['ConnectionSleepRandomRetryMax'.lower()])))
+                sleepsecs = float(random.randint(0, float(self.globopts['ConnectionSleepRandomRetryMax'.lower()])))
             else:
                 sleepsecs = float(self.globopts['ConnectionSleepRetry'.lower()])
 
@@ -198,7 +199,6 @@ class SessionWithRetry(object):
 
         except Exception as exc:
             raise ConnectorHttpError(repr(exc)) from exc
-
 
     async def close(self):
         return await self.session.close()

@@ -1,0 +1,81 @@
+{
+  "messages": [],
+  "statusCode": 200,
+  "result": [
+    {
+      "providerId": "Phenomenal",
+      "name": "21.15120/DcgrOi",
+      "serviceMonitorings": [
+        {
+          "serviceId": "21.11161/rDa1Hm",
+          "name": "Test service for datasource 4-6",
+          "sites": [
+            {
+              "name": "PSNC",
+              "endpoints": [
+                {
+                  "name": "FTS web console",
+                  "url": "https://testUrlEndpoint.com",
+                  "monitoringServiceTypes": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "providerId": "European Commission",
+      "name": "21.15120/b0mGx4",
+      "serviceMonitorings": [
+        {
+          "serviceId": "21.11161/0L2aPz",
+          "name": "Virtual Machines",
+          "sites": [
+            {
+              "name": "PSNC",
+              "endpoints": [
+                {
+                  "name": "OpenStack Horizon Dashboard",
+                  "url": "https://test.claudius.cloud.psnc.pl/",
+                  "monitoringServiceTypes": []
+                },
+                {
+                  "name": "OpenStack API",
+                  "url": "https://test.claudius.cloud.psnc.pl:5000",
+                  "monitoringServiceTypes": []
+                },
+                {
+                  "name": "OpenStack Horizon Dashboard GUI Redirection",
+                  "url": "https://test.claudius.cloud.psnc.pl:5000/v3/auth/OS-FEDERATION/identity_providers/testing.eosc-federation.eu_openid/protocols/openid/websso",
+                  "monitoringServiceTypes": []
+                }
+              ]
+            },
+            {
+              "name": "Safespring",
+              "endpoints": [
+                {
+                  "name": "OpenStack Horizon Dashboard",
+                  "url": "https://openstack.testing.safedc.services/",
+                  "monitoringServiceTypes": []
+                },
+                {
+                  "name": "OpenStack API",
+                  "url": "https://openstack.testing.safedc.services:5000/v3",
+                  "monitoringServiceTypes": []
+                },
+                {
+                  "name": "OpenStack Horizon Dashboard GUI Redirection",
+                  "url": "https://openstack.testing.safedc.services:5000/identity/v3/auth/OS-FEDERATION/identity_providers/proxy.testing.eosc-federation.eu/protocols/openid/websso",
+                  "monitoringServiceTypes": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "success": true
+}

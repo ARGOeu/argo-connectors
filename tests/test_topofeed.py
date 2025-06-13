@@ -5,6 +5,7 @@ from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServic
 from argo_connectors.parse.flat_topology import ParseFlatEndpoints
 from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
 from argo_connectors.parse.agora_topology import ParseAgoraTopo
+from argo_connectors.parse.lot1sc_topology import ParseLot1ScEndpoints
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.mesh.contacts import attach_contacts_topodata
 
@@ -1113,6 +1114,32 @@ class ParseAgoraTopology(unittest.TestCase):
             agora_topo = ParseAgoraTopo(logger, 'FAILED_DATA', 'FAILED_DATA', False)
             self.group_groups = agora_topo.get_group_groups()
             self.group_endpoints = agora_topo.get_group_endpoints()
+        excep = cm.exception
+        self.assertTrue('Providers feed' in excep.msg)
+        self.assertTrue('JSONDecodeError' in excep.msg)
+
+
+class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
+    def setUp(self):
+        with open('tests/sample-lot1sc.json', encoding='utf-8') as feed_file:
+            providers_endpoints = feed_file.read()
+        logger.customer = CUSTOMER_NAME
+        self.maxDiff = None
+        lot1sc_topo = ParseLot1ScEndpoints(logger, providers_endpoints, uidservendp=True)
+        self.group_groups = lot1sc_topo.get_group_groups()
+        self.group_endpoints = lot1sc_topo.get_group_endpoints()
+
+    def test_groupGroups(self):
+        self.assertEqual(self.group_groups, [])
+
+    def test_groupEndpoints(self):
+        self.assertEqual(self.group_endpoints, [])
+
+    def test_FailedParseAgoraTopology(self):
+        with self.assertRaises(ConnectorParseError) as cm:
+            lot1sc_topo = ParseLot1ScEndpoints(logger, 'FAILED_DATA', 'FAILED_DATA', False)
+            self.group_groups = lot1sc_topo.get_group_groups()
+            self.group_endpoints = lot1sc_topo.get_group_endpoints()
         excep = cm.exception
         self.assertTrue('Providers feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
