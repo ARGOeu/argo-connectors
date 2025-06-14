@@ -61,8 +61,6 @@ class TaskLot1ScTopology(object):
         await webapi.send(data, topotype)
 
     async def run(self):
-        import ipdb; ipdb.set_trace()
-
         res = await self.fetch_data()
         group_groups, group_endpoints = self.parse_source_topo(res)
 
