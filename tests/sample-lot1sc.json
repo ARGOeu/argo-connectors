@@ -38,7 +38,7 @@
                 {
                   "name": "OpenStack Horizon Dashboard",
                   "url": "https://test.claudius.cloud.psnc.pl/",
-                  "monitoringServiceTypes": []
+                  "monitoringServiceTypes": ["service.type.1"]
                 },
                 {
                   "name": "OpenStack API",

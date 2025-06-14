@@ -55,7 +55,7 @@ class Global(object):
             'topology-provider-connector.py':
             self._merge_dict(self.shared_secopts,
                              self.conf_topo_output),
-            'topology-lot1-connector.py':
+            'topology-lot1sc-connector.py':
             self._merge_dict(self.shared_secopts,
                              self.conf_topo_output),
             'topology-agora-connector.py':
@@ -212,7 +212,7 @@ class CustomerConf(object):
                     'topology-csv-connector.py': [''],
                     'topology-provider-connector.py': [''],
                     'topology-agora-connector.py': [''],
-                    'topology-lot1-connector.py': [''],
+                    'topology-lot1sc-connector.py': [''],
                     'metricprofile-webapi-connector.py': ['MetricProfileNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
                     'downtimes-csv-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
