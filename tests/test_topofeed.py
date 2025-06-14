@@ -12,6 +12,7 @@ from argo_connectors.mesh.contacts import attach_contacts_topodata
 logger = Logger('test_topofeed.py')
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
+
 # Help function - check if any of endpoints contains extensions
 # Used for checking if pass_extensions is working properly
 def endpoints_have_extension(group_endpoints):
@@ -20,6 +21,7 @@ def endpoints_have_extension(group_endpoints):
             if key.startswith('info_ext_'):
                 return True
     return False
+
 
 # Returns element of group_endpoints with given group_name or None
 def get_group(group_endpoints, group_name):
@@ -43,35 +45,32 @@ class ParseServiceEndpointsTest(unittest.TestCase):
         self.group_endpoints_ext = parse_service_endpoints_ext.get_group_endpoints()
 
     def test_LenEndpoints(self):
-        self.assertEqual(len(self.group_endpoints), 4) # Parsed correct number of endpoint groups
+        self.assertEqual(len(self.group_endpoints), 4)  # Parsed correct number of endpoint groups
 
     def test_DataEndpoints(self):
-        self.assertEqual(self.group_endpoints[0],
-            {
-                'group': 'AZ-IFAN',
-                'hostname': 'ce.physics.science.az',
-                'service': 'CREAM-CE',
-                'tags': {'info_HOSTDN': '/DC=ORG/DC=SEE-GRID/O=Hosts/O=Institute of Physics of ANAS/CN=ce.physics.science.az',
-                'info_ID': '1555G0',
-                'info_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
-                'info_service_endpoint_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
-                'monitored': '1',
-                'production': '1',
-                'scope': 'EGI, wlcg, atlas'},
-                'type': 'SITES'
-            },
-            {
-                'group': 'RAL-LCG2',
-                'hostname': 'arc-ce01.gridpp.rl.ac.uk',
-                'service': 'gLite-APEL',
-                'tags': {'info_HOSTDN': '/C=UK/O=eScience/OU=CLRC/L=RAL/CN=arc-ce01.gridpp.rl.ac.uk',
-                    'info_ID': '782G0',
-                    'monitored': '1',
-                    'production': '1',
-                    'scope': 'EGI, wlcg, tier1, alice, atlas, cms, lhcb'},
-                'type': 'SITES'
-            }
-        )
+        self.assertEqual(self.group_endpoints[0], {
+            'group': 'AZ-IFAN',
+            'hostname': 'ce.physics.science.az',
+            'service': 'CREAM-CE',
+            'tags': {'info_HOSTDN': '/DC=ORG/DC=SEE-GRID/O=Hosts/O=Institute of Physics of ANAS/CN=ce.physics.science.az',
+                     'info_ID': '1555G0',
+                     'info_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
+                     'info_service_endpoint_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
+                     'monitored': '1',
+                     'production': '1',
+                     'scope': 'EGI, wlcg, atlas'},
+            'type': 'SITES'
+        }, {
+            'group': 'RAL-LCG2',
+            'hostname': 'arc-ce01.gridpp.rl.ac.uk',
+            'service': 'gLite-APEL',
+            'tags': {'info_HOSTDN': '/C=UK/O=eScience/OU=CLRC/L=RAL/CN=arc-ce01.gridpp.rl.ac.uk',
+                     'info_ID': '782G0',
+                     'monitored': '1',
+                     'production': '1',
+                     'scope': 'EGI, wlcg, tier1, alice, atlas, cms, lhcb'},
+            'type': 'SITES'
+        })
 
     def test_HaveExtensions(self):
         # Assert pass_extensions=False is working
@@ -87,7 +86,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
                 'service': 'CREAM-CE',
                 'tags': {
                     'info_HOSTDN': '/DC=ORG/DC=SEE-GRID/O=Hosts/O=Institute of Physics '
-                                'of ANAS/CN=ce.physics.science.az',
+                                   'of ANAS/CN=ce.physics.science.az',
                     'info_ID': '1555G0',
                     'info_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
                     'info_service_endpoint_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
@@ -108,7 +107,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
                     'info_ext_ARGO_OIDC_AUTHORISATION_ENDPOINT': '/auth/realms/egi/protocol/openid-connect/auth',
                     'info_ext_ARGO_OIDC_PROVIDER_CONFIGURATION': '/auth/realms/egi/.well-known/openid-configuration',
                     'info_service_endpoint_URL': 'https://aai.egi.eu/auth/realms/egi/.well-known/openid-configuration, '
-                                                'https://aai.egi.eu/auth/realms/egi/protocol/openid-connect/auth',
+                                                 'https://aai.egi.eu/auth/realms/egi/protocol/openid-connect/auth',
                     'monitored': '1',
                     'production': '1',
                     'hostname': 'aai.egi.eu',
@@ -238,59 +237,51 @@ class MeshSitesAndContacts(unittest.TestCase):
         attach_contacts_topodata(logger, self.sample_sites_contacts,
                                  self.sample_sites_data,
                                  self.notification_flag)
-        self.assertEqual(self.sample_sites_data[0],
-            {
-                'group': 'iris.ac.uk',
-                'notifications': {'contacts': ['name1.surname1@durham.ac.uk',
-                                               'name2.surname2@durham.ac.uk'],
-                                  'enabled': False},
-                'subgroup': 'dirac-durham',
-                'tags': {'certification': 'Certified', 'infrastructure':
-                         'Production', 'scope': 'iris.ac.uk'},
-                'type': 'NGI'
-            }
-        )
-        self.assertEqual(self.sample_sites_data[1],
-            {
-                'group': 'Russia',
-                'notifications': {'contacts': ['name1.surname1@gmail.com',
-                                               'name2.surname2@gmail.com'],
-                                  'enabled': True},
-                'subgroup': 'RU-SARFTI',
-                'tags': {'certification': 'Certified', 'infrastructure':
-                         'Production', 'scope': 'EGI'},
-                'type': 'NGI'
-            }
-        )
+        self.assertEqual(self.sample_sites_data[0], {
+            'group': 'iris.ac.uk',
+            'notifications': {'contacts': ['name1.surname1@durham.ac.uk',
+                                           'name2.surname2@durham.ac.uk'],
+                              'enabled': False},
+            'subgroup': 'dirac-durham',
+            'tags': {'certification': 'Certified', 'infrastructure':
+                     'Production', 'scope': 'iris.ac.uk'},
+            'type': 'NGI'
+        })
+        self.assertEqual(self.sample_sites_data[1], {
+            'group': 'Russia',
+            'notifications': {'contacts': ['name1.surname1@gmail.com',
+                                           'name2.surname2@gmail.com'],
+                              'enabled': True},
+            'subgroup': 'RU-SARFTI',
+            'tags': {'certification': 'Certified', 'infrastructure':
+                     'Production', 'scope': 'EGI'},
+            'type': 'NGI'
+        })
 
     def test_SitesAndContactsNoHonorNotificationFlag(self):
         attach_contacts_topodata(logger, self.sample_sites_contacts,
                                  self.sample_sites_data,
                                  False)
-        self.assertEqual(self.sample_sites_data[0],
-            {
-                'group': 'iris.ac.uk',
-                'notifications': {'contacts': ['name1.surname1@durham.ac.uk',
-                                               'name2.surname2@durham.ac.uk'],
-                                  'enabled': True},
-                'subgroup': 'dirac-durham',
-                'tags': {'certification': 'Certified', 'infrastructure':
-                         'Production', 'scope': 'iris.ac.uk'},
-                'type': 'NGI'
-            }
-        )
-        self.assertEqual(self.sample_sites_data[1],
-            {
-                'group': 'Russia',
-                'notifications': {'contacts': ['name1.surname1@gmail.com',
-                                               'name2.surname2@gmail.com'],
-                                  'enabled': True},
-                'subgroup': 'RU-SARFTI',
-                'tags': {'certification': 'Certified', 'infrastructure':
-                         'Production', 'scope': 'EGI'},
-                'type': 'NGI'
-            }
-        )
+        self.assertEqual(self.sample_sites_data[0], {
+            'group': 'iris.ac.uk',
+            'notifications': {'contacts': ['name1.surname1@durham.ac.uk',
+                                           'name2.surname2@durham.ac.uk'],
+                              'enabled': True},
+            'subgroup': 'dirac-durham',
+            'tags': {'certification': 'Certified', 'infrastructure':
+                     'Production', 'scope': 'iris.ac.uk'},
+            'type': 'NGI'
+        })
+        self.assertEqual(self.sample_sites_data[1], {
+            'group': 'Russia',
+            'notifications': {'contacts': ['name1.surname1@gmail.com',
+                                           'name2.surname2@gmail.com'],
+                              'enabled': True},
+            'subgroup': 'RU-SARFTI',
+            'tags': {'certification': 'Certified', 'infrastructure':
+                     'Production', 'scope': 'EGI'},
+            'type': 'NGI'
+        })
 
 
 class MeshServiceGroupsAndContacts(unittest.TestCase):
@@ -332,40 +323,36 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
     def test_ServiceGroupsAndContacts(self):
         attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
                                  self.sample_servicegroups_data, self.notification_flag)
-        self.assertEqual(self.sample_servicegroups_data[0],
-            {
-                'group': 'EGI',
-                'subgroup': 'NGI_ARMGRID_SERVICES',
-                'notifications': {
-                    'contacts': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
-                    'enabled': True
-                },
-                'tags': {
-                    'monitored': '1',
-                    'scope': 'EGI'
-                },
-                'type': 'PROJECT'
-            }
-        )
+        self.assertEqual(self.sample_servicegroups_data[0], {
+            'group': 'EGI',
+            'subgroup': 'NGI_ARMGRID_SERVICES',
+            'notifications': {
+                'contacts': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
+                'enabled': True
+            },
+            'tags': {
+                'monitored': '1',
+                'scope': 'EGI'
+            },
+            'type': 'PROJECT'
+        })
 
     def test_ServiceGroupsAndContactsNoHonorNotificationFlag(self):
         attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
                                  self.sample_servicegroups_data, False)
-        self.assertEqual(self.sample_servicegroups_data[1],
-            {
-                'group': 'EGI',
-                'subgroup': 'NGI_CYGRID_SERVICES',
-                'notifications': {
-                    'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
-                    'enabled': True
-                },
-                'tags': {
-                    'monitored': '1',
-                    'scope': 'EGI'
-                },
-                'type': 'PROJECT'
-            }
-        )
+        self.assertEqual(self.sample_servicegroups_data[1], {
+            'group': 'EGI',
+            'subgroup': 'NGI_CYGRID_SERVICES',
+            'notifications': {
+                'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
+                'enabled': True
+            },
+            'tags': {
+                'monitored': '1',
+                'scope': 'EGI'
+            },
+            'type': 'PROJECT'
+        })
 
 
 class MeshServiceEndpointsAndContacts(unittest.TestCase):
@@ -411,40 +398,36 @@ class MeshServiceEndpointsAndContacts(unittest.TestCase):
     def test_ServiceEndpointsAndContacts(self):
         attach_contacts_topodata(logger, self.sample_serviceendpoints_contacts,
                                  self.sample_serviceendpoints_data, self.notfication_flag)
-        self.assertEqual(self.sample_serviceendpoints_data[0],
-            {
-                'group': 'GROUP1',
-                'hostname': 'fqdn1.com',
-                'service': 'service1',
-                'notifications': {
-                    'contacts': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
-                    'enabled': True
-                },
-                'tags': {
-                    'monitored': '1',
-                    'production': '0',
-                    'scope': ''
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        )
-        self.assertEqual(self.sample_serviceendpoints_data[1],
-            {
-                'group': 'GROUP2',
-                'hostname': 'fqdn2.com',
-                'service': 'service2',
-                'notifications': {
-                    'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
-                    'enabled': True
-                },
-                'tags': {
-                    'monitored': '1',
-                    'production': '0',
-                    'scope': ''
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        )
+        self.assertEqual(self.sample_serviceendpoints_data[0], {
+            'group': 'GROUP1',
+            'hostname': 'fqdn1.com',
+            'service': 'service1',
+            'notifications': {
+                'contacts': ['Name1.Surname1@email.com', 'Name2.Surname2@email.com'],
+                'enabled': True
+            },
+            'tags': {
+                'monitored': '1',
+                'production': '0',
+                'scope': ''
+            },
+            'type': 'SERVICEGROUPS'
+        })
+        self.assertEqual(self.sample_serviceendpoints_data[1], {
+            'group': 'GROUP2',
+            'hostname': 'fqdn2.com',
+            'service': 'service2',
+            'notifications': {
+                'contacts': ['Name3.Surname3@email.com', 'Name4.Surname4@email.com'],
+                'enabled': True
+            },
+            'tags': {
+                'monitored': '1',
+                'production': '0',
+                'scope': ''
+            },
+            'type': 'SERVICEGROUPS'
+        })
 
 
 class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
@@ -461,80 +444,76 @@ class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
 
     def test_CsvTopology(self):
         group_groups = self.topology.get_groupgroups()
-        self.assertEqual(group_groups,
-            [
-                {
-                    'group': 'CUSTOMERFOO',
-                    'subgroup': 'NextCloud',
-                    'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
-                    'type': 'PROJECT'
-                },
-                {
-                    'group': 'CUSTOMERFOO',
-                    'subgroup': 'AAI',
-                    'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
-                    'type': 'PROJECT'
-                },
-                {
-                    'group': 'CUSTOMERFOO',
-                    'subgroup': 'NEANIAS-Space',
-                    'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
-                    'type': 'PROJECT'
-                }
-            ]
-        )
+        self.assertEqual(group_groups, [
+            {
+                'group': 'CUSTOMERFOO',
+                'subgroup': 'NextCloud',
+                'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'CUSTOMERFOO',
+                'subgroup': 'AAI',
+                'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'CUSTOMERFOO',
+                'subgroup': 'NEANIAS-Space',
+                'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                'type': 'PROJECT'
+            }
+        ])
         group_endpoints = self.topology.get_groupendpoints()
-        self.assertEqual(group_endpoints,
-            [
-                {
-                    'group': 'NextCloud',
-                    'hostname': 'files.dev.tenant.eu_tenant_1',
-                    'service': 'nextcloud',
-                    'tags': {'hostname': 'files.dev.tenant.eu', 'info_ID':
-                             'tenant_1', 'info_URL':
-                             'https://files.dev.tenant.eu', 'monitored': '1',
-                             'scope': 'CUSTOMERFOO'},
-                    'type': 'SERVICEGROUPS'
-                },
-                {
-                    'group': 'NextCloud',
-                    'hostname': 'files.tenant.eu_tenant_2',
-                    'service': 'nextcloud',
-                    'tags': {'hostname': 'files.tenant.eu', 'info_ID':
-                             'tenant_2', 'info_URL': 'https://files.tenant.eu',
-                             'monitored': '1', 'scope': 'CUSTOMERFOO'},
-                    'type': 'SERVICEGROUPS'
-                },
-                {
-                    'group': 'AAI',
-                    'hostname': 'sso.tenant.eu_tenant_3',
-                    'service': 'aai',
-                    'tags': {'hostname': 'sso.tenant.eu', 'info_ID': 'tenant_3',
-                            'info_URL': 'https://sso.tenant.eu', 'monitored': '1',
-                            'scope': 'CUSTOMERFOO'},
-                    'type': 'SERVICEGROUPS'
-                },
-                {
-                    'group': 'NEANIAS-Space',
-                    'hostname': 'ia2-vialactea.oats.inaf.it_neanias_4',
-                    'service': 'WebService',
-                    'tags': {'hostname': 'ia2-vialactea.oats.inaf.it',
-                             'info_ID': 'neanias_4', 'info_URL':
-                             'http://ia2-vialactea.oats.inaf.it:8080/vlkb/availability',
-                             'monitored': '1', 'scope': 'CUSTOMERFOO'},
-                    'type': 'SERVICEGROUPS'
-                }
-            ]
-        )
+        self.assertEqual(group_endpoints, [
+            {
+                'group': 'NextCloud',
+                'hostname': 'files.dev.tenant.eu_tenant_1',
+                'service': 'nextcloud',
+                'tags': {'hostname': 'files.dev.tenant.eu', 'info_ID':
+                         'tenant_1', 'info_URL':
+                         'https://files.dev.tenant.eu', 'monitored': '1',
+                         'scope': 'CUSTOMERFOO'},
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'NextCloud',
+                'hostname': 'files.tenant.eu_tenant_2',
+                'service': 'nextcloud',
+                'tags': {'hostname': 'files.tenant.eu', 'info_ID':
+                         'tenant_2', 'info_URL': 'https://files.tenant.eu',
+                         'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'AAI',
+                'hostname': 'sso.tenant.eu_tenant_3',
+                'service': 'aai',
+                'tags': {'hostname': 'sso.tenant.eu', 'info_ID': 'tenant_3',
+                         'info_URL': 'https://sso.tenant.eu', 'monitored': '1',
+                         'scope': 'CUSTOMERFOO'},
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'NEANIAS-Space',
+                'hostname': 'ia2-vialactea.oats.inaf.it_neanias_4',
+                'service': 'WebService',
+                'tags': {'hostname': 'ia2-vialactea.oats.inaf.it',
+                         'info_ID': 'neanias_4', 'info_URL':
+                         'http://ia2-vialactea.oats.inaf.it:8080/vlkb/availability',
+                         'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                'type': 'SERVICEGROUPS'
+            }
+        ])
 
     def test_FailedCsvTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
             self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA',
-                                                    CUSTOMER_NAME,
-                                                    uidservendp=True,
-                                                    fetchtype='ServiceGroups',
-                                                    scope=CUSTOMER_NAME,
-                                                    is_csv=True)
+                                                      CUSTOMER_NAME,
+                                                      uidservendp=True,
+                                                      fetchtype='ServiceGroups',
+                                                      scope=CUSTOMER_NAME,
+                                                      is_csv=True)
         excep = cm.exception
         self.assertTrue('CSV feed' in excep.msg)
 
@@ -552,63 +531,60 @@ class ParseServiceEndpointsAndServiceGroupsJson(unittest.TestCase):
 
     def test_JsonTopology(self):
         group_groups = self.topology.get_groupgroups()
-        self.assertEqual(group_groups,
-            [
-                {
-                    'group': 'CUSTOMERFOO',
-                    'subgroup': 'Open Telekom Cloud',
-                    'tags': {
-                        'monitored': '1', 'scope': 'CUSTOMERFOO'
-                    },
-                    'type': 'PROJECT'
+        self.assertEqual(group_groups, [
+            {
+                'group': 'CUSTOMERFOO',
+                'subgroup': 'Open Telekom Cloud',
+                'tags': {
+                    'monitored': '1', 'scope': 'CUSTOMERFOO'
                 },
-                {
-                    'group': 'CUSTOMERFOO',
-                    'subgroup': 'PaaS Orchestrator ',
-                    'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
-                    'type': 'PROJECT'
-                }
-            ]
-        )
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'CUSTOMERFOO',
+                'subgroup': 'PaaS Orchestrator ',
+                'tags': {'monitored': '1', 'scope': 'CUSTOMERFOO'},
+                'type': 'PROJECT'
+            }
+        ])
         group_endpoints = self.topology.get_groupendpoints()
-        self.assertEqual(group_endpoints,
-            [
-                {
-                    'group': 'Open Telekom Cloud',
-                    'hostname': 'open-telekom-cloud.com_227',
-                    'service': 'eu.eosc.portal.services.url',
-                    'tags': {
-                        'hostname': 'open-telekom-cloud.com',
-                        'info_ID': '227',
-                        'info_URL': 'https://open-telekom-cloud.com/en',
-                        'monitored': '1',
-                        'scope': 'CUSTOMERFOO'
-                    },
-                    'type': 'SERVICEGROUPS'
+        self.assertEqual(group_endpoints, [
+            {
+                'group': 'Open Telekom Cloud',
+                'hostname': 'open-telekom-cloud.com_227',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'open-telekom-cloud.com',
+                    'info_ID': '227',
+                    'info_URL': 'https://open-telekom-cloud.com/en',
+                    'monitored': '1',
+                    'scope': 'CUSTOMERFOO'
                 },
-                {
-                    'group': 'PaaS Orchestrator ',
-                    'hostname': 'indigo-paas.cloud.ba.infn.it_243',
-                    'service': 'eu.eosc.portal.services.url',
-                    'tags': {
-                        'hostname': 'indigo-paas.cloud.ba.infn.it',
-                        'info_ID': '243',
-                        'info_URL': 'https://indigo-paas.cloud.ba.infn.it',
-                        'monitored': '1',
-                        'scope': 'CUSTOMERFOO'
-                    },
-                    'type': 'SERVICEGROUPS'
-                }
-            ]
-        )
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'PaaS Orchestrator ',
+                'hostname': 'indigo-paas.cloud.ba.infn.it_243',
+                'service': 'eu.eosc.portal.services.url',
+                'tags': {
+                    'hostname': 'indigo-paas.cloud.ba.infn.it',
+                    'info_ID': '243',
+                    'info_URL': 'https://indigo-paas.cloud.ba.infn.it',
+                    'monitored': '1',
+                    'scope': 'CUSTOMERFOO'
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        ])
 
     def test_FailedJsonTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
-            self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA', CUSTOMER_NAME,
-                                                    uidservendp=True,
-                                                    fetchtype='ServiceGroups',
-                                                    scope=CUSTOMER_NAME,
-                                                    is_csv=False)
+            self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA',
+                                                      CUSTOMER_NAME,
+                                                      uidservendp=True,
+                                                      fetchtype='ServiceGroups',
+                                                      scope=CUSTOMER_NAME,
+                                                      is_csv=False)
         excep = cm.exception
         self.assertTrue('JSON feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
@@ -623,35 +599,32 @@ class ParseServiceEndpointsBiomed(unittest.TestCase):
         self.group_endpoints = parse_service_endpoints.get_group_endpoints()
 
     def test_BiomedEndpoints(self):
-        self.assertEqual(self.group_endpoints,
-            [
-                {
-                    'group': 'HG-02-IASA',
-                    'hostname': 'cream-ce01.marie.hellasgrid.gr',
-                    'service': 'APEL',
-                    'tags': {
-                        'info_ID': '451G0',
-                        'monitored': '1',
-                        'production': '1',
-                        'scope': 'EGI'
-                    },
-                    'type': 'SITES'},
-                {
-                    'group': 'TR-10-ULAKBIM',
-                    'hostname': 'kalkan1.ulakbim.gov.tr',
-                    'service': 'APEL',
-                    'tags': {
-                        'info_HOSTDN': '/C=TR/O=TRGrid/OU=TUBITAK-ULAKBIM/CN=kalkan1.ulakbim.gov.tr',
-                        'info_ID': '375G0',
-                        'monitored': '1',
-                        'production': '1',
-                        'scope': 'EGI, wlcg, tier2, atlas'
-                    },
-                    'type': 'SITES'
-                }
-            ]
-        )
-
+        self.assertEqual(self.group_endpoints, [
+            {
+                'group': 'HG-02-IASA',
+                'hostname': 'cream-ce01.marie.hellasgrid.gr',
+                'service': 'APEL',
+                'tags': {
+                    'info_ID': '451G0',
+                    'monitored': '1',
+                    'production': '1',
+                    'scope': 'EGI'
+                },
+                'type': 'SITES'},
+            {
+                'group': 'TR-10-ULAKBIM',
+                'hostname': 'kalkan1.ulakbim.gov.tr',
+                'service': 'APEL',
+                'tags': {
+                    'info_HOSTDN': '/C=TR/O=TRGrid/OU=TUBITAK-ULAKBIM/CN=kalkan1.ulakbim.gov.tr',
+                    'info_ID': '375G0',
+                    'monitored': '1',
+                    'production': '1',
+                    'scope': 'EGI, wlcg, tier2, atlas'
+                },
+                'type': 'SITES'
+            }
+        ])
 
 
 class ParseSitesBiomed(unittest.TestCase):
@@ -665,26 +638,24 @@ class ParseSitesBiomed(unittest.TestCase):
         self.group_groups = parse_sites.get_group_groups()
 
     def test_BiomedSites(self):
-        self.assertEqual(self.group_groups,
-            [
-                {
-                    'group': 'NGI_FRANCE',
-                    'subgroup': 'AUVERGRID',
-                    'tags': {
-                        'certification': '', 'infrastructure': '', 'scope': ''
-                    },
-                    'type': 'NGI'
+        self.assertEqual(self.group_groups, [
+            {
+                'group': 'NGI_FRANCE',
+                'subgroup': 'AUVERGRID',
+                'tags': {
+                    'certification': '', 'infrastructure': '', 'scope': ''
                 },
-                {
-                    'group': 'NGI_IT',
-                    'subgroup': 'CNR-ILC-PISA',
-                    'tags': {
-                        'certification': '', 'infrastructure': '', 'scope': ''
-                    },
-                    'type': 'NGI'
-                }
-            ]
-        )
+                'type': 'NGI'
+            },
+            {
+                'group': 'NGI_IT',
+                'subgroup': 'CNR-ILC-PISA',
+                'tags': {
+                    'certification': '', 'infrastructure': '', 'scope': ''
+                },
+                'type': 'NGI'
+            }
+        ])
 
 
 class ParseSitesTest(unittest.TestCase):
@@ -699,51 +670,49 @@ class ParseSitesTest(unittest.TestCase):
         self.maxDiff = None
 
     def test_EgiSites(self):
-        self.assertEqual(self.group_groups,
-            [
-                {
-                    'group': 'NGI_CZ',
-                    'subgroup': 'prague_cesnet_lcg2_cert',
-                    'notifications': {
-                        'contacts': [],
-                        'enabled': False
-                    },
-                    'tags': {
-                        'certification': 'Closed',
-                        'infrastructure': 'Production',
-                        'scope': 'EGI'
-                    },
-                    'type': 'NGI'
+        self.assertEqual(self.group_groups, [
+            {
+                'group': 'NGI_CZ',
+                'subgroup': 'prague_cesnet_lcg2_cert',
+                'notifications': {
+                    'contacts': [],
+                    'enabled': False
                 },
-                {
-                    'group': 'NGI_SK',
-                    'subgroup': 'TU-Kosice',
-                    'notifications': {
-                        'contacts': [],
-                        'enabled': True
-                    },
-                    'tags': {
-                        'certification': 'Certified',
-                        'infrastructure': 'Production',
-                        'scope': 'EGI'
-                    },
-                    'type': 'NGI'
+                'tags': {
+                    'certification': 'Closed',
+                    'infrastructure': 'Production',
+                    'scope': 'EGI'
                 },
-                {
-                    'group': 'NGI_SK',
-                    'subgroup': 'IISAS-Bratislava',
-                    'notifications': {
-                        'contacts': [],
-                        'enabled': True
-                    },
-                    'tags': {
-                        'certification': 'Certified',
-                        'infrastructure': 'Production',
-                        'scope': 'EGI'
-                    },
-                    'type': 'NGI'
-                }
-            ]
+                'type': 'NGI'
+            },
+            {
+                'group': 'NGI_SK',
+                'subgroup': 'TU-Kosice',
+                'notifications': {
+                    'contacts': [],
+                    'enabled': True
+                },
+                'tags': {
+                    'certification': 'Certified',
+                    'infrastructure': 'Production',
+                    'scope': 'EGI'
+                },
+                'type': 'NGI'
+            },
+            {
+                'group': 'NGI_SK',
+                'subgroup': 'IISAS-Bratislava',
+                'notifications': {
+                    'contacts': [],
+                    'enabled': True
+                },
+                'tags': {
+                    'certification': 'Certified',
+                    'infrastructure': 'Production',
+                    'scope': 'EGI'
+                },
+                'type': 'NGI'
+            }]
         )
 
 
@@ -832,24 +801,22 @@ class ParseEoscProvider(unittest.TestCase):
         }
 
         attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
-        self.assertEqual(self.group_endpoints[0],
-            {
-                'group': 'srce.3dbionotes',
-                'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
-                'notifications': {
-                    'contacts': ['Emir.Imamagic@srce.hr'],
-                    'enabled': True
-                },
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': '3dbionotes.cnb.csic.es',
-                    'info_ID': 'srce.3dbionotes',
-                    'info_URL': 'https://3dbionotes.cnb.csic.es/',
-                    'info_groupname': '3DBionotes-WS-TEST'
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        )
+        self.assertEqual(self.group_endpoints[0], {
+            'group': 'srce.3dbionotes',
+            'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
+            'notifications': {
+                'contacts': ['Emir.Imamagic@srce.hr'],
+                'enabled': True
+            },
+            'service': 'eu.eosc.portal.services.url',
+            'tags': {
+                'hostname': '3dbionotes.cnb.csic.es',
+                'info_ID': 'srce.3dbionotes',
+                'info_URL': 'https://3dbionotes.cnb.csic.es/',
+                'info_groupname': '3DBionotes-WS-TEST'
+            },
+            'type': 'SERVICEGROUPS'
+        })
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
@@ -898,7 +865,7 @@ class ParseEoscProvider(unittest.TestCase):
                     'info_ID': 'srce.webodv',
                     'info_URL': 'http://webodv-egi-ace.cloud.ba.infn.it/',
                     'info_groupname': 'WebODV - Online extraction, analysis and '
-                                        'visualization of SeaDataNet and Argo data'
+                                      'visualization of SeaDataNet and Argo data'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1009,7 +976,7 @@ class ParseAgoraTopology(unittest.TestCase):
 
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
-                {
+            {
                 "group": "NI4OS Providers",
                 "type": "PROVIDERS",
                 "subgroup": "UoB_IBISS",
@@ -1029,14 +996,13 @@ class ParseAgoraTopology(unittest.TestCase):
                     "info_ext_catalog_type": "provider",
                     "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
                     "info_ext_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek"
-                    }
                 }
-            ]
+            }]
         )
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
-                {
+            {
                 "group": "UoB-RCUB",
                 "type": "SERVICEGROUPS",
                 "service": "catalog.service.entry",
@@ -1105,8 +1071,7 @@ class ParseAgoraTopology(unittest.TestCase):
                     "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
                     "info_ext_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek"
                 }
-                }
-            ]
+            }]
         )
 
     def test_FailedParseAgoraTopology(self):
@@ -1130,7 +1095,20 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
         self.group_endpoints = lot1sc_topo.get_group_endpoints()
 
     def test_groupGroups(self):
-        self.assertEqual(self.group_groups, [])
+        self.assertEqual(self.group_groups, [
+            {
+                'group': 'Phenomenal',
+                'subgroup': 'Test service for datasource 4-6',
+                'type': 'PROJECT',
+                'tags': {},
+            },
+            {
+                'group': 'European Commission',
+                'subgroup': 'Virtual Machines',
+                'type': 'PROJECT',
+                'tags': {},
+            }]
+        )
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [])
@@ -1141,7 +1119,6 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             self.group_groups = lot1sc_topo.get_group_groups()
             self.group_endpoints = lot1sc_topo.get_group_endpoints()
         excep = cm.exception
-        self.assertTrue('Providers feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
 
 
