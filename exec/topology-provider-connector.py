@@ -86,5 +86,6 @@ def main():
             write_state(sys.argv[0], globopts, confcust, fixed_date, False)
         )
 
+
 if __name__ == '__main__':
     main()
