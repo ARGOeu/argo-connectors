@@ -10,7 +10,7 @@ from argo_connectors.config import Global, CustomerConf
 from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
 from argo_connectors.log import Logger
 from argo_connectors.tasks.common import write_state
-from argo_connectors.tasks.lot1_topology import TaskLot1Topology
+from argo_connectors.tasks.lot1sc_topology import TaskLot1ScTopology
 from argo_connectors.utils import date_check
 
 logger = None
@@ -58,6 +58,7 @@ def main():
     topofeed = confcust.get_topofeed()
     uidservendp = confcust.get_uidserviceendpoints()
     topofetchtype = confcust.get_topofetchtype()[0]
+    tiers = confcust.get_topotiers()
     custname = confcust.get_custname()
     logger.customer = custname
 
@@ -73,9 +74,9 @@ def main():
     loop = asyncio.get_event_loop()
 
     try:
-        task = TaskLot1Topology(
+        task = TaskLot1ScTopology(
             loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
-            custname, topofeed, topofetchtype, fixed_date, uidservendp
+            custname, topofeed, topofetchtype, fixed_date, uidservendp, tiers
         )
         loop.run_until_complete(task.run())
 
