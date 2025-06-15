@@ -2,6 +2,15 @@ from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import construct_fqdn, remove_non_utf
 
+import uuid
+
+
+def build_service_endpoint_id(service_name, service_type):
+    if service_name and service_type:
+        return str(uuid.uuid3(uuid.NAMESPACE_DNS, service_name + service_type))
+    else:
+        return 'FALSEID'
+
 
 class ParseLot1ScEndpoints(ParseHelpers):
     def __init__(self, logger, data, uidservendp=False,
@@ -9,6 +18,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
         self.uidservendp = uidservendp
         self.fetchtype = fetchtype
         self.logger = logger
+        self.tier = tier
         self.data = data
         if type(data) == str:
             self.data = self.parse_json(self.data)
@@ -30,6 +40,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
                     gge['group'] = prname
                     gge['subgroup'] = srname
                     gge['tags'] = dict()
+                    gge['tags']['tier'] = self.tier
                     gg.append(gge)
 
         return gg
@@ -41,9 +52,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
         if providers:
             for provider in providers:
                 for service in provider.get('serviceMonitorings', list()):
-                    gee = dict()
                     srname = service.get('name', '')
-
                     sites = service.get('sites', list())
                     if sites:
                         for site in sites:
@@ -54,14 +63,21 @@ class ParseLot1ScEndpoints(ParseHelpers):
                                     service_types = endpoint.get('monitoringServiceTypes', [])
                                     if service_types:
                                         for service in service_types:
+                                            gee = dict()
                                             gee['type'] = self.fetchtype.upper()
                                             gee['group'] = srname
                                             gee['tags'] = dict()
                                             gee['tags']['site_name'] = site_name
                                             gee['tags']['service_name'] = endpoint.get('name', '')
                                             gee['tags']['info_URL'] = endpoint.get('url', '')
+                                            gee['tags']['tier'] = self.tier
                                             gee['service'] = service
-                                            gee['hostname'] = construct_fqdn(endpoint.get('url', ''))
+                                            if self.uidservendp:
+                                                se_uid = build_service_endpoint_id(endpoint.get('name', ''), service)
+                                                gee['tags']['info_ID'] = se_uid
+                                                gee['hostname'] = '{}_{}'.format(construct_fqdn(endpoint.get('url', '')), se_uid)
+                                            else:
+                                                gee['hostname'] = construct_fqdn(endpoint.get('url', ''))
                                             ge.append(gee)
 
         return ge

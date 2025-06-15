@@ -38,17 +38,17 @@
                 {
                   "name": "OpenStack Horizon Dashboard",
                   "url": "https://test.claudius.cloud.psnc.pl/",
-                  "monitoringServiceTypes": ["service.type.1"]
+                  "monitoringServiceTypes": ["service.type.1", "service.type.2"]
                 },
                 {
                   "name": "OpenStack API",
                   "url": "https://test.claudius.cloud.psnc.pl:5000",
-                  "monitoringServiceTypes": []
+                  "monitoringServiceTypes": ["service.type.2"]
                 },
                 {
                   "name": "OpenStack Horizon Dashboard GUI Redirection",
                   "url": "https://test.claudius.cloud.psnc.pl:5000/v3/auth/OS-FEDERATION/identity_providers/testing.eosc-federation.eu_openid/protocols/openid/websso",
-                  "monitoringServiceTypes": []
+                  "monitoringServiceTypes": ["service.type.1"]
                 }
               ]
             },

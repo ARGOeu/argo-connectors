@@ -1100,18 +1100,71 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'group': 'Phenomenal',
                 'subgroup': 'Test service for datasource 4-6',
                 'type': 'PROJECT',
-                'tags': {},
+                'tags': {
+                    'tier': 1
+                }
             },
             {
                 'group': 'European Commission',
                 'subgroup': 'Virtual Machines',
                 'type': 'PROJECT',
-                'tags': {},
+                'tags': {
+                    'tier': 1
+                }
             }]
         )
 
     def test_groupEndpoints(self):
-        self.assertEqual(self.group_endpoints, [])
+        self.assertEqual(self.group_endpoints, [
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'test.claudius.cloud.psnc.pl_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                'service': 'service.type.1',
+                'tags': {
+                    'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                    'info_URL': 'https://test.claudius.cloud.psnc.pl/',
+                    'service_name': 'OpenStack Horizon Dashboard',
+                    'site_name': 'PSNC', 'tier': 1
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'test.claudius.cloud.psnc.pl_749deefd-e633-385a-805a-3fd64b80dbe4',
+                'service': 'service.type.2',
+                'tags': {
+                    'info_ID': '749deefd-e633-385a-805a-3fd64b80dbe4',
+                    'info_URL': 'https://test.claudius.cloud.psnc.pl/',
+                    'service_name': 'OpenStack Horizon Dashboard',
+                    'site_name': 'PSNC', 'tier': 1
+                },
+                'type': 'SERVICEGROUPS'},
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'test.claudius.cloud.psnc.pl_7caacfa4-5bca-34fc-80eb-386e0579b0e9',
+                'service': 'service.type.2',
+                'tags': {
+                    'info_ID': '7caacfa4-5bca-34fc-80eb-386e0579b0e9',
+                    'info_URL':
+                    'https://test.claudius.cloud.psnc.pl:5000',
+                    'service_name': 'OpenStack API', 'site_name': 'PSNC',
+                    'tier': 1
+                },
+                'type': 'SERVICEGROUPS'},
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'test.claudius.cloud.psnc.pl_8cbe072d-1975-3ca3-bc74-fa2591c99b07',
+                'service': 'service.type.1',
+                'tags': {
+                    'info_ID': '8cbe072d-1975-3ca3-bc74-fa2591c99b07',
+                    'info_URL': 'https://test.claudius.cloud.psnc.pl:5000/v3/auth/OS-FEDERATION/identity_providers/testing.eosc-federation.eu_openid/protocols/openid/websso',
+                    'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
+                    'site_name': 'PSNC',
+                    'tier': 1
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        ])
 
     def test_FailedParseLot1ScTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
