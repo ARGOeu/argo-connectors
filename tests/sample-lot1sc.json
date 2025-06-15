@@ -16,7 +16,7 @@
                 {
                   "name": "FTS web console",
                   "url": "https://testUrlEndpoint.com",
-                  "monitoringServiceTypes": []
+                  "monitoringServiceTypes": ["service.type.1"]
                 }
               ]
             }
@@ -58,7 +58,7 @@
                 {
                   "name": "OpenStack Horizon Dashboard",
                   "url": "https://openstack.testing.safedc.services/",
-                  "monitoringServiceTypes": []
+                  "monitoringServiceTypes": ["service.type.1", "service.type.3"]
                 },
                 {
                   "name": "OpenStack API",
@@ -68,7 +68,7 @@
                 {
                   "name": "OpenStack Horizon Dashboard GUI Redirection",
                   "url": "https://openstack.testing.safedc.services:5000/identity/v3/auth/OS-FEDERATION/identity_providers/proxy.testing.eosc-federation.eu/protocols/openid/websso",
-                  "monitoringServiceTypes": []
+                  "monitoringServiceTypes": ["service.type.2"]
                 }
               ]
             }

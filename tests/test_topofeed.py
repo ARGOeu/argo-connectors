@@ -1117,6 +1117,19 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
             {
+                'group': 'Test service for datasource 4-6',
+                'hostname': 'testUrlEndpoint.com_f17e599f-095d-373e-bcfe-4fb017acf5d5',
+                'service': 'service.type.1',
+                'tags': {
+                    'info_ID': 'f17e599f-095d-373e-bcfe-4fb017acf5d5',
+                    'info_URL': 'https://testUrlEndpoint.com',
+                    'service_name': 'FTS web console',
+                    'site_name': 'PSNC',
+                    'tier': 1
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
                 'group': 'Virtual Machines',
                 'hostname': 'test.claudius.cloud.psnc.pl_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
                 'service': 'service.type.1',
@@ -1163,7 +1176,47 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'tier': 1
                 },
                 'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'openstack.testing.safedc.services_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                'service': 'service.type.1',
+                'tags': {
+                    'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                    'info_URL': 'https://openstack.testing.safedc.services/',
+                    'service_name': 'OpenStack Horizon Dashboard',
+                    'site_name': 'Safespring',
+                    'tier': 1
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'openstack.testing.safedc.services_dd81e46a-6d98-3258-be69-2929d162dc18',
+                'service': 'service.type.3',
+                'tags': {
+                    'info_ID': 'dd81e46a-6d98-3258-be69-2929d162dc18',
+                    'info_URL': 'https://openstack.testing.safedc.services/',
+                    'service_name': 'OpenStack Horizon Dashboard',
+                    'site_name': 'Safespring',
+                    'tier': 1
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Virtual Machines',
+                'hostname': 'openstack.testing.safedc.services_8e57a57f-c6fb-3dea-b586-2871f908776c',
+                'service': 'service.type.2',
+                'tags': {
+                    'info_ID': '8e57a57f-c6fb-3dea-b586-2871f908776c',
+                    'info_URL': 'https://openstack.testing.safedc.services:5000/identity/v3/auth/OS-FEDERATION/identity_providers/proxy.testing.eosc-federation.eu/protocols/openid/websso',
+                    'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
+                    'site_name': 'Safespring',
+                    'tier': 1
+                },
+                'type': 'SERVICEGROUPS'
             }
+
         ])
 
     def test_FailedParseLot1ScTopology(self):
