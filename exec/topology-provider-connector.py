@@ -39,7 +39,6 @@ def main():
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
     args = parser.parse_args()
-    group_endpoints, group_groups = list(), list()
     logger = Logger(os.path.basename(sys.argv[0]))
 
     fixed_date = None
@@ -59,16 +58,12 @@ def main():
     custname = confcust.get_custname()
 
     # safely assume here one customer defined in customer file
-    cust = list(confcust.get_customers())[0]
-    jobstatedir = confcust.get_fullstatedir(globopts['InputStateSaveDir'.lower()], cust)
     fetchtype = confcust.get_topofetchtype()[0]
 
     webapi_opts = get_webapi_opts(cglob, confcust)
 
-    state = None
     logger.customer = custname
     uidservendp = confcust.get_uidserviceendpoints()
-    topofeed = confcust.get_topofeed()
     topofeedpaging = confcust.get_topofeedpaging()
 
     loop = asyncio.get_event_loop()

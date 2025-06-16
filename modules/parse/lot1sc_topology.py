@@ -24,9 +24,16 @@ class ParseLot1ScEndpoints(ParseHelpers):
             self.data = self.parse_json(self.data)
         else:
             self.data = data
+        self.gg = list()
+        self.ge = list()
+        self._service_name_exist = set()
+        self._parse()
 
-    def get_group_groups(self):
-        gg = list()
+    def _parse(self):
+        self._build_group_endpoints()
+        self._build_group_groups()
+
+    def _build_group_groups(self):
         providers = self.data.get('result', None)
         if providers:
             for provider in providers:
@@ -36,17 +43,17 @@ class ParseLot1ScEndpoints(ParseHelpers):
                 for service in provider.get('serviceMonitorings', list()):
                     srname = service.get('name', '')
 
+                    if srname not in self._service_name_exist:
+                        continue
+
                     gge['type'] = 'PROJECT'
                     gge['group'] = prname
                     gge['subgroup'] = srname
                     gge['tags'] = dict()
                     gge['tags']['tier'] = self.tier
-                    gg.append(gge)
+                    self.gg.append(gge)
 
-        return gg
-
-    def get_group_endpoints(self):
-        ge = list()
+    def _build_group_endpoints(self):
         providers = self.data.get('result', None)
 
         if providers:
@@ -78,6 +85,11 @@ class ParseLot1ScEndpoints(ParseHelpers):
                                                 gee['hostname'] = '{}_{}'.format(construct_fqdn(endpoint.get('url', '')), se_uid)
                                             else:
                                                 gee['hostname'] = construct_fqdn(endpoint.get('url', ''))
-                                            ge.append(gee)
+                                            self.ge.append(gee)
+                                            self._service_name_exist.add(srname)
 
-        return ge
+    def get_group_endpoints(self):
+        return self.ge
+
+    def get_group_groups(self):
+        return self.gg
