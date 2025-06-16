@@ -21,6 +21,7 @@ pipeline {
             steps {
                 sh '''
                     cd $WORKSPACE/$PROJECT_DIR/
+                    rm -f *.whl &> /dev/null
                     make wheel-devel
                     make clean
                     poetry run pip install *.whl
