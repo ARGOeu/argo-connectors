@@ -75,6 +75,17 @@
           ]
         }
       ]
+    },
+    {
+      "providerId": "Instruct-ERIC",
+      "name": "21.15120/VVOUS7",
+      "serviceMonitorings": [
+        {
+          "serviceId": "21.11161/EPptAk",
+          "name": "ARIA (Access to Research Infrastructure Administration)",
+          "sites": []
+        }
+      ]
     }
   ],
   "success": true
