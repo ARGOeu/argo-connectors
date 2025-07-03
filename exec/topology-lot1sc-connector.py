@@ -3,22 +3,22 @@
 import argparse
 import os
 import sys
-import json
 
 import asyncio
 
-from argo_connectors.exceptions import ConnectorError, ConnectorHttpError, ConnectorParseError
-from argo_connectors.io.statewrite import state_write
-from argo_connectors.log import Logger
 from argo_connectors.config import Global, CustomerConf
-from argo_connectors.utils import filename_date, datestamp, date_check
-from argo_connectors.tasks.provider_topology import TaskProviderTopology
+from argo_connectors.exceptions import ConnectorHttpError, ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.tasks.common import write_state
-
+from argo_connectors.tasks.lot1sc_topology import TaskLot1ScTopology
+from argo_connectors.utils import date_check
 
 logger = None
+
 globopts = {}
 custname = ''
+
+isok = True
 
 
 def get_webapi_opts(cglob, confcust):
@@ -33,8 +33,9 @@ def get_webapi_opts(cglob, confcust):
 
 def main():
     global logger, globopts, confcust
-
-    parser = argparse.ArgumentParser(description="""Fetch and construct entities from EOSC-PROVIDER feed""")
+    parser = argparse.ArgumentParser(description="""Fetch entities (ServiceGroups, Sites, Endpoints)
+                                                    from LOT1 Service Catalogue topology feed for every customer and job listed in customer.conf
+                                                    and write them in an appropriate place""")
     parser.add_argument('-c', dest='custconf', nargs=1, metavar='customer.conf', help='path to customer configuration file', type=str, required=False)
     parser.add_argument('-g', dest='gloconf', nargs=1, metavar='global.conf', help='path to global configuration file', type=str, required=False)
     parser.add_argument('-d', dest='date', metavar='YEAR-MONTH-DAY', help='write data for this date', type=str, required=False)
@@ -54,32 +55,39 @@ def main():
     confcust.parse()
     confcust.make_dirstruct()
     confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
-    global custname
+    topofeed = confcust.get_topofeed()
+    uidservendp = confcust.get_uidserviceendpoints()
+    topofetchtype = confcust.get_topofetchtype()[0]
+    tiers = confcust.get_topotiers()
     custname = confcust.get_custname()
-
-    # safely assume here one customer defined in customer file
-    fetchtype = confcust.get_topofetchtype()[0]
+    logger.customer = custname
 
     webapi_opts = get_webapi_opts(cglob, confcust)
 
-    logger.customer = custname
-    uidservendp = confcust.get_uidserviceendpoints()
-    topofeedpaging = confcust.get_topofeedpaging()
+    auth_custopts = confcust.get_authopts()
+    auth_opts = cglob.merge_opts(auth_custopts, 'authentication')
+    auth_complete, missing = cglob.is_complete(auth_opts, 'authentication')
+    if not auth_complete:
+        logger.error('%s options incomplete, missing %s' % ('authentication', ' '.join(missing)))
+        raise SystemExit(1)
 
     loop = asyncio.get_event_loop()
 
     try:
-        task = TaskProviderTopology(
+        task = TaskLot1ScTopology(
             loop, logger, sys.argv[0], globopts, webapi_opts, confcust,
-            topofeedpaging, uidservendp, fetchtype, fixed_date
+            custname, topofeed, topofetchtype, fixed_date, uidservendp, tiers
         )
         loop.run_until_complete(task.run())
 
-    except (ConnectorError, ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
+    except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:
         logger.error(repr(exc))
         loop.run_until_complete(
             write_state(sys.argv[0], globopts, confcust, fixed_date, False)
         )
+
+    finally:
+        loop.close()
 
 
 if __name__ == '__main__':
