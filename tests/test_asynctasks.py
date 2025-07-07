@@ -3,6 +3,7 @@ import unittest
 import unittest
 import asyncio
 import datetime
+import json
 
 import mock
 
@@ -113,7 +114,8 @@ class TopologyProvider(unittest.TestCase):
         logger = mock.Mock()
         logger.customer = CUSTOMER_NAME
         self.loop = asyncio.get_event_loop()
-        globopts = mock.Mock()
+        mocked_globopts = dict(generalpublishwebapi='False', generalwritejson='False')
+        globopts = mocked_globopts
         webapiopts = mock.Mock()
         confcust = mock.Mock()
         confcust.get_topofeedservicegroups.return_value = 'http://topo.feed.providers.com'
@@ -199,6 +201,41 @@ class TopologyProvider(unittest.TestCase):
         excep = cm.exception
         self.assertTrue(type(excep), ConnectorParseError)
         self.assertTrue('Could not extract OIDC Access token' in excep.msg)
+
+    @mock.patch('argo_connectors.tasks.provider_topology.write_state')
+    @mock.patch('argo_connectors.tasks.provider_topology.buildmap_id2groupname')
+    @mock.patch('argo_connectors.tasks.provider_topology.TaskProviderTopology.parse_source_extensions')
+    @mock.patch('argo_connectors.tasks.provider_topology.ParseResourcesContacts')
+    @mock.patch('argo_connectors.tasks.provider_topology.attach_contacts_topodata')
+    @mock.patch('argo_connectors.tasks.provider_topology.TaskProviderTopology.parse_source_topo')
+    @mock.patch('argo_connectors.tasks.provider_topology.TaskProviderTopology.store_refresh_token')
+    @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
+    @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
+    @mock.patch.object(TaskProviderTopology, 'fetch_data')
+    @async_test
+    async def test_RefreshTokenRotate(self, mock_fetchdata, mock_httppost,
+                                      mock_buildsslsettings,
+                                      mock_buildconnretry, mock_storerefresh,
+                                      mock_parsesourcetopo,
+                                      mock_attachcontacts,
+                                      mock_parseresourcecontacts,
+                                      mock_parsesourceext,
+                                      mock_buildmapid2group,
+                                      mock_writestate):
+        mock_fetchdata.return_value = 'OK JSON data'
+        mock_httppost.return_value = json.dumps(
+            {
+                'refresh_token': 'NEW_REFRESH_TOKEN',
+                'access_token': 'ACCESS_TOKEN'
+            }
+        )
+        mock_buildsslsettings.return_value = 'SSL settings'
+        mock_parsesourcetopo.return_value = ['group_groups', 'group_endpoints']
+        mock_buildconnretry.return_value = (1, 2)
+        await self.topo_provider.run()
+        self.assertTrue(mock_storerefresh.called)
+        mock_storerefresh.assert_called_with('oidctoken', 'NEW_REFRESH_TOKEN')
 
 
 class ServiceTypesGocdb(unittest.TestCase):
