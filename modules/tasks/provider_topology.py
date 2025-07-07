@@ -99,12 +99,9 @@ class TaskProviderTopology(object):
         return topo.get_group_groups(), topo.get_group_endpoints()
 
     def store_refresh_token(self, prevt, newt):
-        token_file = f"{os.environ['VIRTUAL_ENV']}/PROVIDER_TOKEN"
+        token_file = f"{os.environ['VIRTUAL_ENV']}/{PROVIDER_TOKEN}"
         with open(token_file, 'w') as fp:
-            fp.writelines({
-                "previous": prevt,
-                "next": newt
-            })
+            fp.writelines(json.dumps({"previous": prevt, "next": newt}))
 
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
@@ -218,6 +215,18 @@ class TaskProviderTopology(object):
             msg = "Could not extract OIDC Access token: {}".format(repr(exc))
             raise ConnectorParseError(msg)
 
+        try:
+            refresh_token = json.loads(res).get('refresh_token', None)
+            if not refresh_token:
+                msg = "Could not extract OIDC Refresh token: {}".format(repr(res))
+                raise ConnectorParseError(msg)
+
+            self.store_refresh_token(oidctoken, refresh_token)
+
+        except (json.decoder.JSONDecodeError, TypeError) as exc:
+            msg = "Could not extract OIDC Refresh token: {}".format(repr(exc))
+            raise ConnectorParseError(msg)
+
         return access_token
 
     async def run(self):
@@ -273,9 +282,9 @@ class TaskProviderTopology(object):
             # send concurrently to WEB-API in coroutines
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await asyncio.gather(
-                        self.send_webapi(self.webapi_opts, group_groups, 'groups', self.fixed_date),
-                        self.send_webapi(self.webapi_opts, group_endpoints,'endpoints', self.fixed_date),
-                        loop=self.loop
+                    self.send_webapi(self.webapi_opts, group_groups, 'groups', self.fixed_date),
+                    self.send_webapi(self.webapi_opts, group_endpoints, 'endpoints', self.fixed_date),
+                    loop=self.loop
                 )
 
             if eval(self.globopts['GeneralWriteJson'.lower()]):
