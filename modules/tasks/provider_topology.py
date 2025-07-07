@@ -183,12 +183,12 @@ class TaskProviderTopology(object):
         data += '&client_id={0}&scope=openid%20email%20profile'.format(oidcclientid)
 
         try:
-            res = await session.http_post('{}://{}{}'.format(token_endpoint.scheme,
-                                                            token_endpoint.netloc,
-                                                            token_endpoint.path), data,
-                                        headers={
-                                            'content-type': 'application/x-www-form-urlencoded'
-                                        })
+            res = await \
+                session.http_post('{}://{}{}'.format(token_endpoint.scheme,
+                                                     token_endpoint.netloc,
+                                                     token_endpoint.path), data,
+                                  headers={'content-type':
+                                           'application/x-www-form-urlencoded'})
 
         except ConnectorHttpError as exc:
             raise exc
@@ -198,6 +198,10 @@ class TaskProviderTopology(object):
 
         try:
             access_token = json.loads(res).get('access_token', None)
+            if not access_token:
+                msg = "Could not extract OIDC Access token: {}".format(repr(res))
+                raise ConnectorParseError(msg)
+
         except (json.decoder.JSONDecodeError, TypeError) as exc:
             msg = "Could not extract OIDC Access token: {}".format(repr(exc))
             raise ConnectorParseError(msg)
