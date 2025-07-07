@@ -115,7 +115,6 @@ class TaskProviderTopology(object):
         await webapi.send(data, topotype)
 
     async def fetch_data(self, feed, access_token, paginated):
-        fetched_data = list()
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
 
@@ -127,8 +126,7 @@ class TaskProviderTopology(object):
         try:
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
                                                             remote_topo.netloc,
-                                                            remote_topo.path),
-                                                            headers=headers)
+                                                            remote_topo.path), headers=headers)
 
         except ConnectorHttpError as exc:
             await session.close()
@@ -148,8 +146,7 @@ class TaskProviderTopology(object):
                                                                                 remote_topo.netloc,
                                                                                 remote_topo.path,
                                                                                 from_index,
-                                                                                num),
-                                                                                headers=headers)
+                                                                                num), headers=headers)
                     fetched_results = fetched_results + filter_out_results(res)
                     next_cursor = find_next_paging_cursor_count(self.logger, res)
                     total, from_index, to_index = next_cursor()
@@ -175,8 +172,7 @@ class TaskProviderTopology(object):
                                                                             remote_topo.netloc,
                                                                             remote_topo.path,
                                                                             from_index,
-                                                                            num),
-                                                                            headers=headers)
+                                                                            num), headers=headers)
                 await session.close()
                 return res
 
@@ -221,6 +217,7 @@ class TaskProviderTopology(object):
                 msg = "Could not extract OIDC Refresh token: {}".format(repr(res))
                 raise ConnectorParseError(msg)
 
+            # TODO: move it to run()
             self.store_refresh_token(oidctoken, refresh_token)
 
         except (json.decoder.JSONDecodeError, TypeError) as exc:
