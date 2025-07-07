@@ -182,6 +182,24 @@ class TopologyProvider(unittest.TestCase):
         self.assertTrue(type(excep), ConnectorParseError)
         self.assertTrue('JSONDecodeError' in excep.msg)
 
+    @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
+    @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
+    @mock.patch.object(TaskProviderTopology, 'fetch_data')
+    @async_test
+    async def test_failedAccessToken2(self, mock_fetchdata, mock_httppost,
+                                      mock_buildsslsettings,
+                                      mock_buildconnretry):
+        mock_fetchdata.return_value = 'OK JSON data'
+        mock_httppost.return_value = "{\"no\": \"access_token\"}"
+        mock_buildsslsettings.return_value = 'SSL settings'
+        mock_buildconnretry.return_value = (1, 2)
+        with self.assertRaises(ConnectorError) as cm:
+            await self.topo_provider.run()
+        excep = cm.exception
+        self.assertTrue(type(excep), ConnectorParseError)
+        self.assertTrue('Could not extract OIDC Access token' in excep.msg)
+
 
 class ServiceTypesGocdb(unittest.TestCase):
     def setUp(self):
