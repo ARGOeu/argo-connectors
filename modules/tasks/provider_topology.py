@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 
 from collections import Callable
 from urllib.parse import urlparse
@@ -12,6 +13,9 @@ from argo_connectors.parse.provider_contacts import ParseResourcesContacts
 from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
 from argo_connectors.tasks.common import write_topo_json as write_json, write_state
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
+
+
+PROVIDER_TOKEN = 'var/spool/provider_token.json'
 
 
 def contains_exception(list):
@@ -93,6 +97,14 @@ class TaskProviderTopology(object):
         topo = ParseTopo(self.logger, providers, resources, self.uidservendp, self.logger.customer)
 
         return topo.get_group_groups(), topo.get_group_endpoints()
+
+    def store_refresh_token(self, prevt, newt):
+        token_file = f"{os.environ['VIRTUAL_ENV']}/PROVIDER_TOKEN"
+        with open(token_file, 'w') as fp:
+            fp.writelines({
+                "previous": prevt,
+                "next": newt
+            })
 
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
