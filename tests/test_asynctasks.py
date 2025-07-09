@@ -152,7 +152,7 @@ class TopologyProvider(unittest.TestCase):
         mock_httpget.return_value = 'garbled JSON data'
         mock_httppost.return_value = 'garbled JSON data'
         mock_buildsslsettings.return_value = 'SSL settings'
-        mock_tokenfetch.return_value = 'OIDC token'
+        mock_tokenfetch.return_value = ('OIDC Access token', 'OIDC Refresh token')
         mock_parsejson.side_effect = [
             ConnectorParseError(
                 'failed PROVIDER find_next_paging_cursor_count'),
