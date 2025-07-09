@@ -103,6 +103,18 @@ class TaskProviderTopology(object):
         with open(token_file, 'w') as fp:
             fp.writelines(json.dumps({"previous": prevt, "next": newt}))
 
+    def read_file_token(self):
+        token_file = f"{os.environ['VIRTUAL_ENV']}/{PROVIDER_TOKEN}"
+
+        if os.path.exists(token_file):
+            with open(token_file, 'r') as fp:
+                file_content = json.loads(fp.read())
+
+            return file_content.get('next', None)
+
+        else:
+            return None
+
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
                         webapi_opts['webapitoken'], self.logger,
@@ -217,14 +229,11 @@ class TaskProviderTopology(object):
                 msg = "Could not extract OIDC Refresh token: {}".format(repr(res))
                 raise ConnectorParseError(msg)
 
-            # TODO: move it to run()
-            self.store_refresh_token(oidctoken, refresh_token)
-
         except (json.decoder.JSONDecodeError, TypeError) as exc:
             msg = "Could not extract OIDC Refresh token: {}".format(repr(exc))
             raise ConnectorParseError(msg)
 
-        return access_token
+        return access_token, refresh_token
 
     async def run(self):
         topofeedextensions = self.confcust.get_topofeedendpointsextensions()
@@ -235,10 +244,17 @@ class TaskProviderTopology(object):
         oidcclientid = self.confcust.get_oidcclientid()
         topofeedresources = self.confcust.get_topofeedendpoints()
 
+        token_file = self.read_file_token()
+        if token_file:
+            oidctoken = token_file
+
         if oidctoken and oidctokenapi:
-            access_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
+            access_token, refresh_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
         else:
             raise ConnectorError('OIDC token missing')
+
+        if refresh_token:
+            self.store_refresh_token(oidctoken, refresh_token)
 
         coros = [
             self.fetch_data(topofeedresources, access_token, self.topofeedpaging),
