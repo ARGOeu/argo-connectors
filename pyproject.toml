@@ -62,6 +62,7 @@ argo_connectors = "modules"
 "etc" = ["etc/*.conf.template"]
 "usr/bin" = ["exec/*.py"]
 "var/log/" = ["helpers/empty"]
+"var/spool/" = ["helpers/empty"]
 
 [tool.setuptools.dynamic]
 version = { attr = "version.vernum" }
