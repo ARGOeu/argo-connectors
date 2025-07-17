@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 
 from collections import Callable
 from urllib.parse import urlparse
@@ -12,6 +13,9 @@ from argo_connectors.parse.provider_contacts import ParseResourcesContacts
 from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
 from argo_connectors.tasks.common import write_topo_json as write_json, write_state
 from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
+
+
+PROVIDER_TOKEN = 'var/spool/provider_token.json'
 
 
 def contains_exception(list):
@@ -94,6 +98,23 @@ class TaskProviderTopology(object):
 
         return topo.get_group_groups(), topo.get_group_endpoints()
 
+    def store_refresh_token(self, prevt, newt):
+        token_file = f"{os.environ['VIRTUAL_ENV']}/{PROVIDER_TOKEN}"
+        with open(token_file, 'w') as fp:
+            fp.writelines(json.dumps({"previous": prevt, "next": newt}))
+
+    def read_file_token(self):
+        token_file = f"{os.environ['VIRTUAL_ENV']}/{PROVIDER_TOKEN}"
+
+        if os.path.exists(token_file):
+            with open(token_file, 'r') as fp:
+                file_content = json.loads(fp.read())
+
+            return file_content.get('next', None)
+
+        else:
+            return None
+
     async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
         webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
                         webapi_opts['webapitoken'], self.logger,
@@ -106,7 +127,6 @@ class TaskProviderTopology(object):
         await webapi.send(data, topotype)
 
     async def fetch_data(self, feed, access_token, paginated):
-        fetched_data = list()
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
 
@@ -118,8 +138,7 @@ class TaskProviderTopology(object):
         try:
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
                                                             remote_topo.netloc,
-                                                            remote_topo.path),
-                                                            headers=headers)
+                                                            remote_topo.path), headers=headers)
 
         except ConnectorHttpError as exc:
             await session.close()
@@ -139,8 +158,7 @@ class TaskProviderTopology(object):
                                                                                 remote_topo.netloc,
                                                                                 remote_topo.path,
                                                                                 from_index,
-                                                                                num),
-                                                                                headers=headers)
+                                                                                num), headers=headers)
                     fetched_results = fetched_results + filter_out_results(res)
                     next_cursor = find_next_paging_cursor_count(self.logger, res)
                     total, from_index, to_index = next_cursor()
@@ -166,8 +184,7 @@ class TaskProviderTopology(object):
                                                                             remote_topo.netloc,
                                                                             remote_topo.path,
                                                                             from_index,
-                                                                            num),
-                                                                            headers=headers)
+                                                                            num), headers=headers)
                 await session.close()
                 return res
 
@@ -206,7 +223,17 @@ class TaskProviderTopology(object):
             msg = "Could not extract OIDC Access token: {}".format(repr(exc))
             raise ConnectorParseError(msg)
 
-        return access_token
+        try:
+            refresh_token = json.loads(res).get('refresh_token', None)
+            if not refresh_token:
+                msg = "Could not extract OIDC Refresh token: {}".format(repr(res))
+                raise ConnectorParseError(msg)
+
+        except (json.decoder.JSONDecodeError, TypeError) as exc:
+            msg = "Could not extract OIDC Refresh token: {}".format(repr(exc))
+            raise ConnectorParseError(msg)
+
+        return access_token, refresh_token
 
     async def run(self):
         topofeedextensions = self.confcust.get_topofeedendpointsextensions()
@@ -217,10 +244,17 @@ class TaskProviderTopology(object):
         oidcclientid = self.confcust.get_oidcclientid()
         topofeedresources = self.confcust.get_topofeedendpoints()
 
+        token_file = self.read_file_token()
+        if token_file:
+            oidctoken = token_file
+
         if oidctoken and oidctokenapi:
-            access_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
+            access_token, refresh_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
         else:
             raise ConnectorError('OIDC token missing')
+
+        if refresh_token:
+            self.store_refresh_token(oidctoken, refresh_token)
 
         coros = [
             self.fetch_data(topofeedresources, access_token, self.topofeedpaging),
@@ -261,9 +295,9 @@ class TaskProviderTopology(object):
             # send concurrently to WEB-API in coroutines
             if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
                 await asyncio.gather(
-                        self.send_webapi(self.webapi_opts, group_groups, 'groups', self.fixed_date),
-                        self.send_webapi(self.webapi_opts, group_endpoints,'endpoints', self.fixed_date),
-                        loop=self.loop
+                    self.send_webapi(self.webapi_opts, group_groups, 'groups', self.fixed_date),
+                    self.send_webapi(self.webapi_opts, group_endpoints, 'endpoints', self.fixed_date),
+                    loop=self.loop
                 )
 
             if eval(self.globopts['GeneralWriteJson'.lower()]):
