@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.1] - 2025-07-17
+
+### Changed
+
+* ARGO-5029 Provider connector should complain and stop if access token could not be fetched from refresh token
+
+### Added
+
+* ARGO-5013 LOT1 Service Catalogue connector
+* ARGO-5035 Provider connector need to handle OIDC refresh token rotation
+
 ## [2.3.0] - 2025-04-15
 
 ### Fixed

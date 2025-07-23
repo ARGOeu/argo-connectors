@@ -30,8 +30,11 @@ docker run \
 -v "${CONNECTORS_SOURCE}"/docker/eosc-customer-lot1stg.conf:${VENV}/etc/eosc-customer-lot1stg.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/eosccore-customer-lot1prod.conf:${VENV}/etc/eosccore-customer-lot1prod.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/eosccore-customer-lot1stg.conf:${VENV}/etc/eosccore-customer-lot1stg.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/eoscbeyond-provider-customer.conf:${VENV}/etc/eoscbeyond-provider-customer.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/global-lot1prod.conf:${VENV}/etc/global-lot1prod.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/global-lot1stg.conf:${VENV}/etc/global-lot1stg.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/global-lot1sc.conf:${VENV}/etc/global-lot1sc.conf:ro \
+-v "${CONNECTORS_SOURCE}"/docker/customer-lot1sc.conf:${VENV}/etc/customer-lot1sc.conf:ro \
 -v "${CONNECTORS_SOURCE}"/docker/hostcert.pem:/etc/grid-security/hostcert.pem:ro \
 -v "${CONNECTORS_SOURCE}"/docker/hostkey.pem:/etc/grid-security/hostkey.pem:ro \
 \

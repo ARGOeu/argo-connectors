@@ -49,7 +49,7 @@ def module_class_name(obj):
 def remove_non_utf(string):
     if '+' in string:
         string = string.replace("+", '_plus_')
-    
+
     if '@' in string:
         string = string.replace('@', '_at_')
 

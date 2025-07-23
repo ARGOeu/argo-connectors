@@ -3,6 +3,7 @@ import unittest
 import unittest
 import asyncio
 import datetime
+import json
 
 import mock
 
@@ -113,7 +114,8 @@ class TopologyProvider(unittest.TestCase):
         logger = mock.Mock()
         logger.customer = CUSTOMER_NAME
         self.loop = asyncio.get_event_loop()
-        globopts = mock.Mock()
+        mocked_globopts = dict(generalpublishwebapi='False', generalwritejson='False')
+        globopts = mocked_globopts
         webapiopts = mock.Mock()
         confcust = mock.Mock()
         confcust.get_topofeedservicegroups.return_value = 'http://topo.feed.providers.com'
@@ -150,7 +152,7 @@ class TopologyProvider(unittest.TestCase):
         mock_httpget.return_value = 'garbled JSON data'
         mock_httppost.return_value = 'garbled JSON data'
         mock_buildsslsettings.return_value = 'SSL settings'
-        mock_tokenfetch.return_value = 'OIDC token'
+        mock_tokenfetch.return_value = ('OIDC Access token', 'OIDC Refresh token')
         mock_parsejson.side_effect = [
             ConnectorParseError(
                 'failed PROVIDER find_next_paging_cursor_count'),
@@ -181,6 +183,89 @@ class TopologyProvider(unittest.TestCase):
         excep = cm.exception
         self.assertTrue(type(excep), ConnectorParseError)
         self.assertTrue('JSONDecodeError' in excep.msg)
+
+    @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
+    @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
+    @mock.patch.object(TaskProviderTopology, 'fetch_data')
+    @async_test
+    async def test_failedAccessToken2(self, mock_fetchdata, mock_httppost,
+                                      mock_buildsslsettings,
+                                      mock_buildconnretry):
+        mock_fetchdata.return_value = 'OK JSON data'
+        mock_httppost.return_value = "{\"no\": \"access_token\"}"
+        mock_buildsslsettings.return_value = 'SSL settings'
+        mock_buildconnretry.return_value = (1, 2)
+        with self.assertRaises(ConnectorError) as cm:
+            await self.topo_provider.run()
+        excep = cm.exception
+        self.assertTrue(type(excep), ConnectorParseError)
+        self.assertTrue('Could not extract OIDC Access token' in excep.msg)
+
+    @mock.patch('argo_connectors.tasks.provider_topology.write_state')
+    @mock.patch('argo_connectors.tasks.provider_topology.buildmap_id2groupname')
+    @mock.patch('argo_connectors.tasks.provider_topology.ParseResourcesContacts')
+    @mock.patch('argo_connectors.tasks.provider_topology.attach_contacts_topodata')
+    @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
+    @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
+    @mock.patch.object(TaskProviderTopology, 'fetch_data')
+    @async_test
+    async def test_RefreshTokenStore(self, mock_fetchdata, mock_httppost,
+                                     mock_buildsslsettings,
+                                     mock_buildconnretry, mock_attachcontacts,
+                                     mock_parseresourcecontacts,
+                                     mock_buildmapid2group, mock_writestate):
+        mock_fetchdata.return_value = 'OK JSON data'
+        mock_httppost.return_value = json.dumps(
+            {
+                'refresh_token': 'NEW_REFRESH_TOKEN',
+                'access_token': 'ACCESS_TOKEN'
+            }
+        )
+        mock_buildsslsettings.return_value = 'SSL settings'
+        mock_buildconnretry.return_value = (1, 2)
+        self.topo_provider.parse_source_topo = mock.Mock()
+        self.topo_provider.parse_source_topo.return_value = ['group_groups', 'group_endpoints']
+        self.topo_provider.store_refresh_token = mock.Mock()
+        self.topo_provider.parse_source_extensions = mock.MagicMock()
+        await self.topo_provider.run()
+        self.assertTrue(self.topo_provider.store_refresh_token.called)
+        self.topo_provider.store_refresh_token.assert_called_with('oidctoken', 'NEW_REFRESH_TOKEN')
+
+    @mock.patch('argo_connectors.tasks.provider_topology.json.loads')
+    @mock.patch('argo_connectors.tasks.provider_topology.open')
+    @mock.patch('argo_connectors.tasks.provider_topology.os.path.exists')
+    @mock.patch('argo_connectors.tasks.provider_topology.write_state')
+    @mock.patch('argo_connectors.tasks.provider_topology.buildmap_id2groupname')
+    @mock.patch('argo_connectors.tasks.provider_topology.ParseResourcesContacts')
+    @mock.patch('argo_connectors.tasks.provider_topology.attach_contacts_topodata')
+    @mock.patch('argo_connectors.io.http.build_connection_retry_settings')
+    @mock.patch('argo_connectors.io.http.build_ssl_settings')
+    @mock.patch('argo_connectors.tasks.provider_topology.SessionWithRetry.http_post')
+    @mock.patch.object(TaskProviderTopology, 'fetch_data')
+    @async_test
+    async def test_RefreshTokenRead(self, mock_fetchdata, mock_httppost,
+                                    mock_buildsslsettings, mock_buildconnretry,
+                                    mock_attachcontacts,
+                                    mock_parseresourcecontacts,
+                                    mock_buildmapid2group, mock_writestate,
+                                    mock_pathexists, mock_open, mock_jsonloads):
+        mock_fetchdata.return_value = 'OK JSON data'
+        mock_jsonloads.return_value = {
+            'prev': 'PREVIOUS_REFRESH_TOKEN',
+            'next': 'NEXT_REFRESH_TOKEN'
+        }
+        mock_buildsslsettings.return_value = 'SSL settings'
+        mock_buildconnretry.return_value = (1, 2)
+        self.topo_provider.parse_source_topo = mock.Mock()
+        self.topo_provider.parse_source_topo.return_value = ['group_groups', 'group_endpoints']
+        self.topo_provider.store_refresh_token = mock.Mock()
+        self.topo_provider.parse_source_extensions = mock.MagicMock()
+        self.topo_provider.token_fetch = mock.AsyncMock()
+        self.topo_provider.token_fetch.return_value = ('ACCESS_TOKEN', 'REFRESH_TOKEN')
+        await self.topo_provider.run()
+        self.topo_provider.token_fetch.assert_called_with('clientid', 'NEXT_REFRESH_TOKEN', 'oidctokenapi')
 
 
 class ServiceTypesGocdb(unittest.TestCase):

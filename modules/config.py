@@ -6,8 +6,6 @@ import re
 from .log import Logger
 
 
-
-
 class Global(object):
     """
        Class represents parser for global.conf
@@ -53,6 +51,9 @@ class Global(object):
             self._merge_dict(self.shared_secopts,
                              self.conf_topo_output),
             'topology-provider-connector.py':
+            self._merge_dict(self.shared_secopts,
+                             self.conf_topo_output),
+            'topology-lot1sc-connector.py':
             self._merge_dict(self.shared_secopts,
                              self.conf_topo_output),
             'topology-agora-connector.py':
@@ -209,6 +210,7 @@ class CustomerConf(object):
                     'topology-csv-connector.py': [''],
                     'topology-provider-connector.py': [''],
                     'topology-agora-connector.py': [''],
+                    'topology-lot1sc-connector.py': [''],
                     'metricprofile-webapi-connector.py': ['MetricProfileNamespace'],
                     'downtimes-gocdb-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
                     'downtimes-csv-connector.py': ['DowntimesFeed', 'TopoUIDServiceEndpoints'],
@@ -226,7 +228,7 @@ class CustomerConf(object):
                       'BDIIQueryAttributesSRM', 'BDIIQueryFilterSEPATH',
                       'BDIIQueryAttributesSEPATH', 'WebAPIToken',
                       'WeightsEmpty', 'DowntimesEmpty', 'ServiceTypesFeed',
-                      'HonorNotificationFlag']
+                      'HonorNotificationFlag', 'TopoTiers']
     tenantdir = ''
     deftopofeed = 'https://goc.egi.eu/gocdbpi/'
 
@@ -270,6 +272,7 @@ class CustomerConf(object):
                     topouidservendpoints = config.get(
                         section, 'TopoUIDServiceEndpoints', fallback=False)
                     toposcope = config.get(section, 'TopoScope', fallback=None)
+                    topotiers = config.get(section, 'TopoTiers', fallback=list())
                     topofeedsites = config.get(
                         section, 'TopoFeedSites', fallback=None)
                     topofeedendpoints = config.get(
@@ -324,6 +327,7 @@ class CustomerConf(object):
                                              'TopoFeedSites': topofeedsites,
                                              'TopoFetchType': topofetchtype,
                                              'TopoScope': toposcope,
+                                             'TopoTiers': topotiers,
                                              'TopoType': topotype,
                                              'TopoUIDServiceEnpoints': topouidservendpoints,
                                              'HonorNotificationFlag': notifflag,
@@ -584,6 +588,12 @@ class CustomerConf(object):
 
     def get_toposcope(self):
         return self._get_cust_options('TopoScope')
+
+    def get_topotiers(self):
+        tiers = self._get_cust_options('TopoTiers')
+        if ',' in tiers:
+            tiers = [tier.strip().lower() for tier in tiers.split(',')]
+        return tiers
 
     def get_topofetchtype(self):
         fetchtype = self._get_cust_options('TopoFetchType')
