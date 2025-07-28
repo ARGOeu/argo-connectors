@@ -199,22 +199,23 @@ class ParseTopo(object):
                 lambda resource: resource['provider'] == provider['id'],
                 self.resources.data
             ))
+
             for resource in resource_from_provider:
                 gge = dict()
                 if (providers_added.get(provider['id'], False) and
                         providers_added[provider['id']] == resource['id']):
                     continue
                 gge['type'] = 'PROJECT'
-                gge['group'] = provider['id']
+                gge['group'] = provider['abbr']
                 gge['subgroup'] = resource['id']
                 if provider.get('provider_tag', False):
                     provider_tags = [tag.strip()
                                      for tag in provider['provider_tag']]
                     gge['tags'] = dict(provider_tags=', '.join(
-                        provider_tags), info_projectname=provider['abbr'])
+                        provider_tags), info_projectid=provider['id'])
                 else:
                     gge['tags'] = dict(
-                        info_projectname=provider['abbr'].strip())
+                        info_projectid=provider['id'].strip())
                 gg.append(gge)
                 providers_added.update(
                     {provider['id'].strip(): resource['id'].strip()})
