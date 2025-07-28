@@ -130,10 +130,15 @@ class TaskProviderTopology(object):
         remote_topo = urlparse(feed)
         session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
 
-        headers = {
-            "Accept": "application/json",
-            "Authorization": "Bearer {0}".format(access_token)
-        }
+        if access_token:
+            headers = {
+                "Accept": "application/json",
+                "Authorization": "Bearer {0}".format(access_token)
+            }
+        else:
+            headers = {
+                "Accept": "application/json",
+            }
 
         try:
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
@@ -244,17 +249,20 @@ class TaskProviderTopology(object):
         oidcclientid = self.confcust.get_oidcclientid()
         topofeedresources = self.confcust.get_topofeedendpoints()
 
-        token_file = self.read_file_token()
-        if token_file:
-            oidctoken = token_file
+        access_token = None
 
         if oidctoken and oidctokenapi:
-            access_token, refresh_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
-        else:
-            raise ConnectorError('OIDC token missing')
+            token_file = self.read_file_token()
+            if token_file:
+                oidctoken = token_file
 
-        if refresh_token:
-            self.store_refresh_token(oidctoken, refresh_token)
+            if oidctoken and oidctokenapi:
+                access_token, refresh_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
+            else:
+                raise ConnectorError('OIDC token missing')
+
+            if refresh_token:
+                self.store_refresh_token(oidctoken, refresh_token)
 
         coros = [
             self.fetch_data(topofeedresources, access_token, self.topofeedpaging),

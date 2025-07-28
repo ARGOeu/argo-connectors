@@ -40,8 +40,7 @@ class ParseResources(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                resource = feeddata['service']
-                tags = resource['tags']
+                tags = feeddata['tags']
                 extras = feeddata.get('resourceExtras', None)
                 if extras:
                     for key in self._keys:
@@ -49,19 +48,19 @@ class ParseResources(ParseHelpers):
                         if key_true:
                             tags.append(key)
                 for key in self._keys:
-                    key_true = resource.get(key, False)
+                    key_true = feeddata.get(key, False)
                     if key_true:
                         tags.append(key)
-                if not resource.get('name', False):
+                if not feeddata.get('name', False):
                     continue
                 self._resources.append({
-                    'id': resource['id'],
+                    'id': feeddata['id'],
                     'hardcoded_service': SERVICE_NAME_WEBPAGE,
-                    'name': resource['name'],
-                    'provider': resource['resourceOrganisation'],
-                    'webpage': resource['webpage'],
+                    'name': feeddata['name'],
+                    'provider': feeddata['resourceOrganisation'],
+                    'webpage': feeddata['webpage'],
                     'resource_tag': tags,
-                    'description': resource['description']
+                    'description': feeddata['description']
                 })
             self.data = self._resources
 
@@ -90,15 +89,14 @@ class ParseProviders(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                provider = feeddata['provider']
-                if not provider.get('website', False):
+                if not feeddata.get('website', False):
                     continue
                 self._providers.append({
-                    'id': provider['id'],
-                    'website': provider['website'],
-                    'name': provider['name'],
-                    'abbr': provider['abbreviation'],
-                    'provider_tag': provider['tags']
+                    'id': feeddata['id'],
+                    'website': feeddata['website'],
+                    'name': feeddata['name'],
+                    'abbr': feeddata['abbreviation'],
+                    'provider_tag': feeddata['tags']
                 })
             self.data = self._providers
 
@@ -201,22 +199,23 @@ class ParseTopo(object):
                 lambda resource: resource['provider'] == provider['id'],
                 self.resources.data
             ))
+
             for resource in resource_from_provider:
                 gge = dict()
                 if (providers_added.get(provider['id'], False) and
                         providers_added[provider['id']] == resource['id']):
                     continue
                 gge['type'] = 'PROJECT'
-                gge['group'] = provider['id']
-                gge['subgroup'] = resource['id']
+                gge['group'] = provider['abbr']
+                gge['subgroup'] = resource['name']
                 if provider.get('provider_tag', False):
                     provider_tags = [tag.strip()
                                      for tag in provider['provider_tag']]
                     gge['tags'] = dict(provider_tags=', '.join(
-                        provider_tags), info_projectname=provider['abbr'])
+                        provider_tags), info_projectid=provider['id'])
                 else:
                     gge['tags'] = dict(
-                        info_projectname=provider['abbr'].strip())
+                        info_projectid=provider['id'].strip())
                 gg.append(gge)
                 providers_added.update(
                     {provider['id'].strip(): resource['id'].strip()})
@@ -226,13 +225,14 @@ class ParseTopo(object):
     def get_group_endpoints(self):
         ge = list()
         unique_providers = self.providers.get_unique()
+
         for resource in self.resources.data:
             if resource['provider'] not in unique_providers:
                 continue
             gee = dict()
             gee['type'] = 'SERVICEGROUPS'
             gee['service'] = resource['hardcoded_service']
-            gee['group'] = resource['id']
+            gee['group'] = resource['name']
             if self.uidservendp:
                 gee['hostname'] = '{}_{}'.format(construct_fqdn(resource['webpage']), remove_non_utf(resource['id']))
             else:
@@ -245,11 +245,11 @@ class ParseTopo(object):
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
                                    info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),
-                                   info_groupname=resource['name'].strip())
+                                   info_groupid=resource['id'].strip())
             else:
                 gee['tags'] = dict(info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),
-                                   info_groupname=resource['name'].strip())
+                                   info_groupid=resource['id'].strip())
             if self.uidservendp:
                 gee['tags'].update(
                     dict(hostname=construct_fqdn(resource['webpage'].strip())))
