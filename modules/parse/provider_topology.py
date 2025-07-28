@@ -225,13 +225,14 @@ class ParseTopo(object):
     def get_group_endpoints(self):
         ge = list()
         unique_providers = self.providers.get_unique()
+
         for resource in self.resources.data:
             if resource['provider'] not in unique_providers:
                 continue
             gee = dict()
             gee['type'] = 'SERVICEGROUPS'
             gee['service'] = resource['hardcoded_service']
-            gee['group'] = resource['id']
+            gee['group'] = resource['name']
             if self.uidservendp:
                 gee['hostname'] = '{}_{}'.format(construct_fqdn(resource['webpage']), remove_non_utf(resource['id']))
             else:
@@ -244,11 +245,11 @@ class ParseTopo(object):
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
                                    info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),
-                                   info_groupname=resource['name'].strip())
+                                   info_groupid=resource['id'].strip())
             else:
                 gee['tags'] = dict(info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),
-                                   info_groupname=resource['name'].strip())
+                                   info_groupid=resource['id'].strip())
             if self.uidservendp:
                 gee['tags'].update(
                     dict(hostname=construct_fqdn(resource['webpage'].strip())))
