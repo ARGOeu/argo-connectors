@@ -40,8 +40,7 @@ class ParseResources(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                resource = feeddata['service']
-                tags = resource['tags']
+                tags = feeddata['tags']
                 extras = feeddata.get('resourceExtras', None)
                 if extras:
                     for key in self._keys:
@@ -49,19 +48,19 @@ class ParseResources(ParseHelpers):
                         if key_true:
                             tags.append(key)
                 for key in self._keys:
-                    key_true = resource.get(key, False)
+                    key_true = feeddata.get(key, False)
                     if key_true:
                         tags.append(key)
-                if not resource.get('name', False):
+                if not feeddata.get('name', False):
                     continue
                 self._resources.append({
-                    'id': resource['id'],
+                    'id': feeddata['id'],
                     'hardcoded_service': SERVICE_NAME_WEBPAGE,
-                    'name': resource['name'],
-                    'provider': resource['resourceOrganisation'],
-                    'webpage': resource['webpage'],
+                    'name': feeddata['name'],
+                    'provider': feeddata['resourceOrganisation'],
+                    'webpage': feeddata['webpage'],
                     'resource_tag': tags,
-                    'description': resource['description']
+                    'description': feeddata['description']
                 })
             self.data = self._resources
 
@@ -90,15 +89,14 @@ class ParseProviders(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                provider = feeddata['provider']
-                if not provider.get('website', False):
+                if not feeddata.get('website', False):
                     continue
                 self._providers.append({
-                    'id': provider['id'],
-                    'website': provider['website'],
-                    'name': provider['name'],
-                    'abbr': provider['abbreviation'],
-                    'provider_tag': provider['tags']
+                    'id': feeddata['id'],
+                    'website': feeddata['website'],
+                    'name': feeddata['name'],
+                    'abbr': feeddata['abbreviation'],
+                    'provider_tag': feeddata['tags']
                 })
             self.data = self._providers
 
