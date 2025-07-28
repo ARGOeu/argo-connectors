@@ -207,7 +207,7 @@ class ParseTopo(object):
                     continue
                 gge['type'] = 'PROJECT'
                 gge['group'] = provider['abbr']
-                gge['subgroup'] = resource['id']
+                gge['subgroup'] = resource['name']
                 if provider.get('provider_tag', False):
                     provider_tags = [tag.strip()
                                      for tag in provider['provider_tag']]
