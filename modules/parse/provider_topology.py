@@ -12,7 +12,7 @@ SERVICE_NAME_WEBPAGE = 'eu.eosc.portal.services.url'
 def buildmap_id2groupname(resources):
     id2name = dict()
     for resource in resources:
-        id2name[resource['group']] = resource['tags']['info_groupname']
+        id2name[resource['tags']['info_ID']] = resource['tags']['info_groupname']
     return id2name
 
 
@@ -245,11 +245,11 @@ class ParseTopo(object):
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
                                    info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),
-                                   info_groupid=resource['id'].strip())
+                                   info_groupname=resource['name'].strip())
             else:
                 gee['tags'] = dict(info_URL=resource['webpage'].strip(),
                                    info_ID=resource['id'].strip(),
-                                   info_groupid=resource['id'].strip())
+                                   info_groupname=resource['name'].strip())
             if self.uidservendp:
                 gee['tags'].update(
                     dict(hostname=construct_fqdn(resource['webpage'].strip())))

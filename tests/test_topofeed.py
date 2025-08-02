@@ -730,12 +730,8 @@ class ParseEoscProvider(unittest.TestCase):
         self.group_endpoints = eosc_topo.get_group_endpoints()
         self.id_groupname = buildmap_id2groupname(self.group_endpoints)
         fakemap_idgroupnames = {
-            'openaire.validator': 'OpenAIRE Validator',
-            'srce.3dbionotes': '3DBionotes-WS-TEST',
-            'srce.poem': 'POEM',
-            'srce.srceweb': 'SRCE Web',
-            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
-                            'SeaDataNet and Argo data'
+            '21.T15999/uxIE5y': '3rd-Party Data Security Assessment',
+            '21.T15999/xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
         }
         eosc_topo_extensions = ParseExtensions(logger, resource_extensions, fakemap_idgroupnames, True, CUSTOMER_NAME)
         self.extensions = eosc_topo_extensions.get_extensions()
