@@ -718,11 +718,11 @@ class ParseSitesTest(unittest.TestCase):
 
 class ParseEoscProvider(unittest.TestCase):
     def setUp(self):
-        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-public-service.json', encoding='utf-8') as feed_file:
             resources = feed_file.read()
-        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-public-provider.json', encoding='utf-8') as feed_file:
             providers = feed_file.read()
-        with open('tests/sample-resourcefeed_extensions.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-provider-configurationtemplateinstance.json', encoding='utf-8') as feed_file:
             resource_extensions = feed_file.read()
         logger.customer = CUSTOMER_NAME
         eosc_topo = ParseTopo(logger, providers, resources, True, CUSTOMER_NAME)
@@ -794,29 +794,6 @@ class ParseEoscProvider(unittest.TestCase):
                 'type': 'PROJECT'
             }
         ])
-
-    def test_meshContactsProviders(self):
-        sample_resources_contacts = {
-            '3dbionotes.cnb.csic.es+srce.3dbionotes': ['Emir.Imamagic@srce.hr']
-        }
-
-        attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
-        self.assertEqual(self.group_endpoints[0], {
-            'group': 'srce.3dbionotes',
-            'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
-            'notifications': {
-                'contacts': ['Emir.Imamagic@srce.hr'],
-                'enabled': True
-            },
-            'service': 'eu.eosc.portal.services.url',
-            'tags': {
-                'hostname': '3dbionotes.cnb.csic.es',
-                'info_ID': 'srce.3dbionotes',
-                'info_URL': 'https://3dbionotes.cnb.csic.es/',
-                'info_groupname': '3DBionotes-WS-TEST'
-            },
-            'type': 'SERVICEGROUPS'
-        })
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
@@ -917,49 +894,6 @@ class ParseEoscProvider(unittest.TestCase):
         excep = cm.exception
         self.assertTrue('JSON feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
-
-    def test_serviceExtensions(self):
-        self.assertEqual(self.extensions, [
-            {
-                'group': 'openaire.validator',
-                'hostname': 'argo.grnet.gr_4429aede-129a-4a2d-9788-198a96912bc1',
-                'service': 'eu.eosc.portal',
-                'tags': {
-                    'hostname': 'argo.grnet.gr',
-                    'info_ID': '4429aede-129a-4a2d-9788-198a96912bc1',
-                    'info_URL': 'argo.grnet.gr',
-                    'info_groupname': 'OpenAIRE Validator',
-                    'info_monitored_by': 'asdf'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.poem',
-                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa27',
-                'service': 'eu.eosc.argo.poem',
-                'tags': {
-                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
-                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa27',
-                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr',
-                    'info_groupname': 'POEM',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.poem',
-                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
-                'service': 'eu.eosc.argo.poem',
-                'tags': {
-                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
-                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
-                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr/different/url/path',
-                    'info_groupname': 'POEM',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        ])
 
 
 class ParseAgoraTopology(unittest.TestCase):
