@@ -133,14 +133,17 @@ class ParseExtensions(ParseHelpers):
                 json_data = self.data
 
             for extension in json_data['results']:
-                if extension['serviceId'] not in self.groupnames:
+                if extension['resourceId'] not in self.groupnames:
                     continue
 
-                for group in extension['monitoringGroups']:
+                if 'serviceCheck' not in extension['payload']:
+                    continue
+
+                for group in extension['payload']['serviceCheck']:
                     gee = dict()
                     gee['type'] = 'SERVICEGROUPS'
                     gee['service'] = group['serviceType']
-                    gee['group'] = extension['serviceId']
+                    gee['group'] = self.groupnames[extension['resourceId']]
                     if self.uidservendp:
                         hostname = construct_fqdn(group['endpoint'])
                         urlpath_id = build_urlpath_id(group['endpoint'])
@@ -161,8 +164,7 @@ class ParseExtensions(ParseHelpers):
                         info_URL=group['endpoint'],
                         info_ID='{}_{}'.format(
                             extension['id'], urlpath_id) if urlpath_id else extension['id'],
-                        info_monitored_by=extension['monitoredBy'],
-                        info_groupname=self.groupnames[extension['serviceId']]
+                        info_groupname=self.groupnames[extension['resourceId']]
                     )
                     if self.uidservendp:
                         hostname = construct_fqdn(group['endpoint'])
