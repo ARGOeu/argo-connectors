@@ -824,6 +824,28 @@ class ParseEoscProvider(unittest.TestCase):
             '21.T15999/xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
         })
 
+    def test_meshContactsProviders(self):
+        sample_resources_contacts = {
+            'ictlc.com+21.T15999/uxIE5y': ['foo@bar.com']
+        }
+
+        attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
+        self.assertEqual(self.group_endpoints[0], {
+            'group': '3rd-Party Data Security Assessment',
+            'hostname': 'ictlc.com_21.T15999/uxIE5y',
+            'service': 'eu.eosc.portal.services.url',
+            'tags': {
+                'hostname': 'ictlc.com',
+                'info_ID': '21.T15999/uxIE5y',
+                'info_URL': 'https://ictlc.com/ICTLC_2023_3rd-Party%20Data%20Security%20Assessment.pdf',
+                'info_groupname': '3rd-Party Data Security Assessment',
+                'service_tags': 'Cybersecurity, Supply Chain, Supply Chain '
+                'Management, GDPR, Audit, Data Breach, ENISA'
+            },
+            'type': 'SERVICEGROUPS',
+            'notifications': {'contacts': ['foo@bar.com'], 'enabled': True},
+        })
+
     def test_FailedEoscProviderTopology(self):
         logger.customer = CUSTOMER_NAME
         with self.assertRaises(ConnectorParseError) as cm:
