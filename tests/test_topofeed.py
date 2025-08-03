@@ -872,13 +872,8 @@ class ParseEoscProvider(unittest.TestCase):
 
     def test_idGroupname(self):
         self.assertEqual(self.id_groupname, {
-            'riga_stradins_university.rsu_dataverse': 'RSU Dataverse',
-            'openaire.validator': 'OpenAIRE Validator',
-            'srce.3dbionotes': '3DBionotes-WS-TEST',
-            'srce.poem': 'POEM',
-            'srce.srceweb': 'SRCE Web',
-            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
-                            'SeaDataNet and Argo data'
+            '21.T15999/uxIE5y': '3rd-Party Data Security Assessment',
+            '21.T15999/xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
         })
 
     def test_FailedEoscProviderTopology(self):
