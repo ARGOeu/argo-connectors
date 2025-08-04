@@ -718,11 +718,11 @@ class ParseSitesTest(unittest.TestCase):
 
 class ParseEoscProvider(unittest.TestCase):
     def setUp(self):
-        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-public-service.json', encoding='utf-8') as feed_file:
             resources = feed_file.read()
-        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-public-provider.json', encoding='utf-8') as feed_file:
             providers = feed_file.read()
-        with open('tests/sample-resourcefeed_extensions.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-provider-configurationtemplateinstance.json', encoding='utf-8') as feed_file:
             resource_extensions = feed_file.read()
         logger.customer = CUSTOMER_NAME
         eosc_topo = ParseTopo(logger, providers, resources, True, CUSTOMER_NAME)
@@ -730,12 +730,8 @@ class ParseEoscProvider(unittest.TestCase):
         self.group_endpoints = eosc_topo.get_group_endpoints()
         self.id_groupname = buildmap_id2groupname(self.group_endpoints)
         fakemap_idgroupnames = {
-            'openaire.validator': 'OpenAIRE Validator',
-            'srce.3dbionotes': '3DBionotes-WS-TEST',
-            'srce.poem': 'POEM',
-            'srce.srceweb': 'SRCE Web',
-            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
-                            'SeaDataNet and Argo data'
+            '21.T15999/uxIE5y': '3rd-Party Data Security Assessment',
+            '21.T15999/xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
         }
         eosc_topo_extensions = ParseExtensions(logger, resource_extensions, fakemap_idgroupnames, True, CUSTOMER_NAME)
         self.extensions = eosc_topo_extensions.get_extensions()
@@ -744,154 +740,79 @@ class ParseEoscProvider(unittest.TestCase):
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
             {
-                'group': 'srce',
-                'subgroup': 'srce.3dbionotes',
+                'group': 'CINECA',
+                'subgroup': ' Italian SuperComputing Resource Allocation - ISCRA',
                 'tags': {
-                    'info_projectname': 'SRCE'
+                    'info_projectid': '21.T15999/llB2t3',
+                    'provider_tags': 'High Performance Computing'
                 },
                 'type': 'PROJECT'
             },
             {
-                'group': 'srce',
-                'subgroup': 'srce.poem',
+                'group': 'ICTLC',
+                'subgroup': '3rd-Party Data Security Assessment',
                 'tags': {
-                    'info_projectname': 'SRCE'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'srce',
-                'subgroup': 'srce.srceweb',
-                'tags': {
-                    'info_projectname': 'SRCE'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'srce',
-                'subgroup': 'srce.webodv',
-                'tags': {
-                    'info_projectname': 'SRCE'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'openaire',
-                'subgroup': 'openaire.validator',
-                'tags': {
-                    'info_projectname': 'OpenAIRE',
-                    'provider_tags': 'Open Science'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'riga_stradins_university',
-                'subgroup': 'riga_stradins_university.rsu_dataverse',
-                'tags': {
-                    'info_projectname': 'RIga Stradins University',
-                    'provider_tags': 'university, Latvia, Health, Medicine'
+                    'info_projectid': '21.T15999/kKG7EL'
                 },
                 'type': 'PROJECT'
             }
         ])
 
-    def test_meshContactsProviders(self):
-        sample_resources_contacts = {
-            '3dbionotes.cnb.csic.es+srce.3dbionotes': ['Emir.Imamagic@srce.hr']
-        }
-
-        attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
-        self.assertEqual(self.group_endpoints[0], {
-            'group': 'srce.3dbionotes',
-            'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
-            'notifications': {
-                'contacts': ['Emir.Imamagic@srce.hr'],
-                'enabled': True
+    def test_serviceExtensions(self):
+        self.assertEqual(self.extensions, [
+            {
+                'group': '3rd-Party Data Security Assessment',
+                'hostname': 'example.com_cti/8wEjbu',
+                'service': 'eu.eosc.generic.json',
+                'tags': {
+                    'hostname': 'example.com',
+                    'info_ID': 'cti/8wEjbu',
+                    'info_URL': 'https://example.com',
+                    'info_groupname': '3rd-Party Data Security Assessment'
+                },
+                'type': 'SERVICEGROUPS'
             },
-            'service': 'eu.eosc.portal.services.url',
-            'tags': {
-                'hostname': '3dbionotes.cnb.csic.es',
-                'info_ID': 'srce.3dbionotes',
-                'info_URL': 'https://3dbionotes.cnb.csic.es/',
-                'info_groupname': '3DBionotes-WS-TEST'
-            },
-            'type': 'SERVICEGROUPS'
-        })
+            {
+                'group': 'Italian SuperComputing Resource Allocation - ISCRA',
+                'hostname': 'www.google.com_cti/qykSlW',
+                'service': 'eu.eosc.argo.mon',
+                'tags': {
+                    'hostname': 'www.google.com',
+                    'info_ID': 'cti/qykSlW',
+                    'info_URL': 'https://www.google.com',
+                    'info_groupname': 'Italian SuperComputing Resource Allocation - '
+                                      'ISCRA'
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        ])
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
             {
-                'group': 'srce.3dbionotes',
-                'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
+                'group': '3rd-Party Data Security Assessment',
+                'hostname': 'ictlc.com_21.T15999/uxIE5y',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': '3dbionotes.cnb.csic.es',
-                    'info_ID': 'srce.3dbionotes',
-                    'info_URL': 'https://3dbionotes.cnb.csic.es/',
-                    'info_groupname': '3DBionotes-WS-TEST'
+                    'hostname': 'ictlc.com',
+                    'info_ID': '21.T15999/uxIE5y',
+                    'info_URL': 'https://ictlc.com/ICTLC_2023_3rd-Party%20Data%20Security%20Assessment.pdf',
+                    'info_groupname': '3rd-Party Data Security Assessment',
+                    'service_tags': 'Cybersecurity, Supply Chain, Supply Chain '
+                    'Management, GDPR, Audit, Data Breach, ENISA'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'srce.poem',
-                'hostname': 'poem.devel.argo.grnet.gr_srce.poem',
+                'group': ' Italian SuperComputing Resource Allocation - ISCRA',
+                'hostname': 'www.hpc.cineca.it_21.T15999/xVQZOZ',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'poem.devel.argo.grnet.gr',
-                    'info_ID': 'srce.poem',
-                    'info_URL': 'https://poem.devel.argo.grnet.gr',
-                    'info_groupname': 'POEM'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.srceweb',
-                'hostname': 'www.srce.unizg.hr_srce.srceweb',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.srce.unizg.hr',
-                    'info_ID': 'srce.srceweb',
-                    'info_URL': 'https://www.srce.unizg.hr/',
-                    'info_groupname': 'SRCE Web'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.webodv',
-                'hostname': 'webodv-egi-ace.cloud.ba.infn.it_srce.webodv',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'webodv-egi-ace.cloud.ba.infn.it',
-                    'info_ID': 'srce.webodv',
-                    'info_URL': 'http://webodv-egi-ace.cloud.ba.infn.it/',
-                    'info_groupname': 'WebODV - Online extraction, analysis and '
-                                      'visualization of SeaDataNet and Argo data'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'openaire.validator',
-                'hostname': 'www.openaire.eu_openaire.validator',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.openaire.eu',
-                    'info_ID': 'openaire.validator',
-                    'info_URL': 'https://www.openaire.eu/validator',
-                    'info_groupname': 'OpenAIRE Validator',
-                    'service_tags': 'OAI-PMH protocol, horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'riga_stradins_university.rsu_dataverse',
-                'hostname': 'dataverse.rsu.lv_riga_stradins_university.rsu_dataverse',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'dataverse.rsu.lv',
-                    'info_ID': 'riga_stradins_university.rsu_dataverse',
-                    'info_URL': 'https://dataverse.rsu.lv/',
-                    'info_groupname': 'RSU Dataverse',
-                    'service_tags': 'e-INFRA non-commercial, horizontalService'
+                    'hostname': 'www.hpc.cineca.it',
+                    'info_ID': '21.T15999/xVQZOZ',
+                    'info_URL': 'https://www.hpc.cineca.it/services/iscra',
+                    'info_groupname': 'Italian SuperComputing Resource Allocation - '
+                                      'ISCRA'
                 },
                 'type': 'SERVICEGROUPS'
             }
@@ -899,13 +820,30 @@ class ParseEoscProvider(unittest.TestCase):
 
     def test_idGroupname(self):
         self.assertEqual(self.id_groupname, {
-            'riga_stradins_university.rsu_dataverse': 'RSU Dataverse',
-            'openaire.validator': 'OpenAIRE Validator',
-            'srce.3dbionotes': '3DBionotes-WS-TEST',
-            'srce.poem': 'POEM',
-            'srce.srceweb': 'SRCE Web',
-            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
-                            'SeaDataNet and Argo data'
+            '21.T15999/uxIE5y': '3rd-Party Data Security Assessment',
+            '21.T15999/xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
+        })
+
+    def test_meshContactsProviders(self):
+        sample_resources_contacts = {
+            'ictlc.com+21.T15999/uxIE5y': ['foo@bar.com']
+        }
+
+        attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
+        self.assertEqual(self.group_endpoints[0], {
+            'group': '3rd-Party Data Security Assessment',
+            'hostname': 'ictlc.com_21.T15999/uxIE5y',
+            'service': 'eu.eosc.portal.services.url',
+            'tags': {
+                'hostname': 'ictlc.com',
+                'info_ID': '21.T15999/uxIE5y',
+                'info_URL': 'https://ictlc.com/ICTLC_2023_3rd-Party%20Data%20Security%20Assessment.pdf',
+                'info_groupname': '3rd-Party Data Security Assessment',
+                'service_tags': 'Cybersecurity, Supply Chain, Supply Chain '
+                'Management, GDPR, Audit, Data Breach, ENISA'
+            },
+            'type': 'SERVICEGROUPS',
+            'notifications': {'contacts': ['foo@bar.com'], 'enabled': True},
         })
 
     def test_FailedEoscProviderTopology(self):
@@ -917,49 +855,6 @@ class ParseEoscProvider(unittest.TestCase):
         excep = cm.exception
         self.assertTrue('JSON feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
-
-    def test_serviceExtensions(self):
-        self.assertEqual(self.extensions, [
-            {
-                'group': 'openaire.validator',
-                'hostname': 'argo.grnet.gr_4429aede-129a-4a2d-9788-198a96912bc1',
-                'service': 'eu.eosc.portal',
-                'tags': {
-                    'hostname': 'argo.grnet.gr',
-                    'info_ID': '4429aede-129a-4a2d-9788-198a96912bc1',
-                    'info_URL': 'argo.grnet.gr',
-                    'info_groupname': 'OpenAIRE Validator',
-                    'info_monitored_by': 'asdf'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.poem',
-                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa27',
-                'service': 'eu.eosc.argo.poem',
-                'tags': {
-                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
-                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa27',
-                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr',
-                    'info_groupname': 'POEM',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.poem',
-                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
-                'service': 'eu.eosc.argo.poem',
-                'tags': {
-                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
-                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
-                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr/different/url/path',
-                    'info_groupname': 'POEM',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        ])
 
 
 class ParseAgoraTopology(unittest.TestCase):
