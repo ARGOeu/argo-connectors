@@ -17,12 +17,10 @@ class ParseProvidersContacts(ParseHelpers):
         else:
             json_data = self.data
         for feeddata in json_data['results']:
-            provider = feeddata['provider']
-            key = provider['abbreviation']
-            contacts = [contact['email'] for contact in provider['publicContacts']]
+            contacts = [contact['email'] for contact in feeddata['publicContacts']]
             if contacts:
                 self._provider_contacts.append({
-                    'name': key,
+                    'name': feeddata['abbreviation'],
                     'contacts': contacts
                 })
 

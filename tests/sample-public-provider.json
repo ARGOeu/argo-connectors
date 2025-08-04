@@ -3,86 +3,86 @@
   "from": 0,
   "to": 502,
   "results": [
-		{
-			"id": "21.T15999/llB2t3",
-			"abbreviation": "CINECA",
-			"name": "Cineca Consorzio Interuniversitario",
-			"node": "node-sandbox",
-			"website": "https://www.cineca.it/",
-			"legalEntity": true,
-			"legalStatus": "provider_legal_status-public_legal_entity_under_private_law",
-			"hostingLegalEntity": null,
-			"alternativeIdentifiers": null,
-			"description": "Cineca is a not-for-profit Consortium, made up of the Italian Ministry of Education and the Italian Ministry of Universities and Research, 69 Italian universities and 25 Italian National Institutions. Today it is the largest Italian computing centre, one of the most important worldwide. With more seven hundred employees, it operates in the technological transfer sector through high performance scientific computing, the management and development of networks and web based services, and the development of complex information systems for treating large amounts of data. It develops advanced Information Technology applications and services, acting like a trait-d'union between the academic world, the sphere of pure research and the world of industry and Public Administration.",
-			"logo": "https://www.cineca.it/sites/default/files/contenuto_generico/logo-cineca-social.png",
-			"multimedia": [
-				{
-					"multimediaURL": "https://www.cineca.it/en/press-corner",
-					"multimediaName": "Multimedia 1"
-				}
-			],
-			"scientificDomains": [
-				{
-					"scientificDomain": "scientific_domain-generic",
-					"scientificSubdomain": "scientific_subdomain-generic-generic"
-				}
-			],
-			"tags": [
-				"High Performance Computing "
-			],
-			"structureTypes": [
-				"provider_structure_type-distributed"
-			],
-			"location": {
-				"streetNameAndNumber": "Via Magnanelli 6/3`",
-				"postalCode": "40033",
-				"city": "Casalecchio di Reno (Bologna) ",
-				"region": null,
-				"country": "IT"
-			},
-			"mainContact": null,
-			"publicContacts": [
-				{
-					"firstName": "name",
-					"lastName": "surname",
-					"email": "redacted@example.com",
-					"phone": null,
-					"position": null
-				}
-			],
-			"lifeCycleStatus": "provider_life_cycle_status-operational",
-			"certifications": [
-				"Compliance with the international standard ISO 9001, since November 2001. https://www.cineca.it/en/about-us/certifications",
-				"The Information Security Management System of Cineca is compliance with the international standard ISO 27001:2013. https://www.cineca.it/en/about-us/certifications"
-			],
-			"participatingCountries": [],
-			"affiliations": [],
-			"networks": [
-				"provider_network-prace",
-				"provider_network-eudat",
-				"provider_network-hbp",
-				"provider_network-etp4hpc"
-			],
-			"catalogueId": "eosc",
-			"esfriDomains": [
-				"provider_esfri_domain-data_computing_and_digital_research_infrastructures"
-			],
-			"esfriType": "provider_esfri_type-other",
-			"merilScientificDomains": [
-				{
-					"merilScientificDomain": "provider_meril_scientific_domain-other",
-					"merilScientificSubdomain": "provider_meril_scientific_subdomain-other-other"
-				}
-			],
-			"areasOfActivity": [
-				"provider_area_of_activity-other"
-			],
-			"societalGrandChallenges": [
-				"provider_societal_grand_challenge-other"
-			],
-			"nationalRoadmaps": [],
-			"users": null
-		},
+    {
+        "id": "21.T15999/llB2t3",
+        "abbreviation": "CINECA",
+        "name": "Cineca Consorzio Interuniversitario",
+        "node": "node-sandbox",
+        "website": "https://www.cineca.it/",
+        "legalEntity": true,
+        "legalStatus": "provider_legal_status-public_legal_entity_under_private_law",
+        "hostingLegalEntity": null,
+        "alternativeIdentifiers": null,
+        "description": "Cineca is a not-for-profit Consortium, made up of the Italian Ministry of Education and the Italian Ministry of Universities and Research, 69 Italian universities and 25 Italian National Institutions. Today it is the largest Italian computing centre, one of the most important worldwide. With more seven hundred employees, it operates in the technological transfer sector through high performance scientific computing, the management and development of networks and web based services, and the development of complex information systems for treating large amounts of data. It develops advanced Information Technology applications and services, acting like a trait-d'union between the academic world, the sphere of pure research and the world of industry and Public Administration.",
+        "logo": "https://www.cineca.it/sites/default/files/contenuto_generico/logo-cineca-social.png",
+        "multimedia": [
+            {
+                "multimediaURL": "https://www.cineca.it/en/press-corner",
+                "multimediaName": "Multimedia 1"
+            }
+        ],
+        "scientificDomains": [
+            {
+                "scientificDomain": "scientific_domain-generic",
+                "scientificSubdomain": "scientific_subdomain-generic-generic"
+            }
+        ],
+        "tags": [
+            "High Performance Computing "
+        ],
+        "structureTypes": [
+            "provider_structure_type-distributed"
+        ],
+        "location": {
+            "streetNameAndNumber": "Via Magnanelli 6/3`",
+            "postalCode": "40033",
+            "city": "Casalecchio di Reno (Bologna) ",
+            "region": null,
+            "country": "IT"
+        },
+        "mainContact": null,
+        "publicContacts": [
+            {
+                "firstName": "name",
+                "lastName": "surname",
+                "email": "redacted@example.com",
+                "phone": null,
+                "position": null
+            }
+        ],
+        "lifeCycleStatus": "provider_life_cycle_status-operational",
+        "certifications": [
+            "Compliance with the international standard ISO 9001, since November 2001. https://www.cineca.it/en/about-us/certifications",
+            "The Information Security Management System of Cineca is compliance with the international standard ISO 27001:2013. https://www.cineca.it/en/about-us/certifications"
+        ],
+        "participatingCountries": [],
+        "affiliations": [],
+        "networks": [
+            "provider_network-prace",
+            "provider_network-eudat",
+            "provider_network-hbp",
+            "provider_network-etp4hpc"
+        ],
+        "catalogueId": "eosc",
+        "esfriDomains": [
+            "provider_esfri_domain-data_computing_and_digital_research_infrastructures"
+        ],
+        "esfriType": "provider_esfri_type-other",
+        "merilScientificDomains": [
+            {
+                "merilScientificDomain": "provider_meril_scientific_domain-other",
+                "merilScientificSubdomain": "provider_meril_scientific_subdomain-other-other"
+            }
+        ],
+        "areasOfActivity": [
+            "provider_area_of_activity-other"
+        ],
+        "societalGrandChallenges": [
+            "provider_societal_grand_challenge-other"
+        ],
+        "nationalRoadmaps": [],
+        "users": null
+    },
     {
       "id": "21.T15999/kKG7EL",
       "abbreviation": "ICTLC",
@@ -133,89 +133,6 @@
       "areasOfActivity": [],
       "societalGrandChallenges": [],
       "nationalRoadmaps": [],
-      "users": null
-    },
-    {
-      "id": "21.T15999/YO7Rj2",
-      "abbreviation": "SRCE",
-      "name": "University of Zagreb University Computing Centre",
-      "node": "node-sandbox",
-      "website": "https://www.srce.unizg.hr/en",
-      "legalEntity": true,
-      "legalStatus": "provider_legal_status-public_legal_entity",
-      "hostingLegalEntity": null,
-      "alternativeIdentifiers": null,
-      "description": "University of Zagreb University Computing Centre - SRCE is the major national infrastructural ICT institution in the area of research and higher education in Croatia. It plans, develops, and improves e-infrastructure and digital services for the needs of the academic and scientific community in Croatia and provides support in their usage. In its activities, SRCE is following its vision which represents the desired state of society, and especially the desired state of research and education system in the future. Advanced information and communication technologies are ubiquitous in society, especially in science and education, they are effectively used in research and education processes, ensuring high quality, excellence, affordability and international visibility. The mission of SRCE is to be the leader in the creation and development of advanced and high-quality information and communication infrastructure and services, making them sustainable and accessible to institutions, teachers, researchers, students, employees and other stakeholders of the entire Croatian academic and scientific community, especially the University of Zagreb. SRCE has been providing a modern, sustainable and reliable e-infrastructure for the academic and scientific community since 1971.",
-      "logo": "https://www.srce.unizg.hr/sites/default/files/logo-en.png",
-      "multimedia": [],
-      "scientificDomains": [
-        {
-          "scientificDomain": "scientific_domain-other",
-          "scientificSubdomain": "scientific_subdomain-other-other"
-        }
-      ],
-      "tags": [
-        "advanced computing",
-        "network infrastructure",
-        "national academic information systems",
-        "national Current Research Information System (CRIS)",
-        "data management infrastructure",
-        "identity management infrastructure",
-        "education and training",
-        "e-learning centre",
-        "international cooperation",
-        "programs and projects "
-      ],
-      "structureTypes": [
-        "provider_structure_type-distributed"
-      ],
-      "location": {
-        "streetNameAndNumber": "Josipa Marohnica 5",
-        "postalCode": "10000",
-        "city": "Zagreb",
-        "region": null,
-        "country": "HR"
-      },
-      "mainContact": null,
-      "publicContacts": [
-        {
-          "firstName": "name",
-          "lastName": "surname",
-          "email": "redacted@example.com",
-          "phone": null,
-          "position": null
-        }
-      ],
-      "lifeCycleStatus": "provider_life_cycle_status-operational",
-      "certifications": [],
-      "participatingCountries": [],
-      "affiliations": [
-        "euroCRIS - European Organisation for International Research Information ",
-        "EDEN DLE - European Digital Learning Europe",
-        "EGI.eu - European Grid Initiative Foundation",
-        "EUNIS - European University Information Systems",
-        "EURO-IX-European Internet Exchange Association",
-        "CroJUA - Croatian Java User Association",
-        "HR Open -Croatian Society for Open Systems and Internet",
-        "RIPE NCC - Réseaux IP Européens Network Coordination Centre",
-        "REFEDS-Research and Education Fedarations ",
-        "CITA - Croatian IT association",
-        "EUGridPMA-European Policy Management Authority for Grid Authentication in e-Science",
-        "HATZ - Croatian Academy of Engineering",
-        "EOSC - Association European Open Science Cloud Association",
-        "OPERAS - Open Access In The European Area Through Scholarly Communication ",
-        "CISC - Croatian institute for cybersecurity"
-      ],
-      "networks": [],
-      "catalogueId": "eosc",
-      "esfriDomains": [],
-      "esfriType": null,
-      "merilScientificDomains": [],
-      "areasOfActivity": [],
-      "societalGrandChallenges": [],
-      "nationalRoadmaps": [
-        "National plan for research infrastructure contains EOSC and National Open Science Initiative (locally HR-OOZ) Plan razvoja istraživačke infrastrukture u Republici Hrvatskoj 2023. - 2027. (hrv) "
-      ],
       "users": null
     }
   ]
