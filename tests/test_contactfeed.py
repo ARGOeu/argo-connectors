@@ -97,9 +97,9 @@ class ParseCsvServiceEndpointsWithContacts(unittest.TestCase):
 
 class ParseEoscContacts(unittest.TestCase):
     def setUp(self):
-        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-public-service.json', encoding='utf-8') as feed_file:
             self.resources = feed_file.read()
-        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
+        with open('tests/sample-public-provider.json', encoding='utf-8') as feed_file:
             self.providers = feed_file.read()
         logger.customer = CUSTOMER_NAME
         self.maxDiff = None
@@ -110,31 +110,16 @@ class ParseEoscContacts(unittest.TestCase):
                                                          self.providers).get_contacts()
 
     def test_formatResourcesContacts(self):
-        self.assertEqual(self.resources_contacts,
-            {
-                '3dbionotes.cnb.csic.es+srce.3dbionotes': ['kzailac@srce.hr'],
-                'poem.devel.argo.grnet.gr+srce.poem': ['Emir.Imamagic@srce.hr'],
-                'webodv-egi-ace.cloud.ba.infn.it+srce.webodv': ['Emir.Imamagic@srce.hr'],
-                'dataverse.rsu.lv+riga_stradins_university.rsu_dataverse': ['dataxxxxx@xxx.xx'],
-                'www.openaire.eu+openaire.validator': ['info@openaire.eu'],
-                'www.srce.unizg.hr+srce.srceweb': ['Emir.Imamagic@srce.hr']
-            }
-        )
+        self.assertEqual(self.resources_contacts, {
+            'ictlc.com+21.T15999/uxIE5y': ['redacted@example.com'],
+            'www.hpc.cineca.it+21.T15999/xVQZOZ': ['redacted@example.com']
+        })
 
     def test_formatProvidersContacts(self):
-        self.assertEqual(self.providers_contacts,
-            [
-                {
-                    'contacts': ['office@srce.hr'], 'name': 'SRCE'
-                },
-                {
-                    'contacts': ['info@openaire.eu'], 'name': 'OpenAIRE'
-                },
-                {
-                    'contacts': ['Ixxxxxx.Kxxxxxxxxx@xxx.xx'], 'name': 'RIga Stradins University'
-                }
-            ]
-        )
+        self.assertEqual(self.providers_contacts, [
+            {'contacts': ['redacted@example.com'], 'name': 'CINECA'},
+            {'contacts': ['redacted@example.com'], 'name': 'ICTLC'},
+        ])
 
 
 if __name__ == '__main__':

@@ -152,6 +152,7 @@ class TopologyProvider(unittest.TestCase):
         mock_httpget.return_value = 'garbled JSON data'
         mock_httppost.return_value = 'garbled JSON data'
         mock_buildsslsettings.return_value = 'SSL settings'
+        self.topo_provider.store_refresh_token = mock.Mock()
         mock_tokenfetch.return_value = ('OIDC Access token', 'OIDC Refresh token')
         mock_parsejson.side_effect = [
             ConnectorParseError(
