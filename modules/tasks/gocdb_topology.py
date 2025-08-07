@@ -289,6 +289,9 @@ class TaskGocdbTopology(TaskParseContacts, TaskParseTopology):
             fetched_bdii = list()
             fetched_bdii.append(fetched_topology[-2])
             fetched_bdii.append(fetched_topology[-1])
+            if not all(fetched_bdii):
+                raise ConnectorError("LDAP problem")
+
         if 'sites' in self.topofetchtype and 'servicegroups' in self.topofetchtype:
             fetched_servicegroups, fetched_sites = (
                 fetched_topology[1], fetched_topology[2])
