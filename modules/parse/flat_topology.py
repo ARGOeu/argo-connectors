@@ -1,17 +1,17 @@
+from argo_connectors.config.customer import get_custconf
 from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.parse.base import ParseHelpers
-from argo_connectors.utils import  construct_fqdn
+from argo_connectors.utils import construct_fqdn
 
 
 class ParseFlatEndpoints(ParseHelpers):
-    def __init__(self, logger, data, project, uidservendp=False,
-                 fetchtype='ServiceGroups', is_csv=False, scope=None):
-        self.uidservendp = uidservendp
-        self.fetchtype = fetchtype
-        self.logger = logger
-        self.project = project
+    def __init__(self, data, is_csv=False, combuid=None):
+        self.Customer = get_custconf(combuid)
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
+        self.project = self.Customer.get_custname()
+        self.scope = self.Customer.get_custname()
         self.is_csv = is_csv
-        self.scope = scope if scope else project
         try:
             if is_csv:
                 self.data = self.csv_to_json(data)
@@ -29,7 +29,7 @@ class ParseFlatEndpoints(ParseHelpers):
             for entity in self.data:
                 tmp_dict = dict()
 
-                tmp_dict['type'] = 'PROJECT'
+                tmp_dict['type'] = self.topo_type('gg')
                 tmp_dict['group'] = self.project
                 tmp_dict['subgroup'] = entity['SITENAME-SERVICEGROUP']
                 tmp_dict['tags'] = {'monitored': '1', 'scope': self.scope}
@@ -44,7 +44,7 @@ class ParseFlatEndpoints(ParseHelpers):
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
             feedtype = 'CSV' if self.is_csv else 'JSON'
-            msg = 'Customer:%s : Error parsing %s feed - %s' % (self.logger.customer, feedtype, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = 'Customer:%s : Error parsing %s feed - %s' % (Logger.customer, feedtype, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
     def get_groupendpoints(self):
@@ -54,7 +54,7 @@ class ParseFlatEndpoints(ParseHelpers):
             for entity in self.data:
                 tmp_dict = dict()
 
-                tmp_dict['type'] = self.fetchtype.upper()
+                tmp_dict['type'] = self.topo_type('ge')
                 tmp_dict['group'] = entity['SITENAME-SERVICEGROUP']
                 tmp_dict['service'] = entity['SERVICE_TYPE']
                 info_url = entity['URL']
@@ -76,5 +76,5 @@ class ParseFlatEndpoints(ParseHelpers):
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
             feedtype = 'CSV' if self.is_csv else 'JSON'
-            msg = 'Customer:%s : Error parsing %s feed - %s' % (self.logger.customer, feedtype, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = 'Customer:%s : Error parsing %s feed - %s' % (Logger.customer, feedtype, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)

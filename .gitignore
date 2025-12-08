@@ -1,9 +1,12 @@
 __pycache__/
 .coverage
-*.conf
+docker/*.conf
+docker/*.crt
+docker/pysitepkg
 *.pem
 *.whl
 .ropeproject
 tags
 *.egg-info
 junit.xml
+build/

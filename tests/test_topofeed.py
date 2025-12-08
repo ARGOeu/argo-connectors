@@ -1,15 +1,16 @@
 import unittest
 
-from argo_connectors.log import Logger
-from argo_connectors.parse.gocdb_topology import ParseServiceGroups, ParseServiceEndpoints, ParseSites
-from argo_connectors.parse.flat_topology import ParseFlatEndpoints
-from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
-from argo_connectors.parse.agora_topology import ParseAgoraTopo
-from argo_connectors.parse.lot1sc_topology import ParseLot1ScEndpoints
+from argo_connectors.config.customer import Customer
+from argo_connectors.config.glob import Global
 from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.mesh.contacts import attach_contacts_topodata
+from argo_connectors.parse.flat_topology import ParseFlatEndpoints
+from argo_connectors.parse.gocdb_topology import ParseServiceEndpoints, ParseSites
+from argo_connectors.parse.lot1sc_topology import ParseLot1ScEndpoints
+from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
 
-logger = Logger('test_topofeed.py')
+
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
 
@@ -34,15 +35,27 @@ def get_group(group_endpoints, group_name):
 
 class ParseServiceEndpointsTest(unittest.TestCase):
     def setUp(self):
+        glob = Global('topology-gocdb-connector.py')
+        cust = Customer('topology-gocdb-connector.py')
+        cust.custopts['TopoType'] = 'GOCDB'
+        cust.custopts['TopoFetchType'] = 'Sites'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        cust.custopts['TopoFeedServiceEndpointsExtensions'] = False
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = CUSTOMER_NAME
+
         with open('tests/sample-service_endpoint.xml') as feed_file:
             self.content = feed_file.read()
-        logger.customer = CUSTOMER_NAME
-        parse_service_endpoints = ParseServiceEndpoints(logger, self.content, CUSTOMER_NAME)
-        self.group_endpoints = parse_service_endpoints.get_group_endpoints()
-        self.maxDiff = None
 
-        parse_service_endpoints_ext = ParseServiceEndpoints(logger, self.content, 'CUSTOMERFOO', uid=True, pass_extensions=True)
+        glob.options()['GeneralPassExtensions'.lower()] = False
+        parse_service_endpoints = ParseServiceEndpoints(self.content)
+        self.group_endpoints = parse_service_endpoints.get_group_endpoints()
+
+        glob.options()['GeneralPassExtensions'.lower()] = True
+        parse_service_endpoints_ext = ParseServiceEndpoints(self.content)
         self.group_endpoints_ext = parse_service_endpoints_ext.get_group_endpoints()
+
+        self.maxDiff = None
 
     def test_LenEndpoints(self):
         self.assertEqual(len(self.group_endpoints), 4)  # Parsed correct number of endpoint groups
@@ -50,9 +63,10 @@ class ParseServiceEndpointsTest(unittest.TestCase):
     def test_DataEndpoints(self):
         self.assertEqual(self.group_endpoints[0], {
             'group': 'AZ-IFAN',
-            'hostname': 'ce.physics.science.az',
+            'hostname': 'ce.physics.science.az_1555G0',
             'service': 'CREAM-CE',
             'tags': {'info_HOSTDN': '/DC=ORG/DC=SEE-GRID/O=Hosts/O=Institute of Physics of ANAS/CN=ce.physics.science.az',
+                     'hostname': 'ce.physics.science.az',
                      'info_ID': '1555G0',
                      'info_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
                      'info_service_endpoint_URL': 'ce.physics.science.az:8443/cream-pbs-ops',
@@ -62,11 +76,12 @@ class ParseServiceEndpointsTest(unittest.TestCase):
             'type': 'SITES'
         }, {
             'group': 'RAL-LCG2',
-            'hostname': 'arc-ce01.gridpp.rl.ac.uk',
+            'hostname': 'arc-ce01.gridpp.rl.ac.uk_782G0',
             'service': 'gLite-APEL',
             'tags': {'info_HOSTDN': '/C=UK/O=eScience/OU=CLRC/L=RAL/CN=arc-ce01.gridpp.rl.ac.uk',
                      'info_ID': '782G0',
                      'monitored': '1',
+                     'hostname': 'arc-ce01.gridpp.rl.ac.uk',
                      'production': '1',
                      'scope': 'EGI, wlcg, tier1, alice, atlas, cms, lhcb'},
             'type': 'SITES'
@@ -161,7 +176,7 @@ class ParseServiceEndpointsTest(unittest.TestCase):
     def test_ConnectorParseErrorException(self):
         # Assert proper exception is thrown if empty xml is given to the function
         with self.assertRaises(ConnectorParseError) as cm:
-            ParseServiceEndpoints(logger, '', 'CUSTOMERFOO', uid=True, pass_extensions=True)
+            ParseServiceEndpoints('')
         excep = cm.exception
         self.assertTrue('endpoint feed' in excep.msg)
         self.assertTrue('XMLSyntaxError' in excep.msg)
@@ -169,7 +184,6 @@ class ParseServiceEndpointsTest(unittest.TestCase):
 
 class MeshSitesAndContacts(unittest.TestCase):
     def setUp(self):
-        logger.customer = CUSTOMER_NAME
         self.maxDiff = None
         self.notification_flag = True
         self.sample_sites_data = [
@@ -234,7 +248,7 @@ class MeshSitesAndContacts(unittest.TestCase):
         }
 
     def test_SitesAndContacts(self):
-        attach_contacts_topodata(logger, self.sample_sites_contacts,
+        attach_contacts_topodata(self.sample_sites_contacts,
                                  self.sample_sites_data,
                                  self.notification_flag)
         self.assertEqual(self.sample_sites_data[0], {
@@ -259,7 +273,7 @@ class MeshSitesAndContacts(unittest.TestCase):
         })
 
     def test_SitesAndContactsNoHonorNotificationFlag(self):
-        attach_contacts_topodata(logger, self.sample_sites_contacts,
+        attach_contacts_topodata(self.sample_sites_contacts,
                                  self.sample_sites_data,
                                  False)
         self.assertEqual(self.sample_sites_data[0], {
@@ -286,7 +300,6 @@ class MeshSitesAndContacts(unittest.TestCase):
 
 class MeshServiceGroupsAndContacts(unittest.TestCase):
     def setUp(self):
-        logger.customer = CUSTOMER_NAME
         self.maxDiff = None
         self.notification_flag = True
         self.sample_servicegroups_data = [
@@ -321,7 +334,7 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
         }
 
     def test_ServiceGroupsAndContacts(self):
-        attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
+        attach_contacts_topodata(self.sample_servicegroup_contacts,
                                  self.sample_servicegroups_data, self.notification_flag)
         self.assertEqual(self.sample_servicegroups_data[0], {
             'group': 'EGI',
@@ -338,7 +351,7 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
         })
 
     def test_ServiceGroupsAndContactsNoHonorNotificationFlag(self):
-        attach_contacts_topodata(logger, self.sample_servicegroup_contacts,
+        attach_contacts_topodata(self.sample_servicegroup_contacts,
                                  self.sample_servicegroups_data, False)
         self.assertEqual(self.sample_servicegroups_data[1], {
             'group': 'EGI',
@@ -357,7 +370,6 @@ class MeshServiceGroupsAndContacts(unittest.TestCase):
 
 class MeshServiceEndpointsAndContacts(unittest.TestCase):
     def setUp(self):
-        logger.customer = CUSTOMER_NAME
         self.maxDiff = None
         self.notfication_flag = True
         self.sample_serviceendpoints_data = [
@@ -396,7 +408,7 @@ class MeshServiceEndpointsAndContacts(unittest.TestCase):
         }
 
     def test_ServiceEndpointsAndContacts(self):
-        attach_contacts_topodata(logger, self.sample_serviceendpoints_contacts,
+        attach_contacts_topodata(self.sample_serviceendpoints_contacts,
                                  self.sample_serviceendpoints_data, self.notfication_flag)
         self.assertEqual(self.sample_serviceendpoints_data[0], {
             'group': 'GROUP1',
@@ -432,18 +444,23 @@ class MeshServiceEndpointsAndContacts(unittest.TestCase):
 
 class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
     def setUp(self):
+        _ = Global('topology-csv-connector.py')
+        cust = Customer('topology-csv-connector.py')
+        cust.custopts['TopoType'] = 'CSV'
+        cust.custopts['TopoFetchType'] = 'ServiceGroups'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        cust.custopts['Name'] = 'CUSTOMERFOO'
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = 'CUSTOMERFOO'
         with open('tests/sample-topo.csv') as feed_file:
             self.content = feed_file.read()
-        logger.customer = CUSTOMER_NAME
 
-        self.topology = ParseFlatEndpoints(logger, self.content, CUSTOMER_NAME,
-                                           uidservendp=True,
-                                           fetchtype='ServiceGroups',
-                                           scope=CUSTOMER_NAME, is_csv=True)
+        self.topology = ParseFlatEndpoints(self.content, is_csv=True)
         self.maxDiff = None
 
     def test_CsvTopology(self):
         group_groups = self.topology.get_groupgroups()
+
         self.assertEqual(group_groups, [
             {
                 'group': 'CUSTOMERFOO',
@@ -508,11 +525,7 @@ class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
 
     def test_FailedCsvTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
-            self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA',
-                                                      CUSTOMER_NAME,
-                                                      uidservendp=True,
-                                                      fetchtype='ServiceGroups',
-                                                      scope=CUSTOMER_NAME,
+            self.failed_topology = ParseFlatEndpoints('FAILED_DATA',
                                                       is_csv=True)
         excep = cm.exception
         self.assertTrue('CSV feed' in excep.msg)
@@ -520,14 +533,19 @@ class ParseServiceEndpointsAndServiceGroupsCsv(unittest.TestCase):
 
 class ParseServiceEndpointsAndServiceGroupsJson(unittest.TestCase):
     def setUp(self):
+        _ = Global('topology-csv-connector.py')
+        cust = Customer('topology-csv-connector.py')
+        cust.custopts['TopoType'] = 'CSV'
+        cust.custopts['TopoFetchType'] = 'ServiceGroups'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        cust.custopts['Name'] = 'CUSTOMERFOO'
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = 'CUSTOMERFOO'
         with open('tests/sample-topo.json') as feed_file:
             self.content = feed_file.read()
-        logger.customer = CUSTOMER_NAME
 
-        self.topology = ParseFlatEndpoints(logger, self.content, CUSTOMER_NAME,
-                                           uidservendp=True,
-                                           fetchtype='ServiceGroups',
-                                           scope=CUSTOMER_NAME, is_csv=False)
+        self.topology = ParseFlatEndpoints(self.content,
+                                           is_csv=False)
 
     def test_JsonTopology(self):
         group_groups = self.topology.get_groupgroups()
@@ -579,11 +597,7 @@ class ParseServiceEndpointsAndServiceGroupsJson(unittest.TestCase):
 
     def test_FailedJsonTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
-            self.failed_topology = ParseFlatEndpoints(logger, 'FAILED_DATA',
-                                                      CUSTOMER_NAME,
-                                                      uidservendp=True,
-                                                      fetchtype='ServiceGroups',
-                                                      scope=CUSTOMER_NAME,
+            self.failed_topology = ParseFlatEndpoints('FAILED_DATA',
                                                       is_csv=False)
         excep = cm.exception
         self.assertTrue('JSON feed' in excep.msg)
@@ -592,10 +606,19 @@ class ParseServiceEndpointsAndServiceGroupsJson(unittest.TestCase):
 
 class ParseServiceEndpointsBiomed(unittest.TestCase):
     def setUp(self):
+        glob = Global('topology-gocdb-connector.py')
+        glob.options()['GeneralPassExtensions'.lower()] = False
+        cust = Customer('topology-gocdb-connector.py')
+        cust.custopts['TopoType'] = 'CSV'
+        cust.custopts['TopoFetchType'] = 'Sites'
+        cust.custopts['TopoUIDServiceEndpoints'] = False
+        cust.custopts['Name'] = 'CUSTOMERFOO'
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = 'CUSTOMERFOO'
         with open('tests/sample-service_endpoint_biomed.xml') as feed_file:
             self.content = feed_file.read()
-        logger.customer = CUSTOMER_NAME
-        parse_service_endpoints = ParseServiceEndpoints(logger, self.content, CUSTOMER_NAME)
+        parse_service_endpoints = ParseServiceEndpoints(self.content)
+        self.maxDiff = None
         self.group_endpoints = parse_service_endpoints.get_group_endpoints()
 
     def test_BiomedEndpoints(self):
@@ -629,12 +652,18 @@ class ParseServiceEndpointsBiomed(unittest.TestCase):
 
 class ParseSitesBiomed(unittest.TestCase):
     def setUp(self):
+        glob = Global('topology-gocdb-connector.py')
+        glob.options()['GeneralPassExtensions'.lower()] = False
+        cust = Customer('topology-gocdb-connector.py')
+        cust.custopts['TopoType'] = 'CSV'
+        cust.custopts['TopoFetchType'] = 'Sites'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        cust.custopts['Name'] = 'CUSTOMERFOO'
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = 'CUSTOMERFOO'
         with open('tests/sample-sites_biomed.xml') as feed_file:
             self.content = feed_file.read()
-        logger.customer = CUSTOMER_NAME
-        self.notification_flag = False
-        parse_sites = ParseSites(logger, self.content, CUSTOMER_NAME, False,
-                                 False, self.notification_flag)
+        parse_sites = ParseSites(self.content)
         self.group_groups = parse_sites.get_group_groups()
 
     def test_BiomedSites(self):
@@ -660,12 +689,20 @@ class ParseSitesBiomed(unittest.TestCase):
 
 class ParseSitesTest(unittest.TestCase):
     def setUp(self):
+        glob = Global('topology-gocdb-connector.py')
+        glob.options()['GeneralPassExtensions'.lower()] = False
+        cust = Customer('topology-gocdb-connector.py')
+        cust.custopts['TopoType'] = 'CSV'
+        cust.custopts['TopoFetchType'] = 'Sites'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        cust.custopts['Name'] = 'CUSTOMERFOO'
+        cust.custopts['HonorNotificationFlag'] = True
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = 'CUSTOMERFOO'
         with open('tests/sample-site.xml') as feed_file:
             self.content = feed_file.read()
-        logger.customer = CUSTOMER_NAME
         self.notification_flag = True
-        parse_sites = ParseSites(logger, self.content, CUSTOMER_NAME, False,
-                                 False, self.notification_flag)
+        parse_sites = ParseSites(self.content)
         self.group_groups = parse_sites.get_group_groups()
         self.maxDiff = None
 
@@ -718,180 +755,107 @@ class ParseSitesTest(unittest.TestCase):
 
 class ParseEoscProvider(unittest.TestCase):
     def setUp(self):
-        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
-            resources = feed_file.read()
-        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
-            providers = feed_file.read()
-        with open('tests/sample-resourcefeed_extensions.json', encoding='utf-8') as feed_file:
-            resource_extensions = feed_file.read()
+        _ = Global('topology-provider-connector.py')
+        cust = Customer('topology-provider-connector.py')
+        cust.custopts['TopoType'] = 'EOSC'
+        cust.custopts['TopoFetchType'] = 'ServiceGroups'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        logger = Logger(f'{__name__}.{__class__.__name__}')
         logger.customer = CUSTOMER_NAME
-        eosc_topo = ParseTopo(logger, providers, resources, True, CUSTOMER_NAME)
+        with open('tests/sample-public-service.json', encoding='utf-8') as feed_file:
+            resources = feed_file.read()
+        with open('tests/sample-public-provider.json', encoding='utf-8') as feed_file:
+            providers = feed_file.read()
+        with open('tests/sample-provider-configurationtemplateinstance.json', encoding='utf-8') as feed_file:
+            resource_extensions = feed_file.read()
+        eosc_topo = ParseTopo(providers, resources)
         self.group_groups = eosc_topo.get_group_groups()
         self.group_endpoints = eosc_topo.get_group_endpoints()
         self.id_groupname = buildmap_id2groupname(self.group_endpoints)
         fakemap_idgroupnames = {
-            'openaire.validator': 'OpenAIRE Validator',
-            'srce.3dbionotes': '3DBionotes-WS-TEST',
-            'srce.poem': 'POEM',
-            'srce.srceweb': 'SRCE Web',
-            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
-                            'SeaDataNet and Argo data'
+            '21-T15999-uxIE5y': '3rd-Party Data Security Assessment',
+            '21-T15999-xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
         }
-        eosc_topo_extensions = ParseExtensions(logger, resource_extensions, fakemap_idgroupnames, True, CUSTOMER_NAME)
+        eosc_topo_extensions = ParseExtensions(resource_extensions, fakemap_idgroupnames)
         self.extensions = eosc_topo_extensions.get_extensions()
         self.maxDiff = None
 
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
             {
-                'group': 'srce',
-                'subgroup': 'srce.3dbionotes',
+                'group': 'CINECA',
+                'subgroup': ' Italian SuperComputing Resource Allocation - ISCRA',
                 'tags': {
-                    'info_projectname': 'SRCE'
+                    'info_projectid': '21-T15999-llB2t3',
+                    'provider_tags': 'High Performance Computing'
                 },
                 'type': 'PROJECT'
             },
             {
-                'group': 'srce',
-                'subgroup': 'srce.poem',
+                'group': 'ICTLC',
+                'subgroup': '3rd-Party Data Security Assessment',
                 'tags': {
-                    'info_projectname': 'SRCE'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'srce',
-                'subgroup': 'srce.srceweb',
-                'tags': {
-                    'info_projectname': 'SRCE'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'srce',
-                'subgroup': 'srce.webodv',
-                'tags': {
-                    'info_projectname': 'SRCE'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'openaire',
-                'subgroup': 'openaire.validator',
-                'tags': {
-                    'info_projectname': 'OpenAIRE',
-                    'provider_tags': 'Open Science'
-                },
-                'type': 'PROJECT'
-            },
-            {
-                'group': 'riga_stradins_university',
-                'subgroup': 'riga_stradins_university.rsu_dataverse',
-                'tags': {
-                    'info_projectname': 'RIga Stradins University',
-                    'provider_tags': 'university, Latvia, Health, Medicine'
+                    'info_projectid': '21-T15999-kKG7EL'
                 },
                 'type': 'PROJECT'
             }
         ])
 
-    def test_meshContactsProviders(self):
-        sample_resources_contacts = {
-            '3dbionotes.cnb.csic.es+srce.3dbionotes': ['Emir.Imamagic@srce.hr']
-        }
-
-        attach_contacts_topodata(logger, sample_resources_contacts, self.group_endpoints)
-        self.assertEqual(self.group_endpoints[0], {
-            'group': 'srce.3dbionotes',
-            'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
-            'notifications': {
-                'contacts': ['Emir.Imamagic@srce.hr'],
-                'enabled': True
+    def test_serviceExtensions(self):
+        self.assertEqual(self.extensions, [
+            {
+                'group': '3rd-Party Data Security Assessment',
+                'hostname': 'example.com_cti-8wEjbu',
+                'service': 'eu.eosc.generic.json',
+                'tags': {
+                    'hostname': 'example.com',
+                    'info_ID': 'cti-8wEjbu',
+                    'info_URL': 'https://example.com',
+                    'info_groupname': '3rd-Party Data Security Assessment'
+                },
+                'type': 'SERVICEGROUPS'
             },
-            'service': 'eu.eosc.portal.services.url',
-            'tags': {
-                'hostname': '3dbionotes.cnb.csic.es',
-                'info_ID': 'srce.3dbionotes',
-                'info_URL': 'https://3dbionotes.cnb.csic.es/',
-                'info_groupname': '3DBionotes-WS-TEST'
-            },
-            'type': 'SERVICEGROUPS'
-        })
+            {
+                'group': 'Italian SuperComputing Resource Allocation - ISCRA',
+                'hostname': 'www.google.com_cti-qykSlW',
+                'service': 'eu.eosc.argo.mon',
+                'tags': {
+                    'hostname': 'www.google.com',
+                    'info_ID': 'cti-qykSlW',
+                    'info_URL': 'https://www.google.com',
+                    'info_groupname': 'Italian SuperComputing Resource Allocation - '
+                                      'ISCRA'
+                },
+                'type': 'SERVICEGROUPS'
+            }
+        ])
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
             {
-                'group': 'srce.3dbionotes',
-                'hostname': '3dbionotes.cnb.csic.es_srce.3dbionotes',
+                'group': '3rd-Party Data Security Assessment',
+                'hostname': 'ictlc.com_21-T15999-uxIE5y',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': '3dbionotes.cnb.csic.es',
-                    'info_ID': 'srce.3dbionotes',
-                    'info_URL': 'https://3dbionotes.cnb.csic.es/',
-                    'info_groupname': '3DBionotes-WS-TEST'
+                    'hostname': 'ictlc.com',
+                    'info_ID': '21-T15999-uxIE5y',
+                    'info_URL': 'https://ictlc.com/ICTLC_2023_3rd-Party%20Data%20Security%20Assessment.pdf',
+                    'info_groupname': '3rd-Party Data Security Assessment',
+                    'service_tags': 'Cybersecurity, Supply Chain, Supply Chain '
+                    'Management, GDPR, Audit, Data Breach, ENISA'
                 },
                 'type': 'SERVICEGROUPS'
             },
             {
-                'group': 'srce.poem',
-                'hostname': 'poem.devel.argo.grnet.gr_srce.poem',
+                'group': ' Italian SuperComputing Resource Allocation - ISCRA',
+                'hostname': 'www.hpc.cineca.it_21-T15999-xVQZOZ',
                 'service': 'eu.eosc.portal.services.url',
                 'tags': {
-                    'hostname': 'poem.devel.argo.grnet.gr',
-                    'info_ID': 'srce.poem',
-                    'info_URL': 'https://poem.devel.argo.grnet.gr',
-                    'info_groupname': 'POEM'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.srceweb',
-                'hostname': 'www.srce.unizg.hr_srce.srceweb',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.srce.unizg.hr',
-                    'info_ID': 'srce.srceweb',
-                    'info_URL': 'https://www.srce.unizg.hr/',
-                    'info_groupname': 'SRCE Web'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.webodv',
-                'hostname': 'webodv-egi-ace.cloud.ba.infn.it_srce.webodv',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'webodv-egi-ace.cloud.ba.infn.it',
-                    'info_ID': 'srce.webodv',
-                    'info_URL': 'http://webodv-egi-ace.cloud.ba.infn.it/',
-                    'info_groupname': 'WebODV - Online extraction, analysis and '
-                                      'visualization of SeaDataNet and Argo data'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'openaire.validator',
-                'hostname': 'www.openaire.eu_openaire.validator',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'www.openaire.eu',
-                    'info_ID': 'openaire.validator',
-                    'info_URL': 'https://www.openaire.eu/validator',
-                    'info_groupname': 'OpenAIRE Validator',
-                    'service_tags': 'OAI-PMH protocol, horizontalService'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'riga_stradins_university.rsu_dataverse',
-                'hostname': 'dataverse.rsu.lv_riga_stradins_university.rsu_dataverse',
-                'service': 'eu.eosc.portal.services.url',
-                'tags': {
-                    'hostname': 'dataverse.rsu.lv',
-                    'info_ID': 'riga_stradins_university.rsu_dataverse',
-                    'info_URL': 'https://dataverse.rsu.lv/',
-                    'info_groupname': 'RSU Dataverse',
-                    'service_tags': 'e-INFRA non-commercial, horizontalService'
+                    'hostname': 'www.hpc.cineca.it',
+                    'info_ID': '21-T15999-xVQZOZ',
+                    'info_URL': 'https://www.hpc.cineca.it/services/iscra',
+                    'info_groupname': 'Italian SuperComputing Resource Allocation - '
+                                      'ISCRA'
                 },
                 'type': 'SERVICEGROUPS'
             }
@@ -899,198 +863,55 @@ class ParseEoscProvider(unittest.TestCase):
 
     def test_idGroupname(self):
         self.assertEqual(self.id_groupname, {
-            'riga_stradins_university.rsu_dataverse': 'RSU Dataverse',
-            'openaire.validator': 'OpenAIRE Validator',
-            'srce.3dbionotes': '3DBionotes-WS-TEST',
-            'srce.poem': 'POEM',
-            'srce.srceweb': 'SRCE Web',
-            'srce.webodv': 'WebODV - Online extraction, analysis and visualization of '
-                            'SeaDataNet and Argo data'
+            '21-T15999-uxIE5y': '3rd-Party Data Security Assessment',
+            '21-T15999-xVQZOZ': 'Italian SuperComputing Resource Allocation - ISCRA'
+        })
+
+    def test_meshContactsProviders(self):
+        sample_resources_contacts = {
+            'ictlc.com+21-T15999-uxIE5y': ['foo@bar.com']
+        }
+
+        attach_contacts_topodata(sample_resources_contacts, self.group_endpoints)
+        self.assertEqual(self.group_endpoints[0], {
+            'group': '3rd-Party Data Security Assessment',
+            'hostname': 'ictlc.com_21-T15999-uxIE5y',
+            'service': 'eu.eosc.portal.services.url',
+            'tags': {
+                'hostname': 'ictlc.com',
+                'info_ID': '21-T15999-uxIE5y',
+                'info_URL': 'https://ictlc.com/ICTLC_2023_3rd-Party%20Data%20Security%20Assessment.pdf',
+                'info_groupname': '3rd-Party Data Security Assessment',
+                'service_tags': 'Cybersecurity, Supply Chain, Supply Chain '
+                'Management, GDPR, Audit, Data Breach, ENISA'
+            },
+            'type': 'SERVICEGROUPS',
+            'notifications': {'contacts': ['foo@bar.com'], 'enabled': True},
         })
 
     def test_FailedEoscProviderTopology(self):
-        logger.customer = CUSTOMER_NAME
         with self.assertRaises(ConnectorParseError) as cm:
-            eosc_topo = ParseTopo(logger, 'FAILED_DATA', 'FAILED_DATA', True, CUSTOMER_NAME)
+            eosc_topo = ParseTopo('FAILED_DATA', 'FAILED_DATA')
             self.group_groups = eosc_topo.get_group_groups()
             self.group_endpoints = eosc_topo.get_group_endpoints()
         excep = cm.exception
         self.assertTrue('JSON feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
 
-    def test_serviceExtensions(self):
-        self.assertEqual(self.extensions, [
-            {
-                'group': 'openaire.validator',
-                'hostname': 'argo.grnet.gr_4429aede-129a-4a2d-9788-198a96912bc1',
-                'service': 'eu.eosc.portal',
-                'tags': {
-                    'hostname': 'argo.grnet.gr',
-                    'info_ID': '4429aede-129a-4a2d-9788-198a96912bc1',
-                    'info_URL': 'argo.grnet.gr',
-                    'info_groupname': 'OpenAIRE Validator',
-                    'info_monitored_by': 'asdf'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.poem',
-                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa27',
-                'service': 'eu.eosc.argo.poem',
-                'tags': {
-                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
-                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa27',
-                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr',
-                    'info_groupname': 'POEM',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            },
-            {
-                'group': 'srce.poem',
-                'hostname': 'eosc.poem.devel.argo.grnet.gr_c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
-                'service': 'eu.eosc.argo.poem',
-                'tags': {
-                    'hostname': 'eosc.poem.devel.argo.grnet.gr',
-                    'info_ID': 'c302082a-b0e3-4735-9e1f-b93053e4aa28_2fcf95f1-858b-311a-97aa-52d7e1fe66eb',
-                    'info_URL': 'https://eosc.poem.devel.argo.grnet.gr/different/url/path',
-                    'info_groupname': 'POEM',
-                    'info_monitored_by': 'monitored_by-eosc'
-                },
-                'type': 'SERVICEGROUPS'
-            }
-        ])
-
-
-class ParseAgoraTopology(unittest.TestCase):
-    def setUp(self):
-        with open('tests/agora_resource_sample.json', encoding='utf-8') as feed_file:
-            resources = feed_file.read()
-        with open('tests/agora_provider_sample.json', encoding='utf-8') as feed_file:
-            providers = feed_file.read()
-        logger.customer = CUSTOMER_NAME
-        self.maxDiff = None
-        agora_topo = ParseAgoraTopo(logger, providers, resources, False)
-        self.group_groups = agora_topo.get_group_groups()
-        self.group_endpoints = agora_topo.get_group_endpoints()
-
-    def test_groupGroups(self):
-        self.assertEqual(self.group_groups, [
-            {
-                "group": "NI4OS Providers",
-                "type": "PROVIDERS",
-                "subgroup": "UoB_IBISS",
-                "tags": {
-                    "info_ext_catalog_id": "02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
-                    "info_ext_catalog_type": "provider",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
-                    "info_ext_name": "Institute for Biological Research Sinisa Stankovic, University of Belgrade"
-                }
-            },
-            {
-                "group": "NI4OS Providers",
-                "type": "PROVIDERS",
-                "subgroup": "UNIOS-EFOS",
-                "tags": {
-                    "info_ext_catalog_id": "0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
-                    "info_ext_catalog_type": "provider",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
-                    "info_ext_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek"
-                }
-            }]
-        )
-
-    def test_groupEndpoints(self):
-        self.assertEqual(self.group_endpoints, [
-            {
-                "group": "UoB-RCUB",
-                "type": "SERVICEGROUPS",
-                "service": "catalog.service.entry",
-                "hostname": "agora.ni4os.eu_uob_nardus",
-                "tags": {
-                    "hostname": "agora.ni4os.eu",
-                    "info_ID": "uob_nardus",
-                    "info_ext_catalog_id": "01426fe3-8783-47f2-97e6-757bcd70e1be",
-                    "info_ext_catalog_type": "resource",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/resources/01426fe3-8783-47f2-97e6-757bcd70e1be",
-                    "info_ext_name": "Repository of Faculty of Science, University of Zagreb"
-                }
-            },
-            {
-                "group": "SRCE",
-                "type": "SERVICEGROUPS",
-                "service": "catalog.service.entry",
-                "hostname": "agora.ni4os.eu_uob_nardus",
-                "tags": {
-                    "hostname": "agora.ni4os.eu",
-                    "info_ID": "uob_nardus",
-                    "info_ext_catalog_id": "01426fe3-8783-47f2-97e6-757bcd70e1be",
-                    "info_ext_catalog_type": "resource",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/resources/01426fe3-8783-47f2-97e6-757bcd70e1be",
-                    "info_ext_name": "Repository of Faculty of Science, University of Zagreb"
-                }
-            },
-            {
-                "group": "CING",
-                "type": "SERVICEGROUPS",
-                "service": "catalog.service.entry",
-                "hostname": "agora.ni4os.eu_melgene_cy",
-                "tags": {
-                    "hostname": "agora.ni4os.eu",
-                    "info_ID": "melgene_cy",
-                    "info_ext_catalog_id": "04b06b6f-e3a1-490b-94ea-8a1ab0309213",
-                    "info_ext_catalog_type": "resource",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/resources/04b06b6f-e3a1-490b-94ea-8a1ab0309213",
-                    "info_ext_name": "MelGene"
-                }
-            },
-            {
-                "group": "UoB_IBISS",
-                "type": "SERVICEGROUPS",
-                "service": "catalog.provider.entry",
-                "hostname": "agora.ni4os.eu_uob_ibiss",
-                "tags": {
-                    "hostname": "agora.ni4os.eu",
-                    "info_ID": "uob_ibiss",
-                    "info_ext_catalog_id": "02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
-                    "info_ext_catalog_type": "provider",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/02dc5b9a-99ba-4924-ab80-aa51b9c86b1e",
-                    "info_ext_name": "Institute for Biological Research Sinisa Stankovic, University of Belgrade"
-                }
-            },
-            {
-                "group": "UNIOS-EFOS",
-                "type": "SERVICEGROUPS",
-                "service": "catalog.provider.entry",
-                "hostname": "agora.ni4os.eu_unios-efos",
-                "tags": {
-                    "hostname": "agora.ni4os.eu",
-                    "info_ID": "unios-efos",
-                    "info_ext_catalog_id": "0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
-                    "info_ext_catalog_type": "provider",
-                    "info_ext_catalog_url": "https://catalogue.ni4os.eu/?_=/providers/0a6361a4-dfb4-4acd-af16-05b57c7a80d4",
-                    "info_ext_name": "J.J. Strossmayer University of Osijek, Faculty of Economics in Osijek"
-                }
-            }]
-        )
-
-    def test_FailedParseAgoraTopology(self):
-        with self.assertRaises(ConnectorParseError) as cm:
-            agora_topo = ParseAgoraTopo(logger, 'FAILED_DATA', 'FAILED_DATA', False)
-            self.group_groups = agora_topo.get_group_groups()
-            self.group_endpoints = agora_topo.get_group_endpoints()
-        excep = cm.exception
-        self.assertTrue('Providers feed' in excep.msg)
-        self.assertTrue('JSONDecodeError' in excep.msg)
-
 
 class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
     def setUp(self):
+        _ = Global('topology-lot1sc-connector.py')
+        cust = Customer('topology-lot1sc-connector.py')
+        cust.custopts['TopoType'] = 'LOT1SC'
+        cust.custopts['TopoFetchType'] = 'ServiceGroups'
+        cust.custopts['TopoUIDServiceEndpoints'] = True
+        logger = Logger(f'{__name__}.{__class__.__name__}')
+        logger.customer = CUSTOMER_NAME
         with open('tests/sample-lot1sc.json', encoding='utf-8') as feed_file:
             providers_endpoints = feed_file.read()
-        logger.customer = CUSTOMER_NAME
         self.maxDiff = None
-        lot1sc_topo = ParseLot1ScEndpoints(logger, providers_endpoints, uidservendp=True)
+        lot1sc_topo = ParseLot1ScEndpoints(providers_endpoints, 2)
         self.group_groups = lot1sc_topo.get_group_groups()
         self.group_endpoints = lot1sc_topo.get_group_endpoints()
 
@@ -1101,7 +922,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'subgroup': 'Test service for datasource 4-6',
                 'type': 'PROJECT',
                 'tags': {
-                    'tier': 1
+                    'tier': 2
                 }
             },
             {
@@ -1109,10 +930,41 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'subgroup': 'Virtual Machines',
                 'type': 'PROJECT',
                 'tags': {
-                    'tier': 1
+                    'tier': 2
                 }
-            }]
-        )
+            },
+            {
+                'group': 'Test 20-11 14.41',
+                'subgroup': 'Test Interactive Notebooks',
+                'tags': {
+                    'tier': 2
+                },
+                'type': 'PROJECT'},
+            {
+                'group': 'Test 20-11 14.41',
+                'subgroup': 'Test File Sync and Share',
+                'tags': {
+                    'tier': 2
+                },
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'Test 20-11 14.41',
+                'subgroup': 'Test-HPC',
+                'tags': {
+                    'tier': 2
+                },
+                'type': 'PROJECT'
+            },
+            {
+                'group': 'Test 20-11 14.41',
+                'subgroup': 'Test Cloud Container Platform',
+                'tags': {
+                    'tier': 2
+                },
+                'type': 'PROJECT'
+            }
+        ])
 
     def test_groupEndpoints(self):
         self.assertEqual(self.group_endpoints, [
@@ -1121,11 +973,12 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'testUrlEndpoint.com_f17e599f-095d-373e-bcfe-4fb017acf5d5',
                 'service': 'service.type.1',
                 'tags': {
+                    'hostname': 'testUrlEndpoint.com',
                     'info_ID': 'f17e599f-095d-373e-bcfe-4fb017acf5d5',
                     'info_URL': 'https://testUrlEndpoint.com',
                     'service_name': 'FTS web console',
                     'site_name': 'PSNC',
-                    'tier': 1
+                    'tier': 2
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1134,10 +987,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'test.claudius.cloud.psnc.pl_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
                 'service': 'service.type.1',
                 'tags': {
+                    'hostname': 'test.claudius.cloud.psnc.pl',
                     'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl/',
                     'service_name': 'OpenStack Horizon Dashboard',
-                    'site_name': 'PSNC', 'tier': 1
+                    'site_name': 'PSNC', 'tier': 2
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1146,10 +1000,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'test.claudius.cloud.psnc.pl_749deefd-e633-385a-805a-3fd64b80dbe4',
                 'service': 'service.type.2',
                 'tags': {
+                    'hostname': 'test.claudius.cloud.psnc.pl',
                     'info_ID': '749deefd-e633-385a-805a-3fd64b80dbe4',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl/',
                     'service_name': 'OpenStack Horizon Dashboard',
-                    'site_name': 'PSNC', 'tier': 1
+                    'site_name': 'PSNC', 'tier': 2
                 },
                 'type': 'SERVICEGROUPS'},
             {
@@ -1157,11 +1012,12 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'test.claudius.cloud.psnc.pl_7caacfa4-5bca-34fc-80eb-386e0579b0e9',
                 'service': 'service.type.2',
                 'tags': {
+                    'hostname': 'test.claudius.cloud.psnc.pl',
                     'info_ID': '7caacfa4-5bca-34fc-80eb-386e0579b0e9',
                     'info_URL':
                     'https://test.claudius.cloud.psnc.pl:5000',
                     'service_name': 'OpenStack API', 'site_name': 'PSNC',
-                    'tier': 1
+                    'tier': 2
                 },
                 'type': 'SERVICEGROUPS'},
             {
@@ -1169,11 +1025,12 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'test.claudius.cloud.psnc.pl_8cbe072d-1975-3ca3-bc74-fa2591c99b07',
                 'service': 'service.type.1',
                 'tags': {
+                    'hostname': 'test.claudius.cloud.psnc.pl',
                     'info_ID': '8cbe072d-1975-3ca3-bc74-fa2591c99b07',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl:5000/v3/auth/OS-FEDERATION/identity_providers/testing.eosc-federation.eu_openid/protocols/openid/websso',
                     'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
                     'site_name': 'PSNC',
-                    'tier': 1
+                    'tier': 2
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1182,11 +1039,12 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'openstack.testing.safedc.services_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
                 'service': 'service.type.1',
                 'tags': {
+                    'hostname': 'openstack.testing.safedc.services',
                     'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
                     'info_URL': 'https://openstack.testing.safedc.services/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'Safespring',
-                    'tier': 1
+                    'tier': 2
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1195,11 +1053,12 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'openstack.testing.safedc.services_dd81e46a-6d98-3258-be69-2929d162dc18',
                 'service': 'service.type.3',
                 'tags': {
+                    'hostname': 'openstack.testing.safedc.services',
                     'info_ID': 'dd81e46a-6d98-3258-be69-2929d162dc18',
                     'info_URL': 'https://openstack.testing.safedc.services/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'Safespring',
-                    'tier': 1
+                    'tier': 2
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1208,20 +1067,216 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'hostname': 'openstack.testing.safedc.services_8e57a57f-c6fb-3dea-b586-2871f908776c',
                 'service': 'service.type.2',
                 'tags': {
+                    'hostname': 'openstack.testing.safedc.services',
                     'info_ID': '8e57a57f-c6fb-3dea-b586-2871f908776c',
                     'info_URL': 'https://openstack.testing.safedc.services:5000/identity/v3/auth/OS-FEDERATION/identity_providers/proxy.testing.eosc-federation.eu/protocols/openid/websso',
                     'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
                     'site_name': 'Safespring',
-                    'tier': 1
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Interactive Notebooks',
+                'hostname': 'notebooks-tst.cloud.cesnet.cz_ad3e3f67-36a3-3d7e-9f0f-d0cccad9d221',
+                'service': 'eu.eosc.interactive_notebooks.gui',
+                'tags': {
+                    'hostname': 'notebooks-tst.cloud.cesnet.cz',
+                    'info_ID': 'ad3e3f67-36a3-3d7e-9f0f-d0cccad9d221',
+                    'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/',
+                    'service_name': 'Notebooks GUI',
+                    'site_name': 'CESNET',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Interactive Notebooks',
+                'hostname': 'notebooks-tst.cloud.cesnet.cz_cf3160b8-e297-32ba-9c87-014c17f02594',
+                'service': 'eu.eosc.interactive_notebooks.api',
+                'tags': {
+                    'hostname': 'notebooks-tst.cloud.cesnet.cz',
+                    'info_ID': 'cf3160b8-e297-32ba-9c87-014c17f02594',
+                    'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/services/jwt',
+                    'service_name': 'Notebooks API',
+                    'site_name': 'CESNET',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Interactive Notebooks',
+                'hostname': 'notebooks-tst.cloud.cesnet.cz_5b3dd363-b3bc-3b93-bb99-f64570603f39',
+                'service': 'eu.eosc.interactive_notebooks.gui',
+                'tags': {
+                    'hostname': 'notebooks-tst.cloud.cesnet.cz',
+                    'info_ID': '5b3dd363-b3bc-3b93-bb99-f64570603f39',
+                    'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/hub/oauth_login',
+                    'service_name': 'Notebooks GUI Redirection',
+                    'site_name': 'CESNET',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test File Sync and Share',
+                'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl_cd201cab-7792-3024-b1ed-96c48fec1e43',
+                'service': 'eu.eosc.storage.gui',
+                'tags': {
+                    'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl',
+                    'info_ID': 'cd201cab-7792-3024-b1ed-96c48fec1e43',
+                    'info_URL': 'https://ocis-testing.apps.bst2-test.paas.psnc.pl/',
+                    'service_name': 'OwnCloud GUI',
+                    'site_name': 'PSNC',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test File Sync and Share',
+                'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl_26d1d2a9-0e55-31c1-b83d-1678db3ebeaa',
+                'service': 'eu.eosc.storage.gui',
+                'tags': {
+                    'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl',
+                    'info_ID': '26d1d2a9-0e55-31c1-b83d-1678db3ebeaa',
+                    'info_URL': 'https://ocis-testing.apps.bst2-test.paas.psnc.pl/',
+                    'service_name': 'OwnCloud GUI Redirect',
+                    'site_name': 'PSNC',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test-HPC',
+                'hostname': 'www.hpc.grnet.gr_45b9f71a-742d-3176-86c8-523e258bbc7c',
+                'service': 'eu.eosc.hpc.access',
+                'tags': {
+                    'hostname': 'www.hpc.grnet.gr',
+                    'info_ID': '45b9f71a-742d-3176-86c8-523e258bbc7c',
+                    'info_URL': 'https://www.hpc.grnet.gr/en/',
+                    'service_name': 'HPC API',
+                    'site_name': 'GRNET',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'console.apps.dcw1-test.paas.psnc.pl_ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                'service': 'eu.eosc.container_platform.gui',
+                'tags': {
+                    'hostname': 'console.apps.dcw1-test.paas.psnc.pl',
+                    'info_ID': 'ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                    'info_URL': 'https://console.apps.dcw1-test.paas.psnc.pl/',
+                    'service_name': 'OKD Console',
+                    'site_name': 'PSNC',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'api.dcw1-test.paas.psnc.pl_cdca6940-8a67-3015-97c8-da262b9b3d15',
+                'service': 'eu.eosc.container_platform.api',
+                'tags': {
+                    'hostname': 'api.dcw1-test.paas.psnc.pl',
+                    'info_ID': 'cdca6940-8a67-3015-97c8-da262b9b3d15',
+                    'info_URL': 'https://api.dcw1-test.paas.psnc.pl:6443',
+                    'service_name': 'OKD API',
+                    'site_name': 'PSNC',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'dcw1-test.paas.psnc.pl_931f9020-0ff6-3640-bc7c-2be26af5e917',
+                'service': 'eu.eosc.container_platform.gui',
+                'tags': {
+                    'hostname': 'dcw1-test.paas.psnc.pl',
+                    'info_ID': '931f9020-0ff6-3640-bc7c-2be26af5e917',
+                    'info_URL': 'https://dcw1-test.paas.psnc.pl/',
+                    'service_name': 'OKD Console GUI Redirection',
+                    'site_name': 'PSNC',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'oauth-openshift.apps.dcw1-test.paas.psnc.pl_26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                'service': 'eu.eosc.container_platform.api',
+                'tags': {
+                    'hostname': 'oauth-openshift.apps.dcw1-test.paas.psnc.pl',
+                    'info_ID': '26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                    'info_URL': 'https://oauth-openshift.apps.dcw1-test.paas.psnc.pl/',
+                    'service_name': 'OKD OIDC Server',
+                    'site_name': 'PSNC',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'console-openshift-console.apps.okd01.saft.in_ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                'service': 'eu.eosc.container_platform.gui',
+                'tags': {
+                    'hostname': 'console-openshift-console.apps.okd01.saft.in',
+                    'info_ID': 'ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                    'info_URL': 'https://console-openshift-console.apps.okd01.saft.in/',
+                    'service_name': 'OKD Console',
+                    'site_name': 'Safespring',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'api.okd01.saft.in_cdca6940-8a67-3015-97c8-da262b9b3d15',
+                'service': 'eu.eosc.container_platform.api',
+                'tags': {
+                    'hostname': 'api.okd01.saft.in',
+                    'info_ID': 'cdca6940-8a67-3015-97c8-da262b9b3d15',
+                    'info_URL': 'https://api.okd01.saft.in:6443',
+                    'service_name': 'OKD API',
+                    'site_name': 'Safespring',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'console-openshift-console.apps.eosc-test.safedc.services_931f9020-0ff6-3640-bc7c-2be26af5e917',
+                'service': 'eu.eosc.container_platform.gui',
+                'tags': {
+                    'hostname': 'console-openshift-console.apps.eosc-test.safedc.services',
+                    'info_ID': '931f9020-0ff6-3640-bc7c-2be26af5e917',
+                    'info_URL': 'https://console-openshift-console.apps.eosc-test.safedc.services/',
+                    'service_name': 'OKD Console GUI Redirection',
+                    'site_name': 'Safespring',
+                    'tier': 2
+                },
+                'type': 'SERVICEGROUPS'
+            },
+            {
+                'group': 'Test Cloud Container Platform',
+                'hostname': 'oauth-openshift.apps.eosc-test.safedc.services_26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                'service': 'eu.eosc.container_platform.api',
+                'tags': {
+                    'hostname': 'oauth-openshift.apps.eosc-test.safedc.services',
+                    'info_ID': '26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                    'info_URL': 'https://oauth-openshift.apps.eosc-test.safedc.services/',
+                    'service_name': 'OKD OIDC Server',
+                    'site_name': 'Safespring',
+                    'tier': 2
                 },
                 'type': 'SERVICEGROUPS'
             }
-
         ])
 
     def test_FailedParseLot1ScTopology(self):
         with self.assertRaises(ConnectorParseError) as cm:
-            lot1sc_topo = ParseLot1ScEndpoints(logger, 'FAILED_DATA', 'FAILED_DATA', False)
+            lot1sc_topo = ParseLot1ScEndpoints('FAILED_DATA', 'FAILED_DATA', False)
             self.group_groups = lot1sc_topo.get_group_groups()
             self.group_endpoints = lot1sc_topo.get_group_endpoints()
         excep = cm.exception

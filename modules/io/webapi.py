@@ -2,55 +2,46 @@ import datetime
 import os
 import json
 
+from argo_connectors.config.customer import get_custconf
+from argo_connectors.config.glob import Global
 from argo_connectors.utils import module_class_name
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.exceptions import ConnectorHttpError
+from argo_connectors.log import Logger
 
 
 class WebAPI(object):
     methods = {
+        'downtimes-combiner.py': 'downtimes',
         'downtimes-csv-connector.py': 'downtimes',
         'downtimes-gocdb-connector.py': 'downtimes',
-        'topology-gocdb-connector.py': 'topology',
-        'topology-csv-connector.py': 'topology',
-        'topology-provider-connector.py': 'topology',
-        'topology-json-connector.py': 'topology',
-        'topology-agora-connector.py': 'topology',
-        'weights-vapor-connector.py': 'weights',
-        'service-types-gocdb-connector.py': 'topology',
+        'service-types-combiner.py': 'topology',
         'service-types-csv-connector.py': 'topology',
+        'service-types-gocdb-connector.py': 'topology',
         'service-types-json-connector.py': 'topology',
+        'topology-combiner.py': 'topology',
+        'topology-csv-connector.py': 'topology',
+        'topology-gocdb-connector.py': 'topology',
+        'topology-json-connector.py': 'topology',
+        'topology-provider-connector.py': 'topology',
+        'weights-vapor-connector.py': 'weights',
     }
 
-    def __init__(self, connector, host, token, logger, retry,
-                 timeout=180, sleepretry=60, retryrandom=None, sleepretryrandom=None, report=None, endpoints_group=None,
-                 date=None):
-        self.connector = os.path.basename(connector)
+    def __init__(self, report=None, endpoints_group=None, date=None,
+                 combuid=None):
+        Customer = get_custconf(combuid)
+        self.connector = os.path.basename(Global.caller)
         self.webapi_method = self.methods[self.connector]
-        self.host = host
-        self.token = token
+        self.host = Customer.webapi_opts.opts['webapihost']
+        self.token = Customer.webapi_opts.opts['webapitoken']
         self.headers = {
             'x-api-key': self.token,
             'Accept': 'application/json'
         }
         self.report = report
-        self.logger = logger
-        self.retry = retry
-        self.timeout = timeout
-        self.sleepretry = sleepretry
-        self.retryrandom = retryrandom
-        self.sleepretryrandom = sleepretryrandom
-        self.retry_options = {
-            'ConnectionRetry'.lower(): retry,
-            'ConnectionTimeout'.lower(): timeout,
-            'ConnectionSleepRetry'.lower(): sleepretry,
-            'ConnectionRetryRandom'.lower(): retryrandom,
-            'ConnectionSleepRandomRetryMax'.lower(): sleepretryrandom
-        }
         self.endpoints_group = endpoints_group
         self.date = date or self._construct_datenow()
-        self.session = SessionWithRetry(self.logger, module_class_name(self),
-                                        self.retry_options, verbose_ret=True,
+        self.session = SessionWithRetry(verbose_ret=True,
                                         handle_session_close=True)
 
     def _construct_datenow(self):
@@ -98,20 +89,21 @@ class WebAPI(object):
                     msg = jsonret['status']['message']
                 else:
                     msg = jsonret['message']
-                self.logger.error('%s %s() Customer:%s - HTTP POST %s' % (module_class_name(self),
-                                                                          '_send',
-                                                                          self.logger.customer,
-                                                                          msg))
+                Logger.error('%s %s() Customer:%s - HTTP POST %s' % (module_class_name(self),
+                                                                     '_send',
+                                                                     Logger.customer,
+                                                                     msg))
             else:
                 errormsg = json.loads(content)
                 if 'errors' in errormsg:
                     errormsg = errormsg['errors'][0]['details']
                 elif 'status' in errormsg:
                     errormsg = errormsg['status']['message']
-                self.logger.error('%s %s() Customer:%s Job:%s - HTTP POST %s' %
-                                  (module_class_name(self), '_send',
-                                   self.logger.customer, self.logger.job,
-                                   errormsg))
+                Logger.error('%s %s() Customer:%s Job:%s - HTTP POST %s' %
+                             (module_class_name(self), '_send',
+                              Logger.customer, Logger.job,
+                              errormsg))
+
         return status
 
     async def _get(self, api, jsonret=False):
@@ -150,20 +142,21 @@ class WebAPI(object):
         target = list(
             filter(lambda w: w['name'] == data_send['name'], content['data']))
         if len(target) > 1:
-            self.logger.error('%s %s() Customer:%s Job:%s - HTTP PUT %s' %
-                              (module_class_name(self), '_update',
-                               self.logger.customer, self.logger.job,
-                               'Name of resource not unique on WEB-API, cannot proceed with update'))
+            Logger.error('%s %s() Customer:%s Job:%s - HTTP PUT %s' %
+                         (module_class_name(self), '_update',
+                          Logger.customer, Logger.job,
+                          'Name of resource not unique on WEB-API, cannot proceed with update'))
         else:
             id = target[0]['id']
             content, status = await self._put(api, data_send, id)
             if status == 200:
-                self.logger.info('Succesfully updated (HTTP PUT) resource')
+                Logger.info('Succesfully updated (HTTP PUT) resource')
             else:
-                self.logger.error('%s %s() Customer:%s Job:%s - HTTP PUT %s' %
-                                  (module_class_name(self), '_update',
-                                   self.logger.customer, self.logger.job,
-                                   content))
+                Logger.error('%s %s() Customer:%s Job:%s - HTTP PUT %s' %
+                             (module_class_name(self), '_update',
+                              Logger.customer, Logger.job,
+                              content))
+                raise ConnectorHttpError()
 
     async def _delete_and_resend(self, api, data_send, topo_component, downtimes_component):
         id = None
@@ -173,7 +166,9 @@ class WebAPI(object):
         status = await self._delete(api, id, self.date)
         if status == 200:
             await self._send(api, data_send, self.connector)
-            self.logger.info('Succesfully deleted and created new resource')
+            Logger.info('Succesfully deleted and created new resource')
+        else:
+            raise ConnectorHttpError()
 
     async def get(self, api_path, jsonret):
         if api_path:
@@ -189,11 +184,11 @@ class WebAPI(object):
 
         try:
             content = await self._get(api, jsonret)
-            self.logger.info('Data succesfully fetched from WEB-API')
+            Logger.info('Data succesfully fetched from WEB-API')
             return content
 
         except ConnectorHttpError:
-            self.logger.error('Failed data fetch from WEB-API')
+            Logger.error('Failed data fetch from WEB-API')
 
         finally:
             await self.session.close()
@@ -232,10 +227,5 @@ class WebAPI(object):
             elif status == 409:
                 await self._update(api, data_send)
 
-            self.logger.info('Data succesfully sent to WEB-API')
-
         except ConnectorHttpError:
-            self.logger.error('Failed sent of data to WEB-API')
-
-        finally:
-            await self.session.close()
+            Logger.error('Failed sent of data to WEB-API')

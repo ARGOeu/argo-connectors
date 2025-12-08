@@ -1,0 +1,139 @@
+{
+  "total": 502,
+  "from": 0,
+  "to": 502,
+  "results": [
+    {
+        "id": "21.T15999/llB2t3",
+        "abbreviation": "CINECA",
+        "name": "Cineca Consorzio Interuniversitario",
+        "node": "node-sandbox",
+        "website": "https://www.cineca.it/",
+        "legalEntity": true,
+        "legalStatus": "provider_legal_status-public_legal_entity_under_private_law",
+        "hostingLegalEntity": null,
+        "alternativeIdentifiers": null,
+        "description": "Cineca is a not-for-profit Consortium, made up of the Italian Ministry of Education and the Italian Ministry of Universities and Research, 69 Italian universities and 25 Italian National Institutions. Today it is the largest Italian computing centre, one of the most important worldwide. With more seven hundred employees, it operates in the technological transfer sector through high performance scientific computing, the management and development of networks and web based services, and the development of complex information systems for treating large amounts of data. It develops advanced Information Technology applications and services, acting like a trait-d'union between the academic world, the sphere of pure research and the world of industry and Public Administration.",
+        "logo": "https://www.cineca.it/sites/default/files/contenuto_generico/logo-cineca-social.png",
+        "multimedia": [
+            {
+                "multimediaURL": "https://www.cineca.it/en/press-corner",
+                "multimediaName": "Multimedia 1"
+            }
+        ],
+        "scientificDomains": [
+            {
+                "scientificDomain": "scientific_domain-generic",
+                "scientificSubdomain": "scientific_subdomain-generic-generic"
+            }
+        ],
+        "tags": [
+            "High Performance Computing "
+        ],
+        "structureTypes": [
+            "provider_structure_type-distributed"
+        ],
+        "location": {
+            "streetNameAndNumber": "Via Magnanelli 6/3`",
+            "postalCode": "40033",
+            "city": "Casalecchio di Reno (Bologna) ",
+            "region": null,
+            "country": "IT"
+        },
+        "mainContact": null,
+        "publicContacts": [
+            {
+                "firstName": "name",
+                "lastName": "surname",
+                "email": "redacted@example.com",
+                "phone": null,
+                "position": null
+            }
+        ],
+        "lifeCycleStatus": "provider_life_cycle_status-operational",
+        "certifications": [
+            "Compliance with the international standard ISO 9001, since November 2001. https://www.cineca.it/en/about-us/certifications",
+            "The Information Security Management System of Cineca is compliance with the international standard ISO 27001:2013. https://www.cineca.it/en/about-us/certifications"
+        ],
+        "participatingCountries": [],
+        "affiliations": [],
+        "networks": [
+            "provider_network-prace",
+            "provider_network-eudat",
+            "provider_network-hbp",
+            "provider_network-etp4hpc"
+        ],
+        "catalogueId": "eosc",
+        "esfriDomains": [
+            "provider_esfri_domain-data_computing_and_digital_research_infrastructures"
+        ],
+        "esfriType": "provider_esfri_type-other",
+        "merilScientificDomains": [
+            {
+                "merilScientificDomain": "provider_meril_scientific_domain-other",
+                "merilScientificSubdomain": "provider_meril_scientific_subdomain-other-other"
+            }
+        ],
+        "areasOfActivity": [
+            "provider_area_of_activity-other"
+        ],
+        "societalGrandChallenges": [
+            "provider_societal_grand_challenge-other"
+        ],
+        "nationalRoadmaps": [],
+        "users": null
+    },
+    {
+      "id": "21.T15999/kKG7EL",
+      "abbreviation": "ICTLC",
+      "name": "ICTLC S.P.A.",
+      "node": "node-sandbox",
+      "website": "https://www.ictlc.com/?lang=en",
+      "legalEntity": true,
+      "legalStatus": "provider_legal_status-private_company",
+      "hostingLegalEntity": null,
+      "alternativeIdentifiers": null,
+      "description": "ICTLC S.p.A. is company that offers strategic support in legal compliance (Privacy, IP, TMT) and governance, organisation, management and control models for your data-driven organization.\nICTLC S.p.A. combines the expertise of two realities already established on the international market, ICT Legal Consulting and ICT Cyber Consulting. Over the years, both companies have acquired significant experience and obtained demonstrable results in their respective fields, consolidating a close-knit team of over 70 qualified professionals.",
+      "logo": "https://www.ictlc.com/wp-content/uploads/2021/03/ICTLC_final.png",
+      "multimedia": [],
+      "scientificDomains": [
+        {
+          "scientificDomain": "scientific_domain-generic",
+          "scientificSubdomain": "scientific_subdomain-generic-generic"
+        }
+      ],
+      "tags": [],
+      "structureTypes": [],
+      "location": {
+        "streetNameAndNumber": "Via Borgonuovo 12",
+        "postalCode": "20121",
+        "city": "Milan",
+        "region": "MI",
+        "country": "IT"
+      },
+      "mainContact": null,
+      "publicContacts": [
+        {
+          "firstName": "name",
+          "lastName": "surname",
+          "email": "redacted@example.com",
+          "phone": null,
+          "position": null
+        }
+      ],
+      "lifeCycleStatus": null,
+      "certifications": [],
+      "participatingCountries": [],
+      "affiliations": [],
+      "networks": [],
+      "catalogueId": "eosc",
+      "esfriDomains": [],
+      "esfriType": null,
+      "merilScientificDomains": [],
+      "areasOfActivity": [],
+      "societalGrandChallenges": [],
+      "nationalRoadmaps": [],
+      "users": null
+    }
+  ]
+}

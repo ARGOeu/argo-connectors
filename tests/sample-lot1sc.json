@@ -86,6 +86,159 @@
           "sites": []
         }
       ]
+    },
+    {
+      "providerId": "Test 20/11 14.41",
+      "name": "21.15120/tCnX8c",
+      "serviceMonitorings": [
+        {
+          "serviceId": "21.11161/yRMr7r",
+          "name": "Test Interactive Notebooks",
+          "sites": [
+            {
+              "name": "CESNET",
+              "endpoints": [
+                {
+                  "name": "Notebooks GUI",
+                  "url": "https://notebooks-tst.cloud.cesnet.cz/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.interactive_notebooks.gui"
+                  ]
+                },
+                {
+                  "name": "Notebooks API",
+                  "url": "https://notebooks-tst.cloud.cesnet.cz/services/jwt",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.interactive_notebooks.api"
+                  ]
+                },
+                {
+                  "name": "Notebooks GUI Redirection",
+                  "url": "https://notebooks-tst.cloud.cesnet.cz/hub/oauth_login",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.interactive_notebooks.gui"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "serviceId": "21.11161/OQ1qKn",
+          "name": "Test File Sync and Share",
+          "sites": [
+            {
+              "name": "PSNC",
+              "endpoints": [
+                {
+                  "name": "OwnCloud GUI",
+                  "url": "https://ocis-testing.apps.bst2-test.paas.psnc.pl/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.storage.gui"
+                  ]
+                },
+                {
+                  "name": "OwnCloud GUI Redirect",
+                  "url": "https://ocis-testing.apps.bst2-test.paas.psnc.pl/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.storage.gui"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "serviceId": "21.11161/kDB2v6",
+          "name": "Test/HPC",
+          "sites": [
+            {
+              "name": "GRNET",
+              "endpoints": [
+                {
+                  "name": "HPC API",
+                  "url": "https://www.hpc.grnet.gr/en/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.hpc.access"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "serviceId": "21.11161/BN84sm",
+          "name": "Test Cloud Container Platform",
+          "sites": [
+            {
+              "name": "PSNC",
+              "endpoints": [
+                {
+                  "name": "OKD Console",
+                  "url": "https://console.apps.dcw1-test.paas.psnc.pl/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.gui"
+                  ]
+                },
+                {
+                  "name": "OKD API",
+                  "url": "https://api.dcw1-test.paas.psnc.pl:6443",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.api"
+                  ]
+                },
+                {
+                  "name": "OKD Console GUI Redirection",
+                  "url": "https://dcw1-test.paas.psnc.pl/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.gui"
+                  ]
+                },
+                {
+                  "name": "OKD OIDC Server",
+                  "url": "https://oauth-openshift.apps.dcw1-test.paas.psnc.pl/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.api"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Safespring",
+              "endpoints": [
+                {
+                  "name": "OKD Console",
+                  "url": "https://console-openshift-console.apps.okd01.saft.in/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.gui"
+                  ]
+                },
+                {
+                  "name": "OKD API",
+                  "url": "https://api.okd01.saft.in:6443",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.api"
+                  ]
+                },
+                {
+                  "name": "OKD Console GUI Redirection",
+                  "url": "https://console-openshift-console.apps.eosc-test.safedc.services/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.gui"
+                  ]
+                },
+                {
+                  "name": "OKD OIDC Server",
+                  "url": "https://oauth-openshift.apps.eosc-test.safedc.services/",
+                  "monitoringServiceTypes": [
+                    "eu.eosc.container_platform.api"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "success": true

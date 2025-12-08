@@ -4,16 +4,19 @@ import aiohttp
 import random
 
 from aiohttp import client_exceptions, http_exceptions, ClientSession
-from argo_connectors.utils import module_class_name
+
+from argo_connectors.config.glob import Global
 from argo_connectors.exceptions import ConnectorHttpError
+from argo_connectors.log import Logger
+from argo_connectors.utils import module_class_name
 
 
-def build_ssl_settings(globopts):
+def build_ssl_settings():
     try:
-        sslcontext = ssl.create_default_context(capath=globopts['AuthenticationCAPath'.lower()],
-                                                cafile=globopts['AuthenticationCAFile'.lower()])
-        sslcontext.load_cert_chain(globopts['AuthenticationHostCert'.lower()],
-                                   globopts['AuthenticationHostKey'.lower()])
+        sslcontext = ssl.create_default_context(capath=Global.options()['AuthenticationCAPath'.lower()],
+                                                cafile=Global.options()['AuthenticationCAFile'.lower()])
+        sslcontext.load_cert_chain(Global.options()['AuthenticationHostCert'.lower()],
+                                   Global.options()['AuthenticationHostKey'.lower()])
 
         return sslcontext
 
@@ -21,23 +24,22 @@ def build_ssl_settings(globopts):
         return None
 
 
-def build_connection_retry_settings(globopts):
-    retry = int(globopts['ConnectionRetry'.lower()])
-    timeout = int(globopts['ConnectionTimeout'.lower()])
+def build_connection_retry_settings():
+    retry = int(Global.options()['ConnectionRetry'.lower()])
+    timeout = int(Global.options()['ConnectionTimeout'.lower()])
     return (retry, timeout)
 
 
 class SessionWithRetry(object):
-    def __init__(self, logger, msgprefix, globopts, token=None, custauth=None,
+    def __init__(self, token=None, custauth=None,
                  verbose_ret=False, handle_session_close=False):
-        self.ssl_context = build_ssl_settings(globopts)
-        n_try, client_timeout = build_connection_retry_settings(globopts)
+        self.ssl_context = build_ssl_settings()
+        n_try, client_timeout = build_connection_retry_settings()
         client_timeout = aiohttp.ClientTimeout(total=client_timeout,
                                                connect=client_timeout, sock_connect=client_timeout,
                                                sock_read=client_timeout)
         self.session = ClientSession(timeout=client_timeout)
         self.n_try = n_try
-        self.logger = logger
         self.token = token
         if custauth:
             self.custauth = aiohttp.BasicAuth(
@@ -48,7 +50,6 @@ class SessionWithRetry(object):
             self.custauth = None
         self.verbose_ret = verbose_ret
         self.handle_session_close = handle_session_close
-        self.globopts = globopts
         self.erroneous_statuses = [404]
 
     async def _http_method(self, method, url, data=None, headers=None):
@@ -62,37 +63,37 @@ class SessionWithRetry(object):
                 'Accept': 'application/json'
             })
         try:
-            connct_rty_rnd = self.globopts['ConnectionRetryRandom'.lower()]
+            connct_rty_rnd = Global.options()['ConnectionRetryRandom'.lower()]
             if connct_rty_rnd == 'True':
-                sleepsecs = float(random.randint(0, float(self.globopts['ConnectionSleepRandomRetryMax'.lower()])))
+                sleepsecs = float(random.randint(0, float(Global.options()['ConnectionSleepRandomRetryMax'.lower()])))
             else:
-                sleepsecs = float(self.globopts['ConnectionSleepRetry'.lower()])
+                sleepsecs = float(Global.options()['ConnectionSleepRetry'.lower()])
 
             while n <= self.n_try:
                 if n > 1:
-                    if getattr(self.logger, 'job', False):
-                        self.logger.info(f"{module_class_name(self)} Customer:{self.logger.customer} Job:{self.logger.job} : HTTP Connection try - {n} after sleep {sleepsecs} seconds")
+                    if getattr(Logger, 'job', False):
+                        Logger.info(f"{module_class_name(self)} Customer:{Logger.customer} Job:{Logger.job} : HTTP Connection try - {n} after sleep {sleepsecs} seconds")
                     else:
-                        self.logger.info(f"{module_class_name(self)} Customer:{self.logger.customer} : HTTP Connection try - {n} after sleep {sleepsecs} seconds")
+                        Logger.info(f"{module_class_name(self)} Customer:{Logger.customer} : HTTP Connection try - {n} after sleep {sleepsecs} seconds")
                 try:
                     async with method_obj(url, data=data, headers=headers,
                                           ssl=self.ssl_context, auth=self.custauth) as response:
                         if response.status in self.erroneous_statuses:
-                            if getattr(self.logger, 'job', False):
-                                self.logger.error('{}.http_{}({}) Customer:{} Job:{} - Erroneous HTTP status: {} {}'.\
-                                                  format(module_class_name(self),
-                                                         method, url,
-                                                         self.logger.customer,
-                                                         self.logger.job,
-                                                         response.status,
-                                                         response.reason))
+                            if getattr(Logger, 'job', False):
+                                Logger.error('{}.http_{}({}) Customer:{} Job:{} - Erroneous HTTP status: {} {}'.
+                                             format(module_class_name(self),
+                                                    method, url,
+                                                    Logger.customer,
+                                                    Logger.job,
+                                                    response.status,
+                                                    response.reason))
                             else:
-                                self.logger.error('{}.http_{}({}) Customer:{} - Erroneus HTTP status: {} {}'.\
-                                                  format(module_class_name(self),
-                                                         method, url,
-                                                         self.logger.customer,
-                                                         response.status,
-                                                         response.reason))
+                                Logger.error('{}.http_{}({}) Customer:{} - Erroneus HTTP status: {} {}'.
+                                             format(module_class_name(self),
+                                                    method, url,
+                                                    Logger.customer,
+                                                    response.status,
+                                                    response.reason))
                             break
                         content = await response.text()
                         if content:
@@ -100,12 +101,12 @@ class SessionWithRetry(object):
                                 return (content, response.headers, response.status)
                             return content
 
-                        if getattr(self.logger, 'job', False):
-                            self.logger.warn("{} Customer:{} Job:{} : HTTP Empty response".format(module_class_name(self),
-                                                                                                  self.logger.customer, self.logger.job))
+                        if getattr(Logger, 'job', False):
+                            Logger.warn("{} Customer:{} Job:{} : HTTP Empty response".format(module_class_name(self),
+                                                                                             Logger.customer, Logger.job))
                         else:
-                            self.logger.warn("{} Customer:{} : HTTP Empty response".format(module_class_name(self),
-                                                                                           self.logger.customer))
+                            Logger.warn("{} Customer:{} : HTTP Empty response".format(module_class_name(self),
+                                                                                      Logger.customer))
 
                 # do not retry on SSL errors
                 # raise exc that will be handled in outer try/except clause
@@ -116,50 +117,50 @@ class SessionWithRetry(object):
                 except (client_exceptions.ClientError,
                         client_exceptions.ServerTimeoutError,
                         asyncio.TimeoutError) as exc:
-                    if getattr(self.logger, 'job', False):
-                        self.logger.error('{}.http_{}({}) Customer:{} Job:{} - {}'.format(module_class_name(self),
-                                                                                          method, url, self.logger.customer,
-                                                                                          self.logger.job, repr(exc)))
+                    if getattr(Logger, 'job', False):
+                        Logger.error('{}.http_{}({}) Customer:{} Job:{} - {}'.format(module_class_name(self),
+                                     method, url, Logger.customer,
+                                     Logger.job, repr(exc)))
                     else:
-                        self.logger.error('{}.http_{}({}) Customer:{} - {}'.format(module_class_name(self),
-                                                                                   method, url, self.logger.customer,
-                                                                                   repr(exc)))
+                        Logger.error('{}.http_{}({}) Customer:{} - {}'.format(module_class_name(self),
+                                     method, url, Logger.customer,
+                                     repr(exc)))
                     raised_exc = exc
 
                 # do not retry on HTTP protocol errors
                 # raise exc that will be handled in outer try/except clause
                 except (http_exceptions.HttpProcessingError) as exc:
-                    if getattr(self.logger, 'job', False):
-                        self.logger.error('{}.http_{}({}) Customer:{} Job:{} - {}'.format(module_class_name(self),
-                                                                                          method, url, self.logger.customer,
-                                                                                          self.logger.job, repr(exc)))
+                    if getattr(Logger, 'job', False):
+                        Logger.error('{}.http_{}({}) Customer:{} Job:{} - {}'.format(module_class_name(self),
+                                     method, url, Logger.customer,
+                                     Logger.job, repr(exc)))
                     else:
-                        self.logger.error('{}.http_{}({}) Customer:{} - {}'.format(module_class_name(self),
-                                                                                   method, url, self.logger.customer,
-                                                                                   repr(exc)))
+                        Logger.error('{}.http_{}({}) Customer:{} - {}'.format(module_class_name(self),
+                                     method, url, Logger.customer,
+                                     repr(exc)))
                     raise exc
 
                 await asyncio.sleep(sleepsecs)
                 n += 1
 
             else:
-                if getattr(self.logger, 'job', False):
-                    self.logger.info("{} Customer:{} Job:{} : HTTP Connection retry exhausted".format(module_class_name(self),
-                                                                                                      self.logger.customer, self.logger.job))
+                if getattr(Logger, 'job', False):
+                    Logger.info("{} Customer:{} Job:{} : HTTP Connection retry exhausted".format(module_class_name(self),
+                                Logger.customer, Logger.job))
                 else:
-                    self.logger.info("{} Customer:{} : HTTP Connection retry exhausted".format(module_class_name(self),
-                                                                                               self.logger.customer))
+                    Logger.info("{} Customer:{} : HTTP Connection retry exhausted".format(module_class_name(self),
+                                Logger.customer))
                 raise raised_exc
 
         except Exception as exc:
-            if getattr(self.logger, 'job', False):
-                self.logger.error('{}.http_{}({}) Customer:{} Job:{} - {}'.format(module_class_name(self),
-                                                                                  method, url, self.logger.customer,
-                                                                                  self.logger.job, repr(exc)))
+            if getattr(Logger, 'job', False):
+                Logger.error('{}.http_{}({}) Customer:{} Job:{} - {}'.format(module_class_name(self),
+                             method, url, Logger.customer,
+                             Logger.job, repr(exc)))
             else:
-                self.logger.error('{}.http_{}({}) Customer:{} - {}'.format(module_class_name(self),
-                                                                           method, url, self.logger.customer,
-                                                                           repr(exc)))
+                Logger.error('{}.http_{}({}) Customer:{} - {}'.format(module_class_name(self),
+                             method, url, Logger.customer,
+                             repr(exc)))
             raise exc
 
         finally:

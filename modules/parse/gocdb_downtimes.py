@@ -3,18 +3,19 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 
 from argo_connectors.utils import module_class_name
+from argo_connectors.config.customer import get_custconf
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.parse.base import ParseHelpers
+from argo_connectors.log import Logger
 
 
 class ParseDowntimes(ParseHelpers):
-    def __init__(self, logger, data, start, end, uid=False):
-
-        self.logger = logger
+    def __init__(self, data, start, end, combuid=None):
+        self.Customer = get_custconf(combuid)
         self.data = data
         self.start = start
         self.end = end
-        self.uid = uid
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
 
     def get_data(self):
         filtered_downtimes = list()
@@ -60,7 +61,7 @@ class ParseDowntimes(ParseHelpers):
 
                 if classification == 'SCHEDULED' and severity == 'OUTAGE':
                     downtime = dict()
-                    if self.uid:
+                    if self.uidservendp:
                         downtime['hostname'] = '{0}_{1}'.format(
                             hostname, service_id)
                     else:
@@ -76,7 +77,7 @@ class ParseDowntimes(ParseHelpers):
 
         except (KeyError, IndexError, AttributeError, TypeError, AssertionError, XMLSyntaxError) as exc:
             msg = '{} Customer:{} : Error parsing downtimes feed - {}'.format(
-                module_class_name(self), self.logger.customer, repr(exc))
+                module_class_name(self), Logger.customer, repr(exc))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:

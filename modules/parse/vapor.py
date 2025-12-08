@@ -1,13 +1,12 @@
-from argo_connectors.utils import module_class_name
-from argo_connectors.log import Logger
 from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.parse.base import ParseHelpers
+from argo_connectors.utils import module_class_name
 
 
 class ParseWeights(ParseHelpers):
-    def __init__(self, logger, data):
+    def __init__(self, data):
         self.data = data
-        self.logger = logger
 
     def _reformat(self, data):
         datawr = []
@@ -25,7 +24,7 @@ class ParseWeights(ParseHelpers):
                     if 'ComputationPower' in site:
                         val = site['ComputationPower']
                     else:
-                        self.logger.warn(module_class_name(self) + ': No ComputationPower value for NGI:%s Site:%s' % (ngi['ngi'], site['id']))
+                        Logger.warn(module_class_name(self) + ': No ComputationPower value for NGI:%s Site:%s' % (ngi['ngi'], site['id']))
                         val = '0'
                     weights[key] = val
 
@@ -35,8 +34,8 @@ class ParseWeights(ParseHelpers):
             raise ConnectorParseError()
 
         except Exception as exc:
-            if getattr(self.logger, 'job', False):
-                self.logger.error('{} Customer:{} Job:{} : Error - {}'.format(module_class_name(self), self.logger.customer, self.logger.job, repr(exc)))
+            if getattr(Logger, 'job', False):
+                Logger.error('{} Customer:{} Job:{} : Error - {}'.format(module_class_name(self), Logger.customer, Logger.job, repr(exc)))
             else:
-                self.logger.error('{} Customer:{} : Error - {}'.format(module_class_name(self), self.logger.customer, repr(exc)))
+                Logger.error('{} Customer:{} : Error - {}'.format(module_class_name(self), Logger.customer, repr(exc)))
             raise exc

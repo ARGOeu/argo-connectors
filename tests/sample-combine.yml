@@ -1,0 +1,29 @@
+---
+
+- name: Combine topologies
+  type: topology
+  tenant: EOSC
+  config:
+    WebAPI_Token: SAMPLE_TOKEN1
+    WebAPI_Host: API.HOST.HR
+  combine:
+    - config:
+        TopoFeedPaging: false
+        TopoFeedServiceEndpoints: https://gocdb.eosc.grnet.gr/gocdbpi/private/?method=get_service_endpoint&scope=
+        TopoFeedServiceGroups: https://gocdb.eosc.grnet.gr/gocdbpi/private/?method=get_service_group&scope=
+        TopoFeedSites: https://gocdb.eosc.grnet.gr/gocdbpi/private/?method=get_site&scope=
+        TopoFetchType: Sites
+        TopoScope: EXCHANGE
+        TopoType: GOCDB
+      type: gocdb
+    - config:
+        TopoFeed: http://api.dev-1.eosc.athenarc.gr/action/providers/allEndpoints?tier=
+        TopoFetchType: ServiceGroups
+        TopoSetType: Sites
+        TopoTagServiceEndpoints:
+        - scope: EXCHANGE
+        TopoTagSites:
+        - scope: EXCHANGE
+        TopoTiers: 1, 2
+        TopoUIDServiceEndpoints: true
+      type: lot1sc

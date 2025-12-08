@@ -28,8 +28,13 @@ pipeline {
                     poetry run coverage run -m xmlrunner discover --output-file junit.xml -v tests/
                     poetry run coverage xml
                 '''
-                cobertura coberturaReportFile: '**/coverage.xml'
-                junit '**/junit.xml'
+
+                recordCoverage(
+                    tools: [
+                        [parser: 'COBERTURA', pattern: '**/coverage.xml'],
+                        [parser: 'JUNIT', pattern: '**/junit.xml']
+                    ]
+                )
             }
         }
     }

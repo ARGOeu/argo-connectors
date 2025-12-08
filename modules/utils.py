@@ -8,6 +8,14 @@ num_excp_expand = 0
 daysback = 1
 
 
+def has_exception(list):
+    for a in list:
+        if isinstance(a, Exception):
+            return (True, a)
+
+    return (False, None)
+
+
 def date_check(arg):
     if re.search("[0-9]{4}-[0-9]{2}-[0-9]{2}", arg):
         return True
@@ -33,7 +41,7 @@ def datestamp(daysback=None):
     return str(dateback.strftime('%Y_%m_%d'))
 
 
-def filename_date(logger, option, path, stamp=None):
+def filename_date(option, path, stamp=None):
     stamp = stamp if stamp else datestamp(daysback)
     filename = path + re.sub(r'DATE(.\w+)$', r'%s\1' % stamp, option)
 

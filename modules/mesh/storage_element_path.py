@@ -1,3 +1,6 @@
+from argo_connectors.log import Logger
+
+
 def extract_value(key, entry):
     if isinstance(entry, tuple):
         for e in entry:
@@ -38,7 +41,7 @@ def ispath_already_added(endpoint, mapping, sepath):
         return False
 
 
-def build_map_endpoint_path(logger, bdiidata):
+def build_map_endpoint_path(bdiidata):
     mapping = dict()
 
     try:
@@ -68,17 +71,17 @@ def build_map_endpoint_path(logger, bdiidata):
                     update_map_entry(endpoint, mapping, sepath, vo)
 
     except IndexError as exc:
-        logger.error('Error building map of endpoints and storage paths from BDII data: %s' % repr(exc))
-        logger.error('LDAP entry: %s' % entry)
+        Logger.error('Error building map of endpoints and storage paths from BDII data: %s' % repr(exc))
+        Logger.error('LDAP entry: %s' % entry)
 
     return mapping
 
 
-def attach_sepath_topodata(logger, bdii_opts, bdiidata, group_endpoints):
+def attach_sepath_topodata(bdii_opts, bdiidata, group_endpoints):
     """
         Get SRM ports from LDAP and put them under tags -> info_srm_port
     """
-    endpoint_sepaths = build_map_endpoint_path(logger, bdiidata)
+    endpoint_sepaths = build_map_endpoint_path(bdiidata)
 
     for endpoint in group_endpoints:
         if endpoint['hostname'] in endpoint_sepaths:

@@ -12,6 +12,7 @@ RUN dnf -y install epel-release rocky-repos && \
     gcc \
     git \
     glibc-all-langpacks \
+    htop \
     iproute \
     make \
     mc \
@@ -22,8 +23,8 @@ RUN dnf -y install epel-release rocky-repos && \
     python3-devel \
     python3-pip \
     python3-setuptools \
-    rsync \
     rpmdevtools \
+    rsync \
     sudo \
     the_silver_searcher \
     tmux \

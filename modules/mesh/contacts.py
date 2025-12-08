@@ -1,3 +1,6 @@
+from argo_connectors.log import Logger
+
+
 def filter_dups_noemails(contact_list):
     # does not preserve order needed for test
     # no_dups = list(orderedset(contact_list))
@@ -25,7 +28,7 @@ def filter_dups_noemails(contact_list):
     return only_emails
 
 
-def attach_contacts_topodata(logger, contacts, topodata, notification_flag=None):
+def attach_contacts_topodata(contacts, topodata, notification_flag=None):
     updated_topodata = list()
     found_contacts = None
 
@@ -82,10 +85,10 @@ def attach_contacts_topodata(logger, contacts, topodata, notification_flag=None)
             updated_topodata.append(entity)
 
     except (KeyError, ValueError, TypeError) as exc:
-        logger.warn('Error joining contacts and topology data: %s' % repr(exc))
+        Logger.warn('Error joining contacts and topology data: %s' % repr(exc))
         if entity:
-            logger.warn('Topology entity: %s' % entity)
+            Logger.warn('Topology entity: %s' % entity)
         if found_contacts:
-            logger.warn('Found contacts: %s' % found_contacts)
+            Logger.warn('Found contacts: %s' % found_contacts)
 
     return updated_topodata

@@ -1,6 +1,6 @@
-from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.config.customer import get_custconf
 from argo_connectors.parse.base import ParseHelpers
-from argo_connectors.utils import construct_fqdn, remove_non_utf
+from argo_connectors.utils import construct_fqdn
 
 import uuid
 
@@ -13,11 +13,9 @@ def build_service_endpoint_id(service_name, service_type):
 
 
 class ParseLot1ScEndpoints(ParseHelpers):
-    def __init__(self, logger, data, uidservendp=False,
-                 fetchtype='ServiceGroups', tier=1):
-        self.uidservendp = uidservendp
-        self.fetchtype = fetchtype
-        self.logger = logger
+    def __init__(self, data, tier, combuid=None):
+        self.Customer = get_custconf(combuid)
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
         self.tier = tier
         self.data = data
         if type(data) == str:
@@ -37,16 +35,16 @@ class ParseLot1ScEndpoints(ParseHelpers):
         providers = self.data.get('result', None)
         if providers:
             for provider in providers:
-                gge = dict()
-                prname = provider.get('providerId', '')
+                prname = provider.get('providerId', '').replace('/', '-')
 
                 for service in provider.get('serviceMonitorings', list()):
-                    srname = service.get('name', '')
+                    gge = dict()
+                    srname = service.get('name', '').replace('/', '-')
 
                     if srname not in self._service_name_exist:
                         continue
 
-                    gge['type'] = 'PROJECT'
+                    gge['type'] = self.topo_type('gg')
                     gge['group'] = prname
                     gge['subgroup'] = srname
                     gge['tags'] = dict()
@@ -59,7 +57,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
         if providers:
             for provider in providers:
                 for service in provider.get('serviceMonitorings', list()):
-                    srname = service.get('name', '')
+                    srname = service.get('name', '').replace('/', '-')
                     sites = service.get('sites', list())
                     if sites:
                         for site in sites:
@@ -71,7 +69,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
                                     if service_types:
                                         for service in service_types:
                                             gee = dict()
-                                            gee['type'] = self.fetchtype.upper()
+                                            gee['type'] = self.topo_type('ge')
                                             gee['group'] = srname
                                             gee['tags'] = dict()
                                             gee['tags']['site_name'] = site_name
@@ -82,6 +80,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
                                             if self.uidservendp:
                                                 se_uid = build_service_endpoint_id(endpoint.get('name', ''), service)
                                                 gee['tags']['info_ID'] = se_uid
+                                                gee['tags']['hostname'] = construct_fqdn(endpoint.get('url', ''))
                                                 gee['hostname'] = '{}_{}'.format(construct_fqdn(endpoint.get('url', '')), se_uid)
                                             else:
                                                 gee['hostname'] = construct_fqdn(endpoint.get('url', ''))

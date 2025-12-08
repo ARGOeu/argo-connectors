@@ -4,12 +4,12 @@ from lxml.etree import XMLSyntaxError
 from argo_connectors.utils import module_class_name
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.parse.base import ParseHelpers
+from argo_connectors.log import Logger
 
 
 class ParseGocdbServiceTypes(ParseHelpers):
-    def __init__(self, logger, data):
+    def __init__(self, data):
         self.data = data
-        self.logger = logger
 
     def get_data(self):
         all_service_type = list()
@@ -34,11 +34,11 @@ class ParseGocdbServiceTypes(ParseHelpers):
                         "tags": ["topology"]
                     })
 
-            return sorted(all_service_type,  key=lambda s: s['name'].lower())
+            return sorted(all_service_type, key=lambda s: s['name'].lower())
 
         except (KeyError, IndexError, AttributeError, TypeError, AssertionError, XMLSyntaxError) as exc:
             msg = '{} Customer:{} : Error parsing service types feed - {}'.format(
-                module_class_name(self), self.logger.customer, repr(exc))
+                module_class_name(self), Logger.customer, repr(exc))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:

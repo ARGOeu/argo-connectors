@@ -24,7 +24,7 @@ clean:
 	rm -rf **/*.pyc
 	rm -rf **/*.pyo
 	rm -rf **/*.pyo
-	rm -rf *.egg-info/
+	rm -rf **/*.egg-info/
 	rm -rf **/*__pycache__*
 
 

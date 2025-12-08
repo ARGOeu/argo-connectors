@@ -1,4 +1,7 @@
-def load_srm_port_map(logger, ldap_data, attribute_name):
+from argo_connectors.log import Logger
+
+
+def load_srm_port_map(ldap_data, attribute_name):
     """
         Returnes a dictionary which maps hostnames to their respective ldap port if such exists
     """
@@ -15,15 +18,16 @@ def load_srm_port_map(logger, ldap_data, attribute_name):
             port_dict[fqdn] = port
 
         except ValueError:
-            logger.error('Exception happened while retrieving port from: %s' % res)
+            Logger.error('Exception happened while retrieving port from: %s' % res)
 
     return port_dict
 
-def attach_srmport_topodata(logger, attributes, topodata, group_endpoints):
+
+def attach_srmport_topodata(attributes, topodata, group_endpoints):
     """
         Get SRM ports from LDAP and put them under tags -> info_srm_port
     """
-    srm_port_map = load_srm_port_map(logger, topodata, attributes)
+    srm_port_map = load_srm_port_map(topodata, attributes)
     for endpoint in group_endpoints:
         if endpoint['service'] == 'SRM' and srm_port_map.get(endpoint['hostname'], False):
             endpoint['tags']['info_bdii_SRM2_PORT'] = srm_port_map[endpoint['hostname']]

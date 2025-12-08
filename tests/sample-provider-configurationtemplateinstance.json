@@ -1,0 +1,78 @@
+{
+  "total": 16,
+  "from": 0,
+  "to": 16,
+  "results": [
+    {
+      "id": "cti/zaqp09",
+      "resourceId": "21.T15999/y0c98F",
+      "configurationTemplateId": "con/abc123",
+      "catalogueId": null,
+      "node": null,
+      "payload": {
+        "protocol": "oai",
+        "baseURL": "http://b2find.eudat.eu/oai",
+        "sets": [
+          "eudat"
+        ],
+        "format": "oai_datacite",
+        "id": "re3data_____::r3d100012377",
+        "interoperabilityRecordId": "21.11171/OzHPKr",
+        "compatibility": "openaire2.0_data"
+      }
+    },
+    {
+      "id": "cti/93fp20",
+      "resourceId": "21.T15999/y0c98F",
+      "configurationTemplateId": "con/abc123",
+      "catalogueId": null,
+      "node": null,
+      "payload": {
+        "protocol": "oai",
+        "baseURL": "https://b2find.eudat.eu/oai",
+        "sets": [],
+        "format": "oai_datacite",
+        "id": "re3data_____::r3d100012377",
+        "interoperabilityRecordId": "21.11171/OzHPKr",
+        "compatibility": "openaire4.0"
+      }
+    },
+    {
+      "id": "cti/8wEjbu",
+      "resourceId": "21.T15999/uxIE5y",
+      "configurationTemplateId": "con/cPsB0H",
+      "catalogueId": "eosc",
+      "node": null,
+      "payload": {
+        "serviceCheck": [
+          {
+            "serviceType": "eu.eosc.generic.json",
+            "endpoint": "https://example.com"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cti/qykSlW",
+      "resourceId": "21.T15999/xVQZOZ",
+      "configurationTemplateId": "con/cPsB0H",
+      "catalogueId": "eosc",
+      "node": null,
+      "payload": {
+        "serviceCheck": [
+          {
+            "serviceType": "eu.eosc.argo.mon",
+            "endpoint": "https://www.google.com"
+          }
+        ]
+      }
+    }
+  ],
+  "facets": [
+    {
+      "field": "node",
+      "label": "Node",
+      "values": []
+    }
+  ]
+}

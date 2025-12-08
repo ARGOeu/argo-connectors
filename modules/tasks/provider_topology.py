@@ -5,38 +5,34 @@ import os
 from collections import Callable
 from urllib.parse import urlparse
 
+from argo_connectors.config.customer import get_custconf
+from argo_connectors.config.glob import Global
+from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
 from argo_connectors.io.http import SessionWithRetry
 from argo_connectors.io.webapi import WebAPI
+from argo_connectors.log import Logger
 from argo_connectors.mesh.contacts import attach_contacts_topodata
+from argo_connectors.mesh.topotags import attach_tags
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.parse.provider_contacts import ParseResourcesContacts
 from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
 from argo_connectors.tasks.common import write_topo_json as write_json, write_state
-from argo_connectors.exceptions import ConnectorError, ConnectorParseError, ConnectorHttpError
+from argo_connectors.utils import module_class_name, has_exception
 
 
 PROVIDER_TOKEN = 'var/spool/provider_token.json'
 
 
-def contains_exception(list):
-    for a in list:
-        if isinstance(a, Exception):
-            return (True, a)
-
-    return (False, None)
-
-
 class find_next_paging_cursor_count(ParseHelpers, Callable):
-    def __init__(self, logger, res):
+    def __init__(self, res):
         self.res = res
-        self.logger = logger
 
     def __call__(self):
         try:
             return self._parse()
         except (ConnectorParseError, KeyError) as exc:
-            self.logger.error(repr(exc))
-            self.logger.error("Tried to parse (512 chars): %.512s" % ''.join(self.res.replace('\r\n', '').replace('\n', '')))
+            Logger.error(repr(exc))
+            Logger.error("Tried to parse (512 chars): %.512s" % ''.join(self.res.replace('\r\n', '').replace('\n', '')))
             raise ConnectorParseError(exc)
 
     def _parse(self):
@@ -74,27 +70,26 @@ def join_resources(left, right):
     })
 
 
-class TaskProviderTopology(object):
-    def __init__(self, loop, logger, connector_name, globopts, webapi_opts,
-                 confcust, topofeedpaging, uidservendp, fetchtype, fixed_date):
-        self.loop = loop
-        self.logger = logger
-        self.connector_name = connector_name
-        self.globopts = globopts
-        self.webapi_opts = webapi_opts
-        self.confcust = confcust
-        self.topofeedpaging = topofeedpaging
-        self.uidservendp = uidservendp
+class TaskProviderTopology:
+    def __init__(self, fixed_date, combuid=None):
+        self.connector_name = Global.caller
+        self.globopts = Global.options()
+        self.Customer = get_custconf(combuid)
+        self.paginated = self.Customer.opt('TopoFeedPaging')
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
         self.fixed_date = fixed_date
-        self.fetchtype = fetchtype
+        self.fetchtype = self.Customer.get_topofetchtype()[0]
+        self.combuid = combuid
+        self.tags_ge = self.Customer.opt('TopoTagServiceEndpoints')
+        self.tags_gg = self.Customer.opt('TopoTagServiceGroups') + self.Customer.opt('TopoTagSites')
 
     def parse_source_extensions(self, extensions, groupnames):
-        resources_extended = ParseExtensions(self.logger, extensions, groupnames, self.uidservendp, self.logger.customer)
+        resources_extended = ParseExtensions(extensions, groupnames, self.combuid)
 
         return resources_extended.get_extensions()
 
     def parse_source_topo(self, resources, providers):
-        topo = ParseTopo(self.logger, providers, resources, self.uidservendp, self.logger.customer)
+        topo = ParseTopo(providers, resources, self.combuid)
 
         return topo.get_group_groups(), topo.get_group_endpoints()
 
@@ -115,25 +110,19 @@ class TaskProviderTopology(object):
         else:
             return None
 
-    async def send_webapi(self, webapi_opts, data, topotype, fixed_date=None):
-        webapi = WebAPI(self.connector_name, webapi_opts['webapihost'],
-                        webapi_opts['webapitoken'], self.logger,
-                        int(self.globopts['ConnectionRetry'.lower()]),
-                        int(self.globopts['ConnectionTimeout'.lower()]),
-                        int(self.globopts['ConnectionSleepRetry'.lower()]),
-                        self.globopts['ConnectionRetryRandom'.lower()],
-                        int(self.globopts['ConnectionSleepRandomRetryMax'.lower()]),
-                        date=fixed_date)
-        await webapi.send(data, topotype)
-
-    async def fetch_data(self, feed, access_token, paginated):
+    async def fetch_data(self, feed, access_token):
         remote_topo = urlparse(feed)
-        session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
+        session = SessionWithRetry(handle_session_close=True)
 
-        headers = {
-            "Accept": "application/json",
-            "Authorization": "Bearer {0}".format(access_token)
-        }
+        if access_token:
+            headers = {
+                "Accept": "application/json",
+                "Authorization": "Bearer {0}".format(access_token)
+            }
+        else:
+            headers = {
+                "Accept": "application/json",
+            }
 
         try:
             res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
@@ -144,9 +133,9 @@ class TaskProviderTopology(object):
             await session.close()
             raise exc
 
-        if paginated:
+        if self.paginated:
             try:
-                next_cursor = find_next_paging_cursor_count(self.logger, res)
+                next_cursor = find_next_paging_cursor_count(res)
                 total, from_index, to_index = next_cursor()
                 fetched_results = filter_out_results(res)
                 num = to_index - from_index
@@ -160,7 +149,7 @@ class TaskProviderTopology(object):
                                                                                 from_index,
                                                                                 num), headers=headers)
                     fetched_results = fetched_results + filter_out_results(res)
-                    next_cursor = find_next_paging_cursor_count(self.logger, res)
+                    next_cursor = find_next_paging_cursor_count(res)
                     total, from_index, to_index = next_cursor()
                     num = to_index - from_index
                     from_index = to_index
@@ -174,7 +163,7 @@ class TaskProviderTopology(object):
 
         else:
             try:
-                next_cursor = find_next_paging_cursor_count(self.logger, res)
+                next_cursor = find_next_paging_cursor_count(res)
                 total, from_index, to_index = next_cursor()
                 num = total
                 from_index = 0
@@ -194,7 +183,7 @@ class TaskProviderTopology(object):
 
     async def token_fetch(self, oidcclientid, oidctoken, oidcapi):
         token_endpoint = urlparse(oidcapi)
-        session = SessionWithRetry(self.logger, self.logger.customer, self.globopts, handle_session_close=True)
+        session = SessionWithRetry(handle_session_close=True)
 
         data = 'grant_type=refresh_token&refresh_token={0}'.format(oidctoken)
         data += '&client_id={0}&scope=openid%20email%20profile'.format(oidcclientid)
@@ -236,37 +225,39 @@ class TaskProviderTopology(object):
         return access_token, refresh_token
 
     async def run(self):
-        topofeedextensions = self.confcust.get_topofeedendpointsextensions()
-        topofeedproviders = self.confcust.get_topofeedservicegroups()
-        topofeedresources = self.confcust.get_topofeedendpoints()
-        oidctoken = self.confcust.get_oidctoken()
-        oidctokenapi = self.confcust.get_oidctokenapi()
-        oidcclientid = self.confcust.get_oidcclientid()
-        topofeedresources = self.confcust.get_topofeedendpoints()
+        topofeedextensions = self.Customer.opt('TopoFeedServiceEndpointsExtensions') or self.Customer.opt('TopoFeedEndpointsExtensions')
+        topofeedproviders = self.Customer.opt('TopoFeedServiceGroups')
+        topofeedresources = self.Customer.opt('TopoFeedServiceEndpoints') or self.Customer.opt('TopoFeedEndpoints')
+        oidctoken = self.Customer.opt('OIDCRefreshTOken')
+        oidctokenapi = self.Customer.opt('OIDCTokenEndpoint')
+        oidcclientid = self.Customer.opt('OIDCClientId')
 
-        token_file = self.read_file_token()
-        if token_file:
-            oidctoken = token_file
+        access_token = None
 
         if oidctoken and oidctokenapi:
-            access_token, refresh_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
-        else:
-            raise ConnectorError('OIDC token missing')
+            token_file = self.read_file_token()
+            if token_file:
+                oidctoken = token_file
 
-        if refresh_token:
-            self.store_refresh_token(oidctoken, refresh_token)
+            if oidctoken and oidctokenapi:
+                access_token, refresh_token = await self.token_fetch(oidcclientid, oidctoken, oidctokenapi)
+            else:
+                raise ConnectorError('OIDC token missing')
+
+            if refresh_token:
+                self.store_refresh_token(oidctoken, refresh_token)
 
         coros = [
-            self.fetch_data(topofeedresources, access_token, self.topofeedpaging),
-            self.fetch_data(topofeedproviders, access_token, self.topofeedpaging),
+            self.fetch_data(topofeedresources, access_token),
+            self.fetch_data(topofeedproviders, access_token),
         ]
         if topofeedextensions:
-            coros.append(self.fetch_data(topofeedextensions, access_token, self.topofeedpaging))
+            coros.append(self.fetch_data(topofeedextensions, access_token))
 
         # fetch topology data concurrently in coroutines
         fetched_data = await asyncio.gather(*coros, return_exceptions=True)
 
-        exc_raised, exc = contains_exception(fetched_data)
+        exc_raised, exc = has_exception(fetched_data)
         if exc_raised:
             raise ConnectorError(repr(exc))
 
@@ -277,7 +268,7 @@ class TaskProviderTopology(object):
 
         if fetched_resources and fetched_providers:
             group_groups, group_endpoints = self.parse_source_topo(fetched_resources, fetched_providers)
-            endpoints_contacts = ParseResourcesContacts(self.logger, fetched_resources).get_contacts()
+            endpoints_contacts = ParseResourcesContacts(fetched_resources).get_contacts()
 
             if topofeedextensions:
                 group_endpoints_extended = self.parse_source_extensions(
@@ -285,22 +276,36 @@ class TaskProviderTopology(object):
                 )
                 group_endpoints = group_endpoints + group_endpoints_extended
 
-            attach_contacts_topodata(self.logger, endpoints_contacts, group_endpoints)
+            attach_contacts_topodata(endpoints_contacts, group_endpoints)
 
-            await write_state(self.connector_name, self.globopts, self.confcust, self.fixed_date, True)
+            if not self.combuid:
+                await write_state(self.fixed_date, True)
 
+            if self.tags_ge or self.tags_gg:
+                group_groups, group_endpoints = await attach_tags(group_groups,
+                                                                  group_endpoints,
+                                                                  self.tags_gg,
+                                                                  self.tags_ge)
             numge = len(group_endpoints)
             numgg = len(group_groups)
 
-            # send concurrently to WEB-API in coroutines
-            if eval(self.globopts['GeneralPublishWebAPI'.lower()]):
-                await asyncio.gather(
-                    self.send_webapi(self.webapi_opts, group_groups, 'groups', self.fixed_date),
-                    self.send_webapi(self.webapi_opts, group_endpoints, 'endpoints', self.fixed_date),
-                    loop=self.loop
-                )
+            if not self.combuid:
+                # send concurrently to WEB-API in coroutines
+                if self.globopts['GeneralPublishWebAPI'.lower()]:
+                    webapi = WebAPI(date=self.fixed_date, combuid=self.combuid)
+                    await asyncio.gather(
+                        webapi.send(group_groups, 'groups'),
+                        webapi.send(group_endpoints, 'endpoints')
+                    )
+                    await webapi.session.close()
 
-            if eval(self.globopts['GeneralWriteJson'.lower()]):
-                write_json(self.logger, self.globopts, self.confcust, group_groups, group_endpoints, self.fixed_date)
+                if self.globopts['GeneralWriteJson'.lower()]:
+                    write_json(group_groups, group_endpoints,
+                               self.fixed_date)
 
-            self.logger.info('Customer:' + self.logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            if not self.combuid:
+                Logger.info('Customer:' + Logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+            else:
+                Logger.info(module_class_name(self) + ' ID:' + self.combuid + ' Customer:' + Logger.customer + ' Fetched Endpoints:%d' % (numge) + ' Groups(%s):%d' % (self.fetchtype, numgg))
+
+                return group_groups, group_endpoints

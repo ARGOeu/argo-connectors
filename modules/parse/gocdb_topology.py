@@ -1,22 +1,25 @@
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
+from argo_connectors.config.customer import get_custconf
+from argo_connectors.config.glob import Global
+from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import module_class_name
-from argo_connectors.exceptions import ConnectorParseError
 
 
 class ParseSites(ParseHelpers):
-    def __init__(self, logger, data, custname, uid=False,
-                 pass_extensions=False, notification_flag=False):
-        super().__init__(logger)
-        self.logger = logger
+    def __init__(self, data, combuid=None):
+        super().__init__()
+        self.Customer = get_custconf(combuid)
+        self.combuid = combuid
         self.data = data
-        self.uidservendp = uid
-        self.custname = custname
-        self.pass_extensions = pass_extensions
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
+        self.custname = self.Customer.get_custname()
+        self.pass_extensions = Global.options()['GeneralPassExtensions'.lower()]
         self._sites = dict()
-        self.notification_flag = notification_flag
+        self.notification_flag = self.Customer.opt('HonorNotificationFlag') or False
         self._parse_data()
 
     def _parse_data(self):
@@ -77,7 +80,9 @@ class ParseSites(ParseHelpers):
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
             msg = module_class_name(self) + ' Customer:%s : Error parsing sites feed - %s' % (
-                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+                Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = module_class_name(self) + ' ID:' + self.combuid + ' Customer:%s : Error parsing sites feed - %s' % (
+                Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -91,7 +96,7 @@ class ParseSites(ParseHelpers):
 
         for group in group_list:
             tmpg = dict()
-            tmpg['type'] = 'NGI'
+            tmpg['type'] = self.topo_type('gg', 'Sites')
             tmpg['group'] = group['ngi']
             tmpg['subgroup'] = group['site']
             if self.notification_flag:
@@ -111,14 +116,15 @@ class ParseSites(ParseHelpers):
 
 
 class ParseServiceEndpoints(ParseHelpers):
-    def __init__(self, logger, data=None, custname=None, uid=False,
-                 pass_extensions=False, notification_flag=False):
-        super().__init__(logger)
+    def __init__(self, data=None, combuid=None):
+        super().__init__()
+        self.Customer = get_custconf(combuid)
+        self.combuid = combuid
         self.data = data
-        self.uidservendp = uid
-        self.custname = custname
-        self.pass_extensions = pass_extensions
-        self.notification_flag = notification_flag
+        self.custname = self.Customer.get_custname()
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
+        self.pass_extensions = Global.options()['GeneralPassExtensions'.lower()]
+        self.notification_flag = self.Customer.opt('HonorNotificationFlag')
         self._service_endpoints = dict()
         self._parse_data()
         self.maxDiff = None
@@ -192,8 +198,12 @@ class ParseServiceEndpoints(ParseHelpers):
                         url)
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
-            msg = module_class_name(self) + ' Customer:%s : Error parsing topology service endpoint feed - %s' % (
-                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            if not self.combuid:
+                msg = module_class_name(self) + ' Customer:%s : Error parsing topology service endpoint feed - %s' % (
+                    Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            else:
+                msg = module_class_name(self) + ' ID:' + self.combuid + ' Customer:%s : Error parsing topology service endpoint feed - %s' % (
+                    Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -207,7 +217,7 @@ class ParseServiceEndpoints(ParseHelpers):
 
         for group in group_list:
             tmpg = dict()
-            tmpg['type'] = 'SITES'
+            tmpg['type'] = self.topo_type('ge', 'Sites')
             tmpg['group'] = group['site']
             tmpg['service'] = group['type']
             if self.notification_flag:
@@ -250,14 +260,15 @@ class ParseServiceEndpoints(ParseHelpers):
 
 
 class ParseServiceGroups(ParseHelpers):
-    def __init__(self, logger, data, custname, uid=False,
-                 pass_extensions=False, notification_flag=False):
-        super().__init__(logger)
+    def __init__(self, data, combuid=None):
+        super().__init__()
+        self.Customer = get_custconf(combuid)
+        self.combuid = combuid
         self.data = data
-        self.uidservendp = uid
-        self.custname = custname
-        self.pass_extensions = pass_extensions
-        self.notification_flag = notification_flag
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
+        self.custname = self.Customer.get_custname()
+        self.pass_extensions = Global.options()['GeneralPassExtensions'.lower()]
+        self.notification_flag = self.Customer.opt('HonorNotificationFlag')
         # group_groups and group_endpoints components for ServiceGroup topology
         self._service_groups = dict()
         self._parse_data()
@@ -275,7 +286,7 @@ class ParseServiceGroups(ParseHelpers):
 
                     self._service_groups[group_id]['name'] = self.parse_xmltext(group.find('NAME'))
 
-                    self._service_groups[group_id]['monitored'] =  self.parse_xmltext(group.find('MONITORED'))
+                    self._service_groups[group_id]['monitored'] = self.parse_xmltext(group.find('MONITORED'))
 
                     self._service_groups[group_id]['services'] = []
                     self._service_groups[group_id]['scope'] = ', '.join(self.parse_scopes(group))
@@ -330,8 +341,12 @@ class ParseServiceGroups(ParseHelpers):
                         self._service_groups[group_id]['services'].append(tmps)
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
-            msg = module_class_name(self) + ' Customer:%s : Error parsing service groups feed - %s' % (
-                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            if not self.combuid:
+                msg = module_class_name(self) + ' Customer:%s : Error parsing service groups feed - %s' % (
+                    Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+            else:
+                msg = module_class_name(self) + ' ID:' + self.combuid + ' Customer:%s : Error parsing service groups feed - %s' % (
+                    Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -345,7 +360,7 @@ class ParseServiceGroups(ParseHelpers):
         for group in group_list:
             for service in group['services']:
                 tmpg = dict()
-                tmpg['type'] = 'SERVICEGROUPS'
+                tmpg['type'] = self.topo_type('ge', 'ServiceGroups')
                 tmpg['group'] = group['name']
                 tmpg['service'] = service['type']
                 if self.notification_flag:
@@ -388,7 +403,7 @@ class ParseServiceGroups(ParseHelpers):
 
         for group in group_list:
             tmpg = dict()
-            tmpg['type'] = 'PROJECT'
+            tmpg['type'] = self.topo_type('gg', 'ServiceGroups')
             tmpg['group'] = self.custname
             if self.notification_flag:
                 tmpg['notifications'] = {

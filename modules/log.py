@@ -7,7 +7,7 @@ import os
 LOGFILE = f"{os.environ['VIRTUAL_ENV']}/var/log/connectors.log"
 
 
-class Logger:
+class _Logger:
     def __init__(self, connector):
         lfs = '%(name)s[%(process)s]: %(levelname)s %(message)s'
         logformat = logging.Formatter(lfs)
@@ -28,12 +28,16 @@ class Logger:
         try:
             lffs = '%(asctime)s %(name)s[%(process)s]: %(levelname)s %(message)s'
             lff = logging.Formatter(lffs)
-            filehandle = logging.handlers.RotatingFileHandler(LOGFILE, maxBytes=512*1024, backupCount=5)
+            filehandle = logging.handlers.RotatingFileHandler(LOGFILE, maxBytes=512 * 1024, backupCount=5)
             filehandle.setFormatter(lff)
             filehandle.setLevel(logverbose)
             self.logger.addHandler(filehandle)
         except Exception:
             pass
+
+    def __call__(self, connector):
+        self.__init__(connector)
+        return self
 
     def __getstate__(self):
         d = dict(self.__dict__)
@@ -55,3 +59,6 @@ class Logger:
 
     def info(self, msg):
         self.logger.info(msg)
+
+
+Logger = _Logger('config/log.py')

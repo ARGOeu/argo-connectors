@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.4.0] - 2025-12-08
+
+### Added
+
+ARGO-5058 ARGO Introduce general combiner module in argo-connectors
+ARGO-5077 EOSC Provider connector EOSC Beyond changes
+ARGO-5169 Unit tests for combiner module
+ARGO-5139 Extend combiners to add custom key, value pairs in respective tags bucket
+ARGO-5124 Add downtimes-combiner, servicetypes-combiner and remove metricprofile-webapi connector
+
+### Changed
+
+ARGO-5134 Refactor with global object pattern for logging
+ARGO-5191 Remove slashes in group names for LOT1 Service Catalogue connector
+ARGO-5138 Original hostname in tags for LOT1 Service Catalogue if TopoUIDServiceEndpoints enabled
+ARGO-5117 Remove slashes from IDs in PROVIDER topology endpoints
+
+### Fixed
+
+ARGO-5084 topology gocdb connector does not correctly write state files on LDAP failed queries
+ARGO-5121 Fix connectors-probe with latest changes in configuration handling of argo-connectors
+ARGO-5122 Fix argo-connectors unit tests due to comprehensive configuration handling refactorings
+ARGO-5127 Fix LOT1 SC connector not returning topology components when called from combiner
+
 ## [2.3.1] - 2025-07-17
 
 ### Changed

@@ -9,18 +9,18 @@ from argo_connectors.mesh.storage_element_path import attach_sepath_topodata
 from bonsai import LDAPEntry
 
 
-logger = Logger('test_contactfeed.py')
 CUSTOMER_NAME = 'CUSTOMERFOO'
 
 
 class MeshSePathAndTopodata(unittest.TestCase):
     def setUp(self):
+        logger = Logger(f'{__name__}.{__class__.__name__}')
         logger.customer = CUSTOMER_NAME
         with open('tests/sample-bdii_sepaths.json') as fh:
             content = fh.read()
             self.sample_ldap = json.loads(content)
         self.maxDiff = None
-        self.bdiiopts =  {
+        self.bdiiopts = {
             'bdii': 'True', 'bdiihost': 'bdii.egi.cro-ngi.hr',
             'bdiiport': '2170',
             'bdiiqueryattributessepath': 'GlueVOInfoAccessControlBaseRule GlueVOInfoPath',
@@ -29,7 +29,6 @@ class MeshSePathAndTopodata(unittest.TestCase):
             'bdiiqueryfiltersepath': '(objectClass=GlueSATop)',
             'bdiiqueryfiltersrm': '(&(objectClass=GlueService)(|(GlueServiceType=srm_v1)(GlueServiceType=srm)))'
         }
-
 
         self.sample_storage_endpoints = [
             {
@@ -97,7 +96,7 @@ class MeshSePathAndTopodata(unittest.TestCase):
         self.sample_ldap = tmp
 
     def test_meshSePathTopo(self):
-        attach_sepath_topodata(logger, self.bdiiopts, self.sample_ldap, self.sample_storage_endpoints)
+        attach_sepath_topodata(self.bdiiopts, self.sample_ldap, self.sample_storage_endpoints)
         self.assertEqual(self.sample_storage_endpoints, [
             {
                 'group': 'UKI-SCOTGRID-GLASGOW',

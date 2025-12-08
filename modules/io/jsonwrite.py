@@ -10,14 +10,14 @@ class JsonWriter(object):
 
     def write_json(self):
         try:
-            if self.compress_json == str(True):
+            if self.compress_json:
                 json_data = json.dumps(self.data, indent=4)
 
                 with gzip.open(self.filename + '.gz', 'wb') as f:
                     f.write(json_data.encode())
 
                 return True, None
-            
+
             else:
                 json_data = json.dumps(self.data, indent=4)
 

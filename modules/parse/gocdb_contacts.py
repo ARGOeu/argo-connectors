@@ -1,9 +1,10 @@
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
+from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import module_class_name
-from argo_connectors.exceptions import ConnectorParseError
 
 
 class ParseContacts(ParseHelpers):
@@ -45,12 +46,11 @@ class ParseContacts(ParseHelpers):
                     else:
                         sites_contacts[sitename] = [contact]
 
-
             return sites_contacts
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
-            self.logger.error(module_class_name(self) + ' Customer:%s : Error parsing - %s' %
-                              (self.logger.customer, repr(exc).replace('\'', '').replace('\"', '')))
+            Logger.error(module_class_name(self) + ' Customer:%s : Error parsing - %s' %
+                         (Logger.customer, repr(exc).replace('\'', '').replace('\"', '')))
             raise exc
 
     def parse_servicegroups_with_contacts(self, data):
@@ -79,8 +79,8 @@ class ParseContacts(ParseHelpers):
             return endpoints_contacts
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
-            self.logger.error(module_class_name(self) + ' Customer:%s : Error parsing - %s' %
-                              (self.logger.customer, repr(exc).replace('\'', '').replace('\"', '')))
+            Logger.error(module_class_name(self) + ' Customer:%s : Error parsing - %s' %
+                         (Logger.customer, repr(exc).replace('\'', '').replace('\"', '')))
             raise exc
 
     def parse_serviceendpoint_contacts(self, data):
@@ -119,15 +119,14 @@ class ParseContacts(ParseHelpers):
             return endpoints_contacts
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
-            self.logger.error(module_class_name(self) + ' Customer:%s : Error parsing - %s' %
-                              (self.logger.customer, repr(exc).replace('\'', '').replace('\"', '')))
+            Logger.error(module_class_name(self) + ' Customer:%s : Error parsing - %s' %
+                         (Logger.customer, repr(exc).replace('\'', '').replace('\"', '')))
             raise exc
 
 
 class ParseSitesWithContacts(ParseContacts):
-    def __init__(self, logger, data):
-        super().__init__(logger)
-        self.logger = logger
+    def __init__(self, data):
+        super().__init__()
         self.data = data
         self._parse_data()
 
@@ -135,7 +134,7 @@ class ParseSitesWithContacts(ParseContacts):
         try:
             return self.parse_sites_with_contacts(self.data)
 
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
+        except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError):
             raise ConnectorParseError
 
     def get_contacts(self):
@@ -143,16 +142,15 @@ class ParseSitesWithContacts(ParseContacts):
 
 
 class ParseServiceEndpointContacts(ParseContacts):
-    def __init__(self, logger, data):
-        super().__init__(logger)
-        self.logger = logger
+    def __init__(self, data):
+        super().__init__()
         self.data = data
 
     def _parse_data(self):
         try:
             return self.parse_serviceendpoint_contacts(self.data)
 
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
+        except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError):
             raise ConnectorParseError
 
     def get_contacts(self):
@@ -160,8 +158,8 @@ class ParseServiceEndpointContacts(ParseContacts):
 
 
 class ParseProjectContacts(object):
-    def __init__(self, logger, data):
-        super().__init__(logger)
+    def __init__(self, data):
+        super().__init__()
         self.data = data
 
     def _parse_data(self):
@@ -172,16 +170,15 @@ class ParseProjectContacts(object):
 
 
 class ParseServiceGroupWithContacts(ParseContacts):
-    def __init__(self, logger, data):
-        super().__init__(logger)
+    def __init__(self, data):
+        super().__init__()
         self.data = data
-        self.logger = logger
 
     def _parse_data(self):
         try:
             return self.parse_servicegroups_with_contacts(self.data)
 
-        except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError) as exc:
+        except (KeyError, IndexError, TypeError, AttributeError, AssertionError, XMLSyntaxError):
             raise ConnectorParseError
 
     def get_contacts(self):

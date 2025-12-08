@@ -1,13 +1,11 @@
-from urllib.parse import urlparse
-from argo_connectors.utils import filename_date, module_class_name
 from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.parse.base import ParseHelpers
 
 
 class ParseFlatServiceTypes(ParseHelpers):
-    def __init__(self, logger, data, is_csv=False):
+    def __init__(self, data, is_csv=False):
         self.data = data
-        self.logger = logger
         self.is_csv = is_csv
         try:
             if is_csv:
@@ -44,5 +42,5 @@ class ParseFlatServiceTypes(ParseHelpers):
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
             feedtype = 'CSV' if self.is_csv else 'JSON'
-            msg = 'Customer:%s : Error parsing %s feed - %s' % (self.logger.customer, feedtype, repr(exc).replace('\'', '').replace('\"', ''))
+            msg = 'Customer:%s : Error parsing %s feed - %s' % (Logger.customer, feedtype, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)

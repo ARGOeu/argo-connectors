@@ -1,10 +1,12 @@
 from urllib.parse import urlparse
+
+from argo_connectors.config.customer import get_custconf
 from argo_connectors.exceptions import ConnectorParseError
+from argo_connectors.log import Logger
 from argo_connectors.parse.base import ParseHelpers
-from argo_connectors.utils import filename_date, module_class_name, construct_fqdn, remove_non_utf
+from argo_connectors.utils import module_class_name, construct_fqdn, remove_non_utf
 
 import uuid
-import json
 
 SERVICE_NAME_WEBPAGE = 'eu.eosc.portal.services.url'
 
@@ -12,7 +14,7 @@ SERVICE_NAME_WEBPAGE = 'eu.eosc.portal.services.url'
 def buildmap_id2groupname(resources):
     id2name = dict()
     for resource in resources:
-        id2name[resource['group']] = resource['tags']['info_groupname']
+        id2name[resource['tags']['info_ID']] = resource['tags']['info_groupname']
     return id2name
 
 
@@ -24,12 +26,17 @@ def build_urlpath_id(http_endpoint):
         return None
 
 
+def clean_id(idslash):
+    return idslash.replace('/', '-').replace('.', '-')
+
+
 class ParseResources(ParseHelpers):
-    def __init__(self, logger, data=None, keys=[], custname=None):
-        super(ParseResources, self).__init__(logger)
+    def __init__(self, data=None, keys=[], combuid=None):
+        super(ParseResources, self).__init__()
         self.data = data
         self._keys = keys
-        self.custname = custname
+        self.Customer = get_custconf(combuid)
+        self.custname = self.Customer.get_custname()
         self._resources = list()
         self._parse_data()
 
@@ -40,8 +47,7 @@ class ParseResources(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                resource = feeddata['service']
-                tags = resource['tags']
+                tags = feeddata['tags']
                 extras = feeddata.get('resourceExtras', None)
                 if extras:
                     for key in self._keys:
@@ -49,25 +55,25 @@ class ParseResources(ParseHelpers):
                         if key_true:
                             tags.append(key)
                 for key in self._keys:
-                    key_true = resource.get(key, False)
+                    key_true = feeddata.get(key, False)
                     if key_true:
                         tags.append(key)
-                if not resource.get('name', False):
+                if not feeddata.get('name', False):
                     continue
                 self._resources.append({
-                    'id': resource['id'],
+                    'id': feeddata['id'],
                     'hardcoded_service': SERVICE_NAME_WEBPAGE,
-                    'name': resource['name'],
-                    'provider': resource['resourceOrganisation'],
-                    'webpage': resource['webpage'],
+                    'name': feeddata['name'],
+                    'provider': feeddata['resourceOrganisation'],
+                    'webpage': feeddata['webpage'],
                     'resource_tag': tags,
-                    'description': resource['description']
+                    'description': feeddata['description']
                 })
             self.data = self._resources
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
             msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Resources feed - %s' % (
-                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+                Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -75,10 +81,11 @@ class ParseResources(ParseHelpers):
 
 
 class ParseProviders(ParseHelpers):
-    def __init__(self, logger, data, custname):
-        super(ParseProviders, self).__init__(logger)
+    def __init__(self, data, combuid=None):
+        super(ParseProviders, self).__init__()
         self.data = data
-        self.custname = custname
+        self.Customer = get_custconf(combuid)
+        self.custname = self.Customer.get_custname()
         self._providers = list()
         self._parse_data()
         self.unique_names = set()
@@ -90,21 +97,20 @@ class ParseProviders(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                provider = feeddata['provider']
-                if not provider.get('website', False):
+                if not feeddata.get('website', False):
                     continue
                 self._providers.append({
-                    'id': provider['id'],
-                    'website': provider['website'],
-                    'name': provider['name'],
-                    'abbr': provider['abbreviation'],
-                    'provider_tag': provider['tags']
+                    'id': feeddata['id'],
+                    'website': feeddata['website'],
+                    'name': feeddata['name'],
+                    'abbr': feeddata['abbreviation'],
+                    'provider_tag': feeddata['tags']
                 })
             self.data = self._providers
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
             msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Providers feed - %s' % (
-                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+                Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -118,11 +124,12 @@ class ParseProviders(ParseHelpers):
 
 
 class ParseExtensions(ParseHelpers):
-    def __init__(self, logger, data=None, groupnames=None, uidservendp=True, custname=None):
-        super(ParseExtensions, self).__init__(logger)
+    def __init__(self, data=None, groupnames=None, combuid=None):
+        super(ParseExtensions, self).__init__()
         self.data = data
-        self.custname = custname
-        self.uidservendp = uidservendp
+        self.Customer = get_custconf(combuid)
+        self.custname = self.Customer.get_custname()
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
         self._extensions = list()
         self.groupnames = groupnames
         self._parse_data()
@@ -135,14 +142,19 @@ class ParseExtensions(ParseHelpers):
                 json_data = self.data
 
             for extension in json_data['results']:
-                if extension['serviceId'] not in self.groupnames:
+                if clean_id(extension['resourceId']) not in self.groupnames:
                     continue
 
-                for group in extension['monitoringGroups']:
+                if 'serviceCheck' not in extension['payload']:
+                    continue
+
+                for group in extension['payload']['serviceCheck']:
                     gee = dict()
-                    gee['type'] = 'SERVICEGROUPS'
+                    urlpath_id = None
+                    gee['type'] = self.topo_type('ge')
                     gee['service'] = group['serviceType']
-                    gee['group'] = extension['serviceId']
+                    gee['group'] = self.groupnames[clean_id(extension['resourceId'])]
+
                     if self.uidservendp:
                         hostname = construct_fqdn(group['endpoint'])
                         urlpath_id = build_urlpath_id(group['endpoint'])
@@ -150,22 +162,23 @@ class ParseExtensions(ParseHelpers):
                             hostname = group['endpoint']
                         if urlpath_id:
                             gee['hostname'] = '{}_{}_{}'.format(
-                                hostname, extension['id'], urlpath_id)
+                                hostname, clean_id(extension['id']), urlpath_id)
                         else:
                             gee['hostname'] = '{}_{}'.format(
-                                hostname, extension['id'])
+                                hostname, clean_id(extension['id']))
                     else:
                         hostname = construct_fqdn(group['endpoint'])
                         if not hostname:
                             hostname = group['endpoint']
                         gee['hostname'] = hostname
+
                     gee['tags'] = dict(
                         info_URL=group['endpoint'],
                         info_ID='{}_{}'.format(
-                            extension['id'], urlpath_id) if urlpath_id else extension['id'],
-                        info_monitored_by=extension['monitoredBy'],
-                        info_groupname=self.groupnames[extension['serviceId']]
+                            clean_id(extension['id']), urlpath_id) if urlpath_id else clean_id(extension['id']),
+                        info_groupname=self.groupnames[clean_id(extension['resourceId'])]
                     )
+
                     if self.uidservendp:
                         hostname = construct_fqdn(group['endpoint'])
                         if not hostname:
@@ -175,7 +188,7 @@ class ParseExtensions(ParseHelpers):
 
         except (KeyError, IndexError, TypeError, AttributeError, AssertionError) as exc:
             msg = module_class_name(self) + ' Customer:%s : Error parsing EOSC Resources Extensions feed - %s' % (
-                self.logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
+                Logger.customer, repr(exc).replace('\'', '').replace('\"', ''))
             raise ConnectorParseError(msg)
 
         except ConnectorParseError as exc:
@@ -185,12 +198,13 @@ class ParseExtensions(ParseHelpers):
         return self._extensions
 
 
-class ParseTopo(object):
-    def __init__(self, logger, providers, resources, uidservendp, custname):
-        self.uidservendp = uidservendp
-        self.providers = ParseProviders(logger, providers, custname)
-        self.resources = ParseResources(
-            logger, resources, ['horizontalService'], custname)
+class ParseTopo:
+    def __init__(self, providers, resources, combuid=None):
+        self.Customer = get_custconf(combuid)
+        self.combuid = combuid
+        self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
+        self.providers = ParseProviders(providers, self.combuid)
+        self.resources = ParseResources(resources, ['horizontalService'], self.combuid)
         self.maxDiff = None
 
     def get_group_groups(self):
@@ -201,22 +215,23 @@ class ParseTopo(object):
                 lambda resource: resource['provider'] == provider['id'],
                 self.resources.data
             ))
+
             for resource in resource_from_provider:
                 gge = dict()
                 if (providers_added.get(provider['id'], False) and
                         providers_added[provider['id']] == resource['id']):
                     continue
-                gge['type'] = 'PROJECT'
-                gge['group'] = provider['id']
-                gge['subgroup'] = resource['id']
+                gge['type'] = self.providers.topo_type('gg')
+                gge['group'] = provider['abbr']
+                gge['subgroup'] = resource['name']
                 if provider.get('provider_tag', False):
                     provider_tags = [tag.strip()
                                      for tag in provider['provider_tag']]
                     gge['tags'] = dict(provider_tags=', '.join(
-                        provider_tags), info_projectname=provider['abbr'])
+                        provider_tags), info_projectid=clean_id(provider['id']))
                 else:
                     gge['tags'] = dict(
-                        info_projectname=provider['abbr'].strip())
+                        info_projectid=clean_id(provider['id'].strip()))
                 gg.append(gge)
                 providers_added.update(
                     {provider['id'].strip(): resource['id'].strip()})
@@ -226,15 +241,16 @@ class ParseTopo(object):
     def get_group_endpoints(self):
         ge = list()
         unique_providers = self.providers.get_unique()
+
         for resource in self.resources.data:
             if resource['provider'] not in unique_providers:
                 continue
             gee = dict()
-            gee['type'] = 'SERVICEGROUPS'
+            gee['type'] = self.resources.topo_type('ge')
             gee['service'] = resource['hardcoded_service']
-            gee['group'] = resource['id']
+            gee['group'] = resource['name']
             if self.uidservendp:
-                gee['hostname'] = '{}_{}'.format(construct_fqdn(resource['webpage']), remove_non_utf(resource['id']))
+                gee['hostname'] = '{}_{}'.format(construct_fqdn(resource['webpage']), clean_id(remove_non_utf(resource['id'])))
             else:
                 gee['hostname'] = construct_fqdn(resource['webpage'])
             if resource.get('resource_tag', False):
@@ -244,11 +260,11 @@ class ParseTopo(object):
                     continue
                 gee['tags'] = dict(service_tags=', '.join(resource_tags),
                                    info_URL=resource['webpage'].strip(),
-                                   info_ID=resource['id'].strip(),
+                                   info_ID=clean_id(resource['id'].strip()),
                                    info_groupname=resource['name'].strip())
             else:
                 gee['tags'] = dict(info_URL=resource['webpage'].strip(),
-                                   info_ID=resource['id'].strip(),
+                                   info_ID=clean_id(resource['id'].strip()),
                                    info_groupname=resource['name'].strip())
             if self.uidservendp:
                 gee['tags'].update(

@@ -1,5 +1,4 @@
 import datetime
-import mock
 import unittest
 
 from argo_connectors.log import Logger
@@ -14,13 +13,13 @@ class ParseCsvDowntimes(unittest.TestCase):
         with open('tests/sample-downtimes.csv', encoding='utf-8') as feed_file:
             self.downtimes = feed_file.read()
         self.maxDiff = None
-        logger = mock.Mock()
+        logger = Logger(f'{__name__}.{__class__.__name__}')
         logger.customer = CUSTOMER_NAME
         self.logger = logger
 
     def test_parseDowntimes(self):
         date_2_21_2022 = datetime.datetime(2022, 2, 21)
-        flat_downtimes = ParseDowntimes(self.logger, self.downtimes, date_2_21_2022, True)
+        flat_downtimes = ParseDowntimes(self.downtimes, date_2_21_2022, True)
         downtimes = flat_downtimes.get_data()
         self.assertEqual(len(downtimes), 16)
         first_schedule = downtimes[0]
@@ -31,7 +30,7 @@ class ParseCsvDowntimes(unittest.TestCase):
         self.assertEqual(end_time, datetime.datetime(2022, 2, 21, 23, 59))
 
         date_2_22_2022 = datetime.datetime(2022, 2, 22)
-        flat_downtimes = ParseDowntimes(self.logger, self.downtimes, date_2_22_2022, True)
+        flat_downtimes = ParseDowntimes(self.downtimes, date_2_22_2022, True)
         downtimes = flat_downtimes.get_data()
         self.assertEqual(len(downtimes), 16)
         first_schedule = downtimes[0]
@@ -42,7 +41,7 @@ class ParseCsvDowntimes(unittest.TestCase):
         self.assertEqual(end_time, datetime.datetime(2022, 2, 22, 19, 0))
 
         date_3_1_2022 = datetime.datetime(2022, 3, 1)
-        flat_downtimes = ParseDowntimes(self.logger, self.downtimes, date_3_1_2022, True)
+        flat_downtimes = ParseDowntimes(self.downtimes, date_3_1_2022, True)
         downtimes = flat_downtimes.get_data()
         self.assertEqual(len(downtimes), 16)
         first_schedule = downtimes[0]
@@ -53,7 +52,7 @@ class ParseCsvDowntimes(unittest.TestCase):
         self.assertEqual(end_time, datetime.datetime(2022, 3, 1, 23, 59))
 
         date_3_2_2022 = datetime.datetime(2022, 3, 2)
-        flat_downtimes = ParseDowntimes(self.logger, self.downtimes, date_3_2_2022, True)
+        flat_downtimes = ParseDowntimes(self.downtimes, date_3_2_2022, True)
         downtimes = flat_downtimes.get_data()
         self.assertEqual(len(downtimes), 16)
         first_schedule = downtimes[0]
@@ -64,7 +63,7 @@ class ParseCsvDowntimes(unittest.TestCase):
         self.assertEqual(end_time, datetime.datetime(2022, 3, 2, 23, 59))
 
         date_3_4_2022 = datetime.datetime(2022, 3, 4)
-        flat_downtimes = ParseDowntimes(self.logger, self.downtimes, date_3_4_2022, True)
+        flat_downtimes = ParseDowntimes(self.downtimes, date_3_4_2022, True)
         downtimes = flat_downtimes.get_data()
         self.assertEqual(len(downtimes), 16)
         first_schedule = downtimes[0]
@@ -77,12 +76,13 @@ class ParseCsvDowntimes(unittest.TestCase):
     def test_failedParseDowntimes(self):
         date_2_21_2022 = datetime.datetime(2022, 2, 21)
         with self.assertRaises(ConnectorParseError) as cm:
-            flat_downtimes = ParseDowntimes(self.logger, 'DUMMY DATA', date_2_21_2022, False)
+            flat_downtimes = ParseDowntimes('DUMMY DATA', date_2_21_2022, False)
             downtimes = flat_downtimes.get_data()
 
         excep = cm.exception
         self.assertTrue('CSV feed' in excep.msg)
         self.assertTrue(CUSTOMER_NAME in excep.msg)
+
 
 if __name__ == '__main__':
     unittest.main()
