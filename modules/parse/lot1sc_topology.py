@@ -35,7 +35,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
         providers = self.data.get('result', None)
         if providers:
             for provider in providers:
-                prname = provider.get('providerId', '').replace('/', '-')
+                prname = provider.get('name', '').replace('/', '-')
 
                 for service in provider.get('serviceMonitorings', list()):
                     gge = dict()
