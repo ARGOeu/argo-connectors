@@ -1,3 +1,4 @@
+import json
 import unittest
 from urllib.parse import urlparse
 
@@ -1014,6 +1015,24 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
         lot1sc_topo = ParseLot1ScEndpoints(providers_endpoints, 2)
         self.group_groups = lot1sc_topo.get_group_groups()
         self.group_endpoints = lot1sc_topo.get_group_endpoints()
+
+    def test_providerNameUsedInsteadOfProviderId(self):
+        with open('tests/sample-lot1sc.json', encoding='utf-8') as feed_file:
+            providers_endpoints = json.load(feed_file)
+        provider = providers_endpoints['result'][0]
+        provider['providerId'] = '21.15120/new-provider-id'
+        provider['name'] = 'Renamed/Provider'
+
+        topo = ParseLot1ScEndpoints(providers_endpoints, 2)
+
+        self.assertEqual(topo.get_group_groups()[0], {
+            'group': 'Renamed-Provider',
+            'subgroup': 'Test service for datasource 4-6',
+            'type': 'PROJECT',
+            'tags': {'tier': '2'}
+        })
+        self.assertEqual(topo.get_group_groups()[1:], self.group_groups[1:])
+        self.assertEqual(topo.get_group_endpoints(), self.group_endpoints)
 
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
