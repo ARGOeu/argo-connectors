@@ -21,9 +21,8 @@ pipeline {
             steps {
                 sh '''
                     cd $WORKSPACE/$PROJECT_DIR/
-                    rm -f *.whl &> /dev/null
-                    make wheel-devel
                     make clean
+                    make wheel-devel
                     poetry run pip install *.whl
                     poetry run coverage run -m xmlrunner discover --output-file junit.xml -v tests/
                     poetry run coverage xml

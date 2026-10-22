@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.5.0] - 2026-10-22
+
+### Added
+
+* ARGO-2682 Tenant separated logs files
+* ARGO-5777 Configurable default service type for PROVIDER connector
+* ARGO-5813 Service types LOT1 connector
+* ARGO-5822 connectors logrotate configuration
+
+### Fixed
+
+* ARGO-5958 LOT1 service catalogue inverted providerId and name
+
+### Changed
+
+* ARGO-5143 CSV connectors should filter empty entries if all needed data is not presented
+* ARGO-5436 Sending of empty weights requires API feed defined
+* ARGO-5774 Improve topology-provider parsing and feed compatibility for EOSC/NI4OS provider APIs
+
 ## [2.4.0] - 2025-12-08
 
 ### Added
