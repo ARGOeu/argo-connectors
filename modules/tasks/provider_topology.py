@@ -2,8 +2,8 @@ import asyncio
 import json
 import os
 
-from collections import Callable
-from urllib.parse import urlparse
+from collections.abc import Callable
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from argo_connectors.config.customer import get_custconf
 from argo_connectors.config.glob import Global
@@ -70,6 +70,19 @@ def join_resources(left, right):
     })
 
 
+def build_feed_url(feed_parts, params=None):
+    query = dict(parse_qsl(feed_parts.query, keep_blank_values=True))
+    if params:
+        query.update(params)
+
+    return urlunparse((feed_parts.scheme,
+                       feed_parts.netloc,
+                       feed_parts.path,
+                       '',
+                       urlencode(query),
+                       ''))
+
+
 class TaskProviderTopology:
     def __init__(self, fixed_date, combuid=None):
         self.connector_name = Global.caller
@@ -125,9 +138,7 @@ class TaskProviderTopology:
             }
 
         try:
-            res = await session.http_get('{}://{}{}'.format(remote_topo.scheme,
-                                                            remote_topo.netloc,
-                                                            remote_topo.path), headers=headers)
+            res = await session.http_get(build_feed_url(remote_topo), headers=headers)
 
         except ConnectorHttpError as exc:
             await session.close()
@@ -143,11 +154,10 @@ class TaskProviderTopology:
 
                 while to_index != total:
                     res = await \
-                        session.http_get('{}://{}{}?from={}&quantity={}'.format(remote_topo.scheme,
-                                                                                remote_topo.netloc,
-                                                                                remote_topo.path,
-                                                                                from_index,
-                                                                                num), headers=headers)
+                        session.http_get(build_feed_url(remote_topo, {
+                            'from': from_index,
+                            'quantity': num
+                        }), headers=headers)
                     fetched_results = fetched_results + filter_out_results(res)
                     next_cursor = find_next_paging_cursor_count(res)
                     total, from_index, to_index = next_cursor()
@@ -169,11 +179,10 @@ class TaskProviderTopology:
                 from_index = 0
 
                 res = await \
-                    session.http_get('{}://{}{}?from={}&quantity={}'.format(remote_topo.scheme,
-                                                                            remote_topo.netloc,
-                                                                            remote_topo.path,
-                                                                            from_index,
-                                                                            num), headers=headers)
+                    session.http_get(build_feed_url(remote_topo, {
+                        'from': from_index,
+                        'quantity': num
+                    }), headers=headers)
                 await session.close()
                 return res
 
@@ -228,7 +237,7 @@ class TaskProviderTopology:
         topofeedextensions = self.Customer.opt('TopoFeedServiceEndpointsExtensions') or self.Customer.opt('TopoFeedEndpointsExtensions')
         topofeedproviders = self.Customer.opt('TopoFeedServiceGroups')
         topofeedresources = self.Customer.opt('TopoFeedServiceEndpoints') or self.Customer.opt('TopoFeedEndpoints')
-        oidctoken = self.Customer.opt('OIDCRefreshTOken')
+        oidctoken = self.Customer.opt('OIDCRefreshToken')
         oidctokenapi = self.Customer.opt('OIDCTokenEndpoint')
         oidcclientid = self.Customer.opt('OIDCClientId')
 

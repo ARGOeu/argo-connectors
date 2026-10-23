@@ -59,6 +59,10 @@ class ExecCombiner:
                         confcust.make_dirstruct(jobdir=False)
                         confcust.make_dirstruct(self.globopts.options()['InputStateSaveDir'.lower()], jobdir=False)
                         self._logger.customer = self.tenant_name
+                        self._logger.set_filelog(
+                            self.globopts.options().get('generaltenantlogs', False),
+                            self.tenant_name
+                        )
                         key = which.lower()
                         self.tasks.append({
                             'type': key,

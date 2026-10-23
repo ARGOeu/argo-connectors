@@ -3,8 +3,19 @@ import logging.handlers
 import sys
 import socket
 import os
+import re
 
-LOGFILE = f"{os.environ['VIRTUAL_ENV']}/var/log/connectors.log"
+
+def _logfile(tenant=None):
+    basename = 'connectors.log'
+
+    if tenant:
+        safe_tenant = re.sub(r'[^A-Za-z0-9_.-]+', '-', tenant).lower()
+        basename = f'connectors-{safe_tenant}.log'
+    return f"{os.environ['VIRTUAL_ENV']}/var/log/{basename}"
+
+
+LOGFILE = _logfile()
 
 
 class _Logger:
@@ -16,6 +27,10 @@ class _Logger:
 
         logging.basicConfig(format=lfs, level=logging.INFO, stream=sys.stdout)
         self.logger = logging.getLogger(connector)
+        for handler in list(self.logger.handlers):
+            if getattr(handler, '_argo_connectors_syslog', False):
+                self.logger.removeHandler(handler)
+                handler.close()
 
         try:
             sysloghandle = logging.handlers.SysLogHandler('/dev/log', logging.handlers.SysLogHandler.LOG_USER)
@@ -23,17 +38,31 @@ class _Logger:
             sysloghandle = logging.StreamHandler()
         sysloghandle.setFormatter(logformat)
         sysloghandle.setLevel(logverbose)
+        sysloghandle._argo_connectors_syslog = True
         self.logger.addHandler(sysloghandle)
+
+        self._set_filehandler(LOGFILE, logverbose)
+
+    def _set_filehandler(self, logfile, loglevel=logging.INFO):
+        for handler in list(self.logger.handlers):
+            if getattr(handler, '_argo_connectors_filelog', False):
+                self.logger.removeHandler(handler)
+                handler.close()
 
         try:
             lffs = '%(asctime)s %(name)s[%(process)s]: %(levelname)s %(message)s'
             lff = logging.Formatter(lffs)
-            filehandle = logging.handlers.RotatingFileHandler(LOGFILE, maxBytes=512 * 1024, backupCount=5)
+            filehandle = logging.handlers.RotatingFileHandler(logfile, maxBytes=512 * 1024, backupCount=5)
             filehandle.setFormatter(lff)
-            filehandle.setLevel(logverbose)
+            filehandle.setLevel(loglevel)
+            filehandle._argo_connectors_filelog = True
             self.logger.addHandler(filehandle)
         except Exception:
             pass
+
+    def set_filelog(self, tenant_logs=False, tenant=None):
+        logfile = _logfile(tenant if tenant_logs else None)
+        self._set_filehandler(logfile)
 
     def __call__(self, connector):
         self.__init__(connector)

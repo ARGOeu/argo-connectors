@@ -11,6 +11,21 @@ import uuid
 SERVICE_NAME_WEBPAGE = 'eu.eosc.portal.services.url'
 
 
+def unwrap_provider(feeddata):
+    return feeddata.get('provider') or feeddata
+
+
+def unwrap_resource(feeddata):
+    resource = dict(feeddata.get('service') or feeddata)
+    if 'resourceExtras' not in resource and 'resourceExtras' in feeddata:
+        resource['resourceExtras'] = feeddata['resourceExtras']
+    return resource
+
+
+def get_resource_provider(resource):
+    return resource.get('resourceOrganisation') or resource.get('resourceOwner')
+
+
 def buildmap_id2groupname(resources):
     id2name = dict()
     for resource in resources:
@@ -47,7 +62,8 @@ class ParseResources(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
-                tags = feeddata['tags']
+                feeddata = unwrap_resource(feeddata)
+                tags = list(feeddata.get('tags') or [])
                 extras = feeddata.get('resourceExtras', None)
                 if extras:
                     for key in self._keys:
@@ -60,14 +76,18 @@ class ParseResources(ParseHelpers):
                         tags.append(key)
                 if not feeddata.get('name', False):
                     continue
+                provider = get_resource_provider(feeddata)
+                if not provider:
+                    continue
                 self._resources.append({
                     'id': feeddata['id'],
-                    'hardcoded_service': SERVICE_NAME_WEBPAGE,
+                    'hardcoded_service': self.Customer.opt(
+                        'TopoDefaultServiceType') or SERVICE_NAME_WEBPAGE,
                     'name': feeddata['name'],
-                    'provider': feeddata['resourceOrganisation'],
+                    'provider': provider,
                     'webpage': feeddata['webpage'],
                     'resource_tag': tags,
-                    'description': feeddata['description']
+                    'description': feeddata.get('description', '')
                 })
             self.data = self._resources
 
@@ -97,6 +117,7 @@ class ParseProviders(ParseHelpers):
             else:
                 json_data = self.data
             for feeddata in json_data['results']:
+                feeddata = unwrap_provider(feeddata)
                 if not feeddata.get('website', False):
                     continue
                 self._providers.append({
@@ -104,7 +125,7 @@ class ParseProviders(ParseHelpers):
                     'website': feeddata['website'],
                     'name': feeddata['name'],
                     'abbr': feeddata['abbreviation'],
-                    'provider_tag': feeddata['tags']
+                    'provider_tag': feeddata.get('tags', '')
                 })
             self.data = self._providers
 

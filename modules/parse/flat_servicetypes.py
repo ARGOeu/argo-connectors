@@ -25,7 +25,11 @@ class ParseFlatServiceTypes(ParseHelpers):
                 target_key = None
                 tmp_dict = dict()
 
-                tmp_dict['name'] = entity['SERVICE_TYPE']
+                service_type = entity['SERVICE_TYPE']
+                if service_type:
+                    tmp_dict['name'] = service_type
+                else:
+                    continue
                 for key in entity.keys():
                     if key.lower().startswith('Service Description'.lower()):
                         target_key = key

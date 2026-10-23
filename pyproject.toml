@@ -7,7 +7,6 @@ aiofiles = "*"
 aiohttp = "*"
 bonsai = "*"
 lxml = "*"
-requests = "*"
 unidecode = "*"
 pyyaml = "*"
 
@@ -65,6 +64,7 @@ argo_connectors = "modules"
 [tool.setuptools.data-files]
 "" = ["pyproject.toml", "poetry.lock"]
 "etc" = ["etc/customer.conf", "etc/global.conf"]
+"etc/logrotate.d/" = ["logrotate/connectors-log", "logrotate/connectors-tenants-log"]
 "usr/bin" = ["exec/*.py"]
 "var/log/" = ["helpers/empty"]
 "var/spool/" = ["helpers/empty"]

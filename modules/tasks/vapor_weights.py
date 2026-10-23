@@ -12,10 +12,10 @@ from argo_connectors.log import Logger
 
 
 class TaskVaporWeights(object):
-    def __init__(self, jobcust, fixed_date):
+    def __init__(self, jobcust, fixed_date, feed=None):
         self.connector_name = Global.caller
         self.globopts = Global.options()
-        self.feed = Customer.opt('Vaporpi')
+        self.feed = feed or Customer.opt('Vaporpi')
         self.jobcust = jobcust
         self.fixed_date = fixed_date
 

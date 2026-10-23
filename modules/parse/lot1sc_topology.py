@@ -35,7 +35,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
         providers = self.data.get('result', None)
         if providers:
             for provider in providers:
-                prname = provider.get('providerId', '').replace('/', '-')
+                prname = provider.get('name', '').replace('/', '-')
 
                 for service in provider.get('serviceMonitorings', list()):
                     gge = dict()
@@ -48,7 +48,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
                     gge['group'] = prname
                     gge['subgroup'] = srname
                     gge['tags'] = dict()
-                    gge['tags']['tier'] = self.tier
+                    gge['tags']['tier'] = str(self.tier)
                     self.gg.append(gge)
 
     def _build_group_endpoints(self):
@@ -75,7 +75,7 @@ class ParseLot1ScEndpoints(ParseHelpers):
                                             gee['tags']['site_name'] = site_name
                                             gee['tags']['service_name'] = endpoint.get('name', '')
                                             gee['tags']['info_URL'] = endpoint.get('url', '')
-                                            gee['tags']['tier'] = self.tier
+                                            gee['tags']['tier'] = str(self.tier)
                                             gee['service'] = service
                                             if self.uidservendp:
                                                 se_uid = build_service_endpoint_id(endpoint.get('name', ''), service)

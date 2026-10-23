@@ -4,7 +4,7 @@ from unittest import mock
 from unittest.mock import patch
 
 from argo_connectors.exe.combiner import ExecCombiner
-from argo_connectors.tasks.combine_topology import TaskCombineTopology
+from argo_connectors.tasks.combine_servicetypes import TaskCombineServiceTypes
 
 
 class CombinerTopology(unittest.IsolatedAsyncioTestCase):
@@ -22,6 +22,7 @@ class CombinerTopology(unittest.IsolatedAsyncioTestCase):
             exe_script="topology-combiner.py",
             combiner="topology",
         )
+        from argo_connectors.tasks.combine_topology import TaskCombineTopology
         self.topo_combine = TaskCombineTopology(exec_combiner)
 
     @mock.patch('argo_connectors.tasks.combine_topology.write_state')
@@ -62,6 +63,55 @@ class CombinerTopology(unittest.IsolatedAsyncioTestCase):
     def tearDown(self):
         self.patcher1.stop()
         self.patcher2.stop()
+
+
+class CombinerServiceTypes(unittest.TestCase):
+    def test_combine_keeps_first_duplicate_service_name(self):
+        combiner = TaskCombineServiceTypes(mock.Mock())
+        servicetypes = combiner.combine([
+            [
+                {
+                    'name': 'service.type.1',
+                    'description': 'from first feed',
+                    'tags': ['topology']
+                },
+                {
+                    'name': 'service.type.2',
+                    'description': 'from first feed',
+                    'tags': ['topology']
+                }
+            ],
+            [
+                {
+                    'name': 'service.type.1',
+                    'description': 'from second feed',
+                    'tags': ['topology']
+                },
+                {
+                    'name': 'service.type.3',
+                    'description': 'from second feed',
+                    'tags': ['topology']
+                }
+            ]
+        ])
+
+        self.assertEqual(servicetypes, [
+            {
+                'name': 'service.type.1',
+                'description': 'from first feed',
+                'tags': ['topology']
+            },
+            {
+                'name': 'service.type.2',
+                'description': 'from first feed',
+                'tags': ['topology']
+            },
+            {
+                'name': 'service.type.3',
+                'description': 'from second feed',
+                'tags': ['topology']
+            }
+        ])
 
 
 if __name__ == '__main__':

@@ -25,6 +25,8 @@ class TaskLot1ScTopology():
         self.fixed_date = fixed_date
         self.uidservendp = self.Customer.opt('TopoUIDServiceEndpoints')
         self.tiers = self.Customer.opt('TopoTiers')
+        if not isinstance(self.tiers, list):
+            self.tiers = [self.tiers]
         self.combuid = combuid
         self.tags_ge = self.Customer.opt('TopoTagServiceEndpoints')
         self.tags_gg = self.Customer.opt('TopoTagServiceGroups') + self.Customer.opt('TopoTagSites')

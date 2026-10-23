@@ -1,8 +1,6 @@
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import construct_fqdn
 
-from urllib.parse import urlparse
-
 
 class ParseContacts(ParseHelpers):
     def __init__(self, data, uidservendp=False, is_csv=False):
@@ -16,6 +14,8 @@ class ParseContacts(ParseHelpers):
         contacts = dict()
 
         for entity in self.data:
+            if not entity['URL'] or not entity['Service Unique ID'] or not entity['SERVICE_TYPE']:
+                continue
             if self.uidservendp:
                 key = '{}_{}+{}'.format(construct_fqdn(entity['URL']), entity['Service Unique ID'], entity['SERVICE_TYPE'])
             else:

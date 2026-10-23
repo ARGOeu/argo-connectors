@@ -19,6 +19,7 @@ class WebAPI(object):
         'service-types-csv-connector.py': 'topology',
         'service-types-gocdb-connector.py': 'topology',
         'service-types-json-connector.py': 'topology',
+        'service-types-lot1sc-connector.py': 'topology',
         'topology-combiner.py': 'topology',
         'topology-csv-connector.py': 'topology',
         'topology-gocdb-connector.py': 'topology',
@@ -89,20 +90,20 @@ class WebAPI(object):
                     msg = jsonret['status']['message']
                 else:
                     msg = jsonret['message']
-                Logger.error('%s %s() Customer:%s - HTTP POST %s' % (module_class_name(self),
-                                                                     '_send',
-                                                                     Logger.customer,
-                                                                     msg))
+                Logger.warn('%s %s() Customer:%s - HTTP POST %s' % (module_class_name(self),
+                                                                       '_send',
+                                                                       Logger.customer,
+                                                                       msg))
             else:
                 errormsg = json.loads(content)
                 if 'errors' in errormsg:
                     errormsg = errormsg['errors'][0]['details']
                 elif 'status' in errormsg:
                     errormsg = errormsg['status']['message']
-                Logger.error('%s %s() Customer:%s Job:%s - HTTP POST %s' %
-                             (module_class_name(self), '_send',
-                              Logger.customer, Logger.job,
-                              errormsg))
+                Logger.warn('%s %s() Customer:%s Job:%s - HTTP POST %s' %
+                               (module_class_name(self), '_send',
+                                Logger.customer, Logger.job,
+                                errormsg))
 
         return status
 

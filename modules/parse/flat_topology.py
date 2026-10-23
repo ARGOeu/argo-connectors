@@ -31,7 +31,11 @@ class ParseFlatEndpoints(ParseHelpers):
 
                 tmp_dict['type'] = self.topo_type('gg')
                 tmp_dict['group'] = self.project
-                tmp_dict['subgroup'] = entity['SITENAME-SERVICEGROUP']
+                subgroup = entity['SITENAME-SERVICEGROUP']
+                if subgroup:
+                    tmp_dict['subgroup'] = subgroup
+                else:
+                    continue
                 tmp_dict['tags'] = {'monitored': '1', 'scope': self.scope}
 
                 if tmp_dict['subgroup'] in already_added:
@@ -55,9 +59,21 @@ class ParseFlatEndpoints(ParseHelpers):
                 tmp_dict = dict()
 
                 tmp_dict['type'] = self.topo_type('ge')
-                tmp_dict['group'] = entity['SITENAME-SERVICEGROUP']
-                tmp_dict['service'] = entity['SERVICE_TYPE']
-                info_url = entity['URL']
+                group = entity['SITENAME-SERVICEGROUP']
+                if group:
+                    tmp_dict['group'] = group
+                else:
+                    continue
+                service = entity['SERVICE_TYPE']
+                if service:
+                    tmp_dict['service'] = service
+                else:
+                    continue
+                url = entity['URL']
+                if url:
+                    info_url = url
+                else:
+                    continue
                 if self.uidservendp:
                     tmp_dict['hostname'] = '{1}_{0}'.format(entity['Service Unique ID'], construct_fqdn(info_url))
                 else:

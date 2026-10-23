@@ -9,4 +9,5 @@ docker/pysitepkg
 tags
 *.egg-info
 junit.xml
+coverage.xml
 build/

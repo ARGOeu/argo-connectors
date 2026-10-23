@@ -1,0 +1,7 @@
+/opt/argo-connectors/var/log/connectors-[a-z-]*.log {
+    size 256k
+    rotate 365
+    compress
+    missingok
+    notifempty
+}

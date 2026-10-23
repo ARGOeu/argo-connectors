@@ -31,7 +31,7 @@ def main():
         Logger.customer = customers
 
         try:
-            task = TaskVaporWeights(jobcust, conn_exec.fixed_date)
+            task = TaskVaporWeights(jobcust, conn_exec.fixed_date, feed)
             asyncio.run(task.run())
 
         except (ConnectorHttpError, ConnectorParseError, KeyboardInterrupt) as exc:

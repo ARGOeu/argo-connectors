@@ -61,3 +61,5 @@ class ExecConnector:
         confcust.make_dirstruct()
         confcust.make_dirstruct(globopts['InputStateSaveDir'.lower()])
         self._logger.customer = confcust.get_custname()
+        self._logger.set_filelog(globopts.get('generaltenantlogs', False),
+                                 confcust.get_custname())

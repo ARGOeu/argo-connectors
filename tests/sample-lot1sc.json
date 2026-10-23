@@ -3,8 +3,8 @@
   "statusCode": 200,
   "result": [
     {
-      "providerId": "Phenomenal",
-      "name": "21.15120/DcgrOi",
+      "providerId": "21.15120/DcgrOi",
+      "name": "Phenomenal",
       "serviceMonitorings": [
         {
           "serviceId": "21.11161/rDa1Hm",
@@ -25,8 +25,8 @@
       ]
     },
     {
-      "providerId": "European Commission",
-      "name": "21.15120/b0mGx4",
+      "providerId": "21.15120/b0mGx4",
+      "name": "European Commission",
       "serviceMonitorings": [
         {
           "serviceId": "21.11161/0L2aPz",
@@ -77,8 +77,8 @@
       ]
     },
     {
-      "providerId": "Instruct-ERIC",
-      "name": "21.15120/VVOUS7",
+      "providerId": "21.15120/VVOUS7",
+      "name": "Instruct-ERIC",
       "serviceMonitorings": [
         {
           "serviceId": "21.11161/EPptAk",
@@ -88,8 +88,8 @@
       ]
     },
     {
-      "providerId": "Test 20/11 14.41",
-      "name": "21.15120/tCnX8c",
+      "providerId": "21.15120/tCnX8c",
+      "name": "Test 20/11 14.41",
       "serviceMonitorings": [
         {
           "serviceId": "21.11161/yRMr7r",

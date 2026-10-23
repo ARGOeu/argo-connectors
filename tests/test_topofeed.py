@@ -1,14 +1,18 @@
+import json
 import unittest
+from urllib.parse import urlparse
 
 from argo_connectors.config.customer import Customer
 from argo_connectors.config.glob import Global
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.log import Logger
 from argo_connectors.mesh.contacts import attach_contacts_topodata
+from argo_connectors.parse.provider_contacts import ParseResourcesContacts
 from argo_connectors.parse.flat_topology import ParseFlatEndpoints
 from argo_connectors.parse.gocdb_topology import ParseServiceEndpoints, ParseSites
 from argo_connectors.parse.lot1sc_topology import ParseLot1ScEndpoints
 from argo_connectors.parse.provider_topology import ParseTopo, ParseExtensions, buildmap_id2groupname
+from argo_connectors.tasks.provider_topology import build_feed_url
 
 
 CUSTOMER_NAME = 'CUSTOMERFOO'
@@ -760,6 +764,7 @@ class ParseEoscProvider(unittest.TestCase):
         cust.custopts['TopoType'] = 'EOSC'
         cust.custopts['TopoFetchType'] = 'ServiceGroups'
         cust.custopts['TopoUIDServiceEndpoints'] = True
+        cust.custopts['TopoDefaultServiceType'] = None
         logger = Logger(f'{__name__}.{__class__.__name__}')
         logger.customer = CUSTOMER_NAME
         with open('tests/sample-public-service.json', encoding='utf-8') as feed_file:
@@ -861,6 +866,22 @@ class ParseEoscProvider(unittest.TestCase):
             }
         ])
 
+    def test_groupEndpointsConfiguredDefaultServiceType(self):
+        custom_service_type = 'eu.eosc.custom.default'
+        cust = Customer('topology-provider-connector.py')
+        cust.custopts['TopoDefaultServiceType'] = custom_service_type
+
+        with open('tests/sample-public-service.json', encoding='utf-8') as feed_file:
+            resources = feed_file.read()
+        with open('tests/sample-public-provider.json', encoding='utf-8') as feed_file:
+            providers = feed_file.read()
+
+        eosc_topo = ParseTopo(providers, resources)
+        group_endpoints = eosc_topo.get_group_endpoints()
+
+        self.assertEqual(group_endpoints[0]['service'], custom_service_type)
+        self.assertEqual(group_endpoints[1]['service'], custom_service_type)
+
     def test_idGroupname(self):
         self.assertEqual(self.id_groupname, {
             '21-T15999-uxIE5y': '3rd-Party Data Security Assessment',
@@ -898,6 +919,86 @@ class ParseEoscProvider(unittest.TestCase):
         self.assertTrue('JSON feed' in excep.msg)
         self.assertTrue('JSONDecodeError' in excep.msg)
 
+    def test_wrappedProviderFeeds(self):
+        with open('tests/sample-private-resource.json', encoding='utf-8') as feed_file:
+            resources = feed_file.read()
+        with open('tests/sample-private-provider.json', encoding='utf-8') as feed_file:
+            providers = feed_file.read()
+
+        eosc_topo = ParseTopo(providers, resources)
+        group_groups = eosc_topo.get_group_groups()
+        group_endpoints = eosc_topo.get_group_endpoints()
+
+        self.assertEqual(group_groups[0], {
+            'group': 'SRCE',
+            'subgroup': '3DBionotes-WS-TEST',
+            'tags': {'info_projectid': 'srce'},
+            'type': 'PROJECT'
+        })
+        self.assertEqual(group_endpoints[0], {
+            'group': '3DBionotes-WS-TEST',
+            'hostname': '3dbionotes.cnb.csic.es_srce-3dbionotes',
+            'service': 'eu.eosc.portal.services.url',
+            'tags': {
+                'hostname': '3dbionotes.cnb.csic.es',
+                'info_ID': 'srce-3dbionotes',
+                'info_URL': 'https://3dbionotes.cnb.csic.es/',
+                'info_groupname': '3DBionotes-WS-TEST'
+            },
+            'type': 'SERVICEGROUPS'
+        })
+
+    def test_buildFeedUrlPreservesConfiguredQuery(self):
+        feed = urlparse('https://example.test/api/service/all?catalogue_id=eosc&type=all')
+
+        self.assertEqual(
+            build_feed_url(feed, {'from': 0, 'quantity': 100}),
+            'https://example.test/api/service/all?catalogue_id=eosc&type=all&from=0&quantity=100'
+        )
+
+    def test_ni4osProviderFeeds(self):
+        providers = {
+            'results': [
+                {
+                    'id': 'provider/1r5Y0e00',
+                    'abbreviation': 'UKIM, FCSE',
+                    'name': 'Ss. Cyril and Methodius University in Skopje, Faculty of Computer Science and Engineering',
+                    'website': 'https://finki.ukim.mk/',
+                    'tags': [],
+                    'publicContacts': ['default@example.com']
+                }
+            ]
+        }
+        resources = {
+            'results': [
+                {
+                    'id': 'service/1SrlhG00',
+                    'name': 'Schrodinger API',
+                    'webpage': 'https://schrodinger.chem-api.finki.ukim.mk/',
+                    'description': '<p>Schrodinger API</p>',
+                    'tags': [],
+                    'resourceOwner': 'provider/1r5Y0e00',
+                    'serviceProviders': ['provider/1r5Y0e00'],
+                    'publicContacts': ['default@example.com']
+                }
+            ]
+        }
+
+        eosc_topo = ParseTopo(providers, resources)
+        group_groups = eosc_topo.get_group_groups()
+        group_endpoints = eosc_topo.get_group_endpoints()
+        resource_contacts = ParseResourcesContacts(resources).get_contacts()
+
+        self.assertEqual(len(group_groups), 1)
+        self.assertEqual(len(group_endpoints), 1)
+        self.assertEqual(group_groups[0]['group'], 'UKIM, FCSE')
+        self.assertEqual(group_groups[0]['subgroup'], 'Schrodinger API')
+        self.assertEqual(group_endpoints[0]['group'], 'Schrodinger API')
+        self.assertEqual(group_endpoints[0]['tags']['info_ID'], 'service-1SrlhG00')
+        self.assertEqual(resource_contacts, {
+            'schrodinger.chem-api.finki.ukim.mk+service/1SrlhG00': ['default@example.com']
+        })
+
 
 class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
     def setUp(self):
@@ -915,6 +1016,24 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
         self.group_groups = lot1sc_topo.get_group_groups()
         self.group_endpoints = lot1sc_topo.get_group_endpoints()
 
+    def test_providerNameUsedInsteadOfProviderId(self):
+        with open('tests/sample-lot1sc.json', encoding='utf-8') as feed_file:
+            providers_endpoints = json.load(feed_file)
+        provider = providers_endpoints['result'][0]
+        provider['providerId'] = '21.15120/new-provider-id'
+        provider['name'] = 'Renamed/Provider'
+
+        topo = ParseLot1ScEndpoints(providers_endpoints, 2)
+
+        self.assertEqual(topo.get_group_groups()[0], {
+            'group': 'Renamed-Provider',
+            'subgroup': 'Test service for datasource 4-6',
+            'type': 'PROJECT',
+            'tags': {'tier': '2'}
+        })
+        self.assertEqual(topo.get_group_groups()[1:], self.group_groups[1:])
+        self.assertEqual(topo.get_group_endpoints(), self.group_endpoints)
+
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
             {
@@ -922,7 +1041,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'subgroup': 'Test service for datasource 4-6',
                 'type': 'PROJECT',
                 'tags': {
-                    'tier': 2
+                    'tier': '2'
                 }
             },
             {
@@ -930,21 +1049,22 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'subgroup': 'Virtual Machines',
                 'type': 'PROJECT',
                 'tags': {
-                    'tier': 2
+                    'tier': '2'
                 }
             },
             {
                 'group': 'Test 20-11 14.41',
                 'subgroup': 'Test Interactive Notebooks',
                 'tags': {
-                    'tier': 2
+                    'tier': '2'
                 },
-                'type': 'PROJECT'},
+                'type': 'PROJECT'
+            },
             {
                 'group': 'Test 20-11 14.41',
                 'subgroup': 'Test File Sync and Share',
                 'tags': {
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'PROJECT'
             },
@@ -952,7 +1072,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'group': 'Test 20-11 14.41',
                 'subgroup': 'Test-HPC',
                 'tags': {
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'PROJECT'
             },
@@ -960,7 +1080,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'group': 'Test 20-11 14.41',
                 'subgroup': 'Test Cloud Container Platform',
                 'tags': {
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'PROJECT'
             }
@@ -978,7 +1098,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://testUrlEndpoint.com',
                     'service_name': 'FTS web console',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -991,7 +1111,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl/',
                     'service_name': 'OpenStack Horizon Dashboard',
-                    'site_name': 'PSNC', 'tier': 2
+                    'site_name': 'PSNC', 'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1004,7 +1124,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_ID': '749deefd-e633-385a-805a-3fd64b80dbe4',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl/',
                     'service_name': 'OpenStack Horizon Dashboard',
-                    'site_name': 'PSNC', 'tier': 2
+                    'site_name': 'PSNC', 'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'},
             {
@@ -1017,7 +1137,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL':
                     'https://test.claudius.cloud.psnc.pl:5000',
                     'service_name': 'OpenStack API', 'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'},
             {
@@ -1030,7 +1150,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://test.claudius.cloud.psnc.pl:5000/v3/auth/OS-FEDERATION/identity_providers/testing.eosc-federation.eu_openid/protocols/openid/websso',
                     'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1044,7 +1164,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://openstack.testing.safedc.services/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1058,7 +1178,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://openstack.testing.safedc.services/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1072,7 +1192,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://openstack.testing.safedc.services:5000/identity/v3/auth/OS-FEDERATION/identity_providers/proxy.testing.eosc-federation.eu/protocols/openid/websso',
                     'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1086,7 +1206,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/',
                     'service_name': 'Notebooks GUI',
                     'site_name': 'CESNET',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1100,7 +1220,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/services/jwt',
                     'service_name': 'Notebooks API',
                     'site_name': 'CESNET',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1114,7 +1234,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/hub/oauth_login',
                     'service_name': 'Notebooks GUI Redirection',
                     'site_name': 'CESNET',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1128,7 +1248,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://ocis-testing.apps.bst2-test.paas.psnc.pl/',
                     'service_name': 'OwnCloud GUI',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1142,7 +1262,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://ocis-testing.apps.bst2-test.paas.psnc.pl/',
                     'service_name': 'OwnCloud GUI Redirect',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1156,7 +1276,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://www.hpc.grnet.gr/en/',
                     'service_name': 'HPC API',
                     'site_name': 'GRNET',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1170,7 +1290,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://console.apps.dcw1-test.paas.psnc.pl/',
                     'service_name': 'OKD Console',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1184,7 +1304,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://api.dcw1-test.paas.psnc.pl:6443',
                     'service_name': 'OKD API',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1198,7 +1318,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://dcw1-test.paas.psnc.pl/',
                     'service_name': 'OKD Console GUI Redirection',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1212,7 +1332,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://oauth-openshift.apps.dcw1-test.paas.psnc.pl/',
                     'service_name': 'OKD OIDC Server',
                     'site_name': 'PSNC',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1226,7 +1346,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://console-openshift-console.apps.okd01.saft.in/',
                     'service_name': 'OKD Console',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1240,7 +1360,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://api.okd01.saft.in:6443',
                     'service_name': 'OKD API',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1254,7 +1374,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://console-openshift-console.apps.eosc-test.safedc.services/',
                     'service_name': 'OKD Console GUI Redirection',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             },
@@ -1268,7 +1388,7 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                     'info_URL': 'https://oauth-openshift.apps.eosc-test.safedc.services/',
                     'service_name': 'OKD OIDC Server',
                     'site_name': 'Safespring',
-                    'tier': 2
+                    'tier': '2'
                 },
                 'type': 'SERVICEGROUPS'
             }

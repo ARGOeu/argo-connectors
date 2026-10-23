@@ -84,6 +84,7 @@ class _CustomerConf(object):
         'weights-vapor-connector.py': ['WeightsFeed',
                                        'TopoFetchType'],
         'service-types-gocdb-connector.py': ['ServiceTypesFeed'],
+        'service-types-lot1sc-connector.py': [''],
         'service-types-csv-connector.py': ['ServiceTypesFeed'],
         'service-types-json-connector.py': ['ServiceTypesFeed']
     }
@@ -96,7 +97,7 @@ class _CustomerConf(object):
         'BDIIQueryAttributesSRM', 'BDIIQueryFilterSEPATH',
         'BDIIQueryAttributesSEPATH', 'WebAPIToken',
         'WeightsEmpty', 'DowntimesEmpty', 'ServiceTypesFeed',
-        'HonorNotificationFlag', 'TopoTiers'
+        'HonorNotificationFlag', 'TopoTiers', 'TopoDefaultServiceType'
     ]
     tenantdir = ''
     deftopofeed = 'https://goc.egi.eu/gocdbpi/'
@@ -154,6 +155,8 @@ class _CustomerConf(object):
                     topofeed = config.get(section, 'TopoFeed', fallback=None)
                     vaporpi = config.get(section, 'Vaporpi', fallback=None)
                     topotype = config.get(section, 'TopoType')
+                    topodefaultservicetype = config.get(
+                        section, 'TopoDefaultServiceType', fallback=None)
                     topouidservendpoints = config.get(
                         section, 'TopoUIDServiceEndpoints', fallback=False)
                     toposcope = config.get(section, 'TopoScope', fallback=None)
@@ -220,6 +223,7 @@ class _CustomerConf(object):
                     'TopoScope': toposcope,
                     'TopoTiers': topotiers,
                     'TopoType': topotype,
+                    'TopoDefaultServiceType': topodefaultservicetype,
                     'TopoSetType': toposettype,
                     'TopoTagServiceEndpoints': topotagserviceendpoints or list(),
                     'TopoTagServiceGroups': topotagservicegroups or list(),
@@ -465,17 +469,20 @@ class _CustomerConf(object):
             for job in self.get_jobs(c):
                 if 'downtimes' in caller:
                     feedurl = self._get_feed(job, 'DowntimesFeed')
+                    if not feedurl:
+                        feedurl = deffeed
+                    if not feedurl and self.send_empty(caller, c):
+                        feedurl = 'empty'
                     if feedurl:
                         self._update_feeds(feeds, feedurl, job, c)
-                    else:
-                        feedurl = deffeed
-                        self._update_feeds(feeds, feedurl, job, c)
+
                 elif 'weights' in caller:
                     feedurl = self._get_feed(job, 'WeightsFeed')
-                    if feedurl:
-                        self._update_feeds(feeds, feedurl, job, c)
-                    else:
+                    if not feedurl:
                         feedurl = deffeed
+                    if not feedurl and self.send_empty(caller, c):
+                        feedurl = 'empty'
+                    if feedurl:
                         self._update_feeds(feeds, feedurl, job, c)
 
         return feeds

@@ -1,14 +1,20 @@
 import unittest
 
-import mock
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 from argo_connectors.exceptions import ConnectorParseError
 from argo_connectors.parse.webapi_servicetypes import ParseWebApiServiceTypes
 from argo_connectors.parse.gocdb_servicetypes import ParseGocdbServiceTypes
 from argo_connectors.parse.flat_servicetypes import ParseFlatServiceTypes
+from argo_connectors.parse.lot1sc_servicetypes import ParseLot1ScServiceTypes
 from argo_connectors.parse.base import ParseHelpers
+from argo_connectors.log import Logger
 
 CUSTOMER_NAME = 'CUSTOMERFOO'
+Logger.customer = CUSTOMER_NAME
 
 
 class ParseWebApi(unittest.TestCase):
@@ -220,3 +226,72 @@ class ParseFlat(unittest.TestCase):
         excep = cm.exception
         self.assertTrue('CSV feed' in excep.msg)
         self.assertTrue(CUSTOMER_NAME in excep.msg)
+
+
+class ParseLot1Sc(unittest.TestCase):
+    def setUp(self):
+        with open('tests/sample-lot1sc.json', encoding='utf-8') as feed_file:
+            service_types = feed_file.read()
+        logger = mock.Mock()
+        logger.customer = CUSTOMER_NAME
+        self.logger = logger
+        self.services_lot1sc = ParseLot1ScServiceTypes(service_types)
+        self.maxDiff = None
+
+    def test_Lot1ScFeedParse(self):
+        service_types = self.services_lot1sc.get_data()
+        self.assertEqual(service_types, [
+            {
+                'description': '',
+                'name': 'eu.eosc.container_platform.api',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'eu.eosc.container_platform.gui',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'eu.eosc.hpc.access',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'eu.eosc.interactive_notebooks.api',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'eu.eosc.interactive_notebooks.gui',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'eu.eosc.storage.gui',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'service.type.1',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'service.type.2',
+                'tags': ['topology']
+            },
+            {
+                'description': '',
+                'name': 'service.type.3',
+                'tags': ['topology']
+            }
+        ])
+
+    def test_FailedLot1ScFeedParse(self):
+        with self.assertRaises(ConnectorParseError) as cm:
+            ParseLot1ScServiceTypes('FAILED_DATA')
+
+        excep = cm.exception
+        self.assertTrue('JSON feed' in excep.msg)
+        self.assertTrue('JSONDecodeError' in excep.msg)

@@ -12,6 +12,8 @@ class _GlobalConf(object):
     # options common for all connectors
     conf_general = {'General': ['WriteJson',
                                 'PublishWebAPI', 'PassExtensions', 'CompressJson']}
+    conf_general_logging = {'General': ['TenantLogs']}
+    conf_defaults = {'generaltenantlogs': False}
     conf_auth = {'Authentication': ['HostKey', 'HostCert', 'CAPath', 'CAFile',
                                     'VerifyServerCert', 'UsePlainHttpAuth',
                                     'HttpUser', 'HttpPass']}
@@ -46,6 +48,7 @@ class _GlobalConf(object):
         self.optional.update(self._lowercase_dict(self.conf_webapi))
 
         self.shared_secopts = self._merge_dict(self.conf_general,
+                                               self.conf_general_logging,
                                                self.conf_auth, self.conf_conn,
                                                self.conf_state,
                                                self.conf_webapi)
@@ -88,6 +91,9 @@ class _GlobalConf(object):
             'service-types-gocdb-connector.py':
             self._merge_dict(self.shared_secopts,
                              self.conf_servicetypes_output),
+            'service-types-lot1sc-connector.py':
+            self._merge_dict(self.shared_secopts,
+                             self.conf_servicetypes_output),
             'service-types-csv-connector.py':
             self._merge_dict(self.shared_secopts,
                              self.conf_servicetypes_output),
@@ -110,7 +116,11 @@ class _GlobalConf(object):
     def _merge_dict(self, *args):
         newd = dict()
         for d in args:
-            newd.update(d)
+            for section, options in d.items():
+                if section in newd:
+                    newd[section].extend(options)
+                else:
+                    newd[section] = list(options)
         return newd
 
     def _lowercase_dict(self, d):
@@ -195,8 +205,11 @@ class _GlobalConf(object):
 
                             except configparser.NoOptionError as e:
                                 s = e.section.lower()
-                                if (s in self.optional.keys() and
-                                        e.option in self.optional[s]):
+                                default_key = (sect + opt).lower()
+                                if default_key in self.conf_defaults:
+                                    self._options.update({default_key: self.conf_defaults[default_key]})
+                                elif (s in self.optional.keys() and
+                                      e.option in self.optional[s]):
                                     pass
                                 else:
                                     raise e
