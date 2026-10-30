@@ -2,12 +2,14 @@ from argo_connectors.config.customer import get_custconf
 from argo_connectors.parse.base import ParseHelpers
 from argo_connectors.utils import construct_fqdn
 
+import json
 import uuid
 
 
-def build_service_endpoint_id(service_name, service_type):
+def build_service_endpoint_id(service_name, service_type, service_url):
     if service_name and service_type:
-        return str(uuid.uuid3(uuid.NAMESPACE_DNS, service_name + service_type))
+        identity = json.dumps([service_name, service_type, service_url], ensure_ascii=False)
+        return str(uuid.uuid3(uuid.NAMESPACE_DNS, identity))
     else:
         return 'FALSEID'
 
@@ -78,7 +80,8 @@ class ParseLot1ScEndpoints(ParseHelpers):
                                             gee['tags']['tier'] = str(self.tier)
                                             gee['service'] = service
                                             if self.uidservendp:
-                                                se_uid = build_service_endpoint_id(endpoint.get('name', ''), service)
+                                                se_uid = build_service_endpoint_id(
+                                                    endpoint.get('name', ''), service, endpoint.get('url', ''))
                                                 gee['tags']['info_ID'] = se_uid
                                                 gee['tags']['hostname'] = construct_fqdn(endpoint.get('url', ''))
                                                 gee['hostname'] = '{}_{}'.format(construct_fqdn(endpoint.get('url', '')), se_uid)

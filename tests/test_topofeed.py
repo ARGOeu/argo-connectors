@@ -1034,6 +1034,33 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
         self.assertEqual(topo.get_group_groups()[1:], self.group_groups[1:])
         self.assertEqual(topo.get_group_endpoints(), self.group_endpoints)
 
+    def test_endpointIdsIncludeFullUrl(self):
+        endpoints = [
+            {'name': 'EFP GUI', 'url': url,
+             'monitoringServiceTypes': ['eu.eosc.hpc.acess.gui']}
+            for url in ['https://my-eurohpc.eu/', 'https://my-eurohpc.eu/overview']
+        ]
+        data = {'result': [{
+            'name': 'EuroHPC',
+            'serviceMonitorings': [{
+                'name': 'EuroHPC Federation Platform',
+                'sites': [{'name': 'Default', 'endpoints': endpoints}]
+            }]
+        }]}
+
+        parsed = ParseLot1ScEndpoints(data, 2).get_group_endpoints()
+
+        self.assertEqual(len(parsed), 2)
+        self.assertNotEqual(parsed[0]['tags']['info_ID'], parsed[1]['tags']['info_ID'])
+        self.assertNotEqual(parsed[0]['hostname'], parsed[1]['hostname'])
+        for endpoint in parsed:
+            self.assertEqual(endpoint['tags']['hostname'], 'my-eurohpc.eu')
+            self.assertEqual(endpoint['hostname'],
+                             'my-eurohpc.eu_' + endpoint['tags']['info_ID'])
+        self.assertEqual(ParseLot1ScEndpoints(data, 2).get_group_endpoints(), parsed)
+        endpoints.reverse()
+        self.assertEqual(ParseLot1ScEndpoints(data, 2).get_group_endpoints(), parsed[::-1])
+
     def test_groupGroups(self):
         self.assertEqual(self.group_groups, [
             {
@@ -1090,11 +1117,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
         self.assertEqual(self.group_endpoints, [
             {
                 'group': 'Test service for datasource 4-6',
-                'hostname': 'testUrlEndpoint.com_f17e599f-095d-373e-bcfe-4fb017acf5d5',
+                'hostname': 'testUrlEndpoint.com_f12a7e67-9233-3a12-a6bc-dd94b647a3d3',
                 'service': 'service.type.1',
                 'tags': {
                     'hostname': 'testUrlEndpoint.com',
-                    'info_ID': 'f17e599f-095d-373e-bcfe-4fb017acf5d5',
+                    'info_ID': 'f12a7e67-9233-3a12-a6bc-dd94b647a3d3',
                     'info_URL': 'https://testUrlEndpoint.com',
                     'service_name': 'FTS web console',
                     'site_name': 'PSNC',
@@ -1104,11 +1131,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Virtual Machines',
-                'hostname': 'test.claudius.cloud.psnc.pl_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                'hostname': 'test.claudius.cloud.psnc.pl_f6d30872-8dc4-3444-8aa8-706736f793a8',
                 'service': 'service.type.1',
                 'tags': {
                     'hostname': 'test.claudius.cloud.psnc.pl',
-                    'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                    'info_ID': 'f6d30872-8dc4-3444-8aa8-706736f793a8',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'PSNC', 'tier': '2'
@@ -1117,11 +1144,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Virtual Machines',
-                'hostname': 'test.claudius.cloud.psnc.pl_749deefd-e633-385a-805a-3fd64b80dbe4',
+                'hostname': 'test.claudius.cloud.psnc.pl_aad259e0-504f-32e6-ab83-a7c75291ca90',
                 'service': 'service.type.2',
                 'tags': {
                     'hostname': 'test.claudius.cloud.psnc.pl',
-                    'info_ID': '749deefd-e633-385a-805a-3fd64b80dbe4',
+                    'info_ID': 'aad259e0-504f-32e6-ab83-a7c75291ca90',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'PSNC', 'tier': '2'
@@ -1129,11 +1156,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'type': 'SERVICEGROUPS'},
             {
                 'group': 'Virtual Machines',
-                'hostname': 'test.claudius.cloud.psnc.pl_7caacfa4-5bca-34fc-80eb-386e0579b0e9',
+                'hostname': 'test.claudius.cloud.psnc.pl_cd864ce6-396b-3848-8f26-06bffdda1793',
                 'service': 'service.type.2',
                 'tags': {
                     'hostname': 'test.claudius.cloud.psnc.pl',
-                    'info_ID': '7caacfa4-5bca-34fc-80eb-386e0579b0e9',
+                    'info_ID': 'cd864ce6-396b-3848-8f26-06bffdda1793',
                     'info_URL':
                     'https://test.claudius.cloud.psnc.pl:5000',
                     'service_name': 'OpenStack API', 'site_name': 'PSNC',
@@ -1142,11 +1169,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
                 'type': 'SERVICEGROUPS'},
             {
                 'group': 'Virtual Machines',
-                'hostname': 'test.claudius.cloud.psnc.pl_8cbe072d-1975-3ca3-bc74-fa2591c99b07',
+                'hostname': 'test.claudius.cloud.psnc.pl_3b8bfece-e9a8-3737-b44e-f183d92cff4d',
                 'service': 'service.type.1',
                 'tags': {
                     'hostname': 'test.claudius.cloud.psnc.pl',
-                    'info_ID': '8cbe072d-1975-3ca3-bc74-fa2591c99b07',
+                    'info_ID': '3b8bfece-e9a8-3737-b44e-f183d92cff4d',
                     'info_URL': 'https://test.claudius.cloud.psnc.pl:5000/v3/auth/OS-FEDERATION/identity_providers/testing.eosc-federation.eu_openid/protocols/openid/websso',
                     'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
                     'site_name': 'PSNC',
@@ -1156,11 +1183,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Virtual Machines',
-                'hostname': 'openstack.testing.safedc.services_bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                'hostname': 'openstack.testing.safedc.services_13ab8f0b-9828-3e78-bcc3-19298f82d8b6',
                 'service': 'service.type.1',
                 'tags': {
                     'hostname': 'openstack.testing.safedc.services',
-                    'info_ID': 'bdb09405-f227-3cd6-b8fd-c19c52a3a354',
+                    'info_ID': '13ab8f0b-9828-3e78-bcc3-19298f82d8b6',
                     'info_URL': 'https://openstack.testing.safedc.services/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'Safespring',
@@ -1170,11 +1197,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Virtual Machines',
-                'hostname': 'openstack.testing.safedc.services_dd81e46a-6d98-3258-be69-2929d162dc18',
+                'hostname': 'openstack.testing.safedc.services_36ddb7bd-34a9-346b-a39a-bf12fd97c601',
                 'service': 'service.type.3',
                 'tags': {
                     'hostname': 'openstack.testing.safedc.services',
-                    'info_ID': 'dd81e46a-6d98-3258-be69-2929d162dc18',
+                    'info_ID': '36ddb7bd-34a9-346b-a39a-bf12fd97c601',
                     'info_URL': 'https://openstack.testing.safedc.services/',
                     'service_name': 'OpenStack Horizon Dashboard',
                     'site_name': 'Safespring',
@@ -1184,11 +1211,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Virtual Machines',
-                'hostname': 'openstack.testing.safedc.services_8e57a57f-c6fb-3dea-b586-2871f908776c',
+                'hostname': 'openstack.testing.safedc.services_bb406fd1-662a-3c82-b5c7-8f17e1c0ee00',
                 'service': 'service.type.2',
                 'tags': {
                     'hostname': 'openstack.testing.safedc.services',
-                    'info_ID': '8e57a57f-c6fb-3dea-b586-2871f908776c',
+                    'info_ID': 'bb406fd1-662a-3c82-b5c7-8f17e1c0ee00',
                     'info_URL': 'https://openstack.testing.safedc.services:5000/identity/v3/auth/OS-FEDERATION/identity_providers/proxy.testing.eosc-federation.eu/protocols/openid/websso',
                     'service_name': 'OpenStack Horizon Dashboard GUI Redirection',
                     'site_name': 'Safespring',
@@ -1198,11 +1225,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Interactive Notebooks',
-                'hostname': 'notebooks-tst.cloud.cesnet.cz_ad3e3f67-36a3-3d7e-9f0f-d0cccad9d221',
+                'hostname': 'notebooks-tst.cloud.cesnet.cz_29adfc56-addf-333d-b8a3-3584009a4c93',
                 'service': 'eu.eosc.interactive_notebooks.gui',
                 'tags': {
                     'hostname': 'notebooks-tst.cloud.cesnet.cz',
-                    'info_ID': 'ad3e3f67-36a3-3d7e-9f0f-d0cccad9d221',
+                    'info_ID': '29adfc56-addf-333d-b8a3-3584009a4c93',
                     'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/',
                     'service_name': 'Notebooks GUI',
                     'site_name': 'CESNET',
@@ -1212,11 +1239,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Interactive Notebooks',
-                'hostname': 'notebooks-tst.cloud.cesnet.cz_cf3160b8-e297-32ba-9c87-014c17f02594',
+                'hostname': 'notebooks-tst.cloud.cesnet.cz_78609cb5-04cf-3bcf-8fd0-4f60dbf909dd',
                 'service': 'eu.eosc.interactive_notebooks.api',
                 'tags': {
                     'hostname': 'notebooks-tst.cloud.cesnet.cz',
-                    'info_ID': 'cf3160b8-e297-32ba-9c87-014c17f02594',
+                    'info_ID': '78609cb5-04cf-3bcf-8fd0-4f60dbf909dd',
                     'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/services/jwt',
                     'service_name': 'Notebooks API',
                     'site_name': 'CESNET',
@@ -1226,11 +1253,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Interactive Notebooks',
-                'hostname': 'notebooks-tst.cloud.cesnet.cz_5b3dd363-b3bc-3b93-bb99-f64570603f39',
+                'hostname': 'notebooks-tst.cloud.cesnet.cz_eff581d7-eceb-3740-932f-d3a02067f401',
                 'service': 'eu.eosc.interactive_notebooks.gui',
                 'tags': {
                     'hostname': 'notebooks-tst.cloud.cesnet.cz',
-                    'info_ID': '5b3dd363-b3bc-3b93-bb99-f64570603f39',
+                    'info_ID': 'eff581d7-eceb-3740-932f-d3a02067f401',
                     'info_URL': 'https://notebooks-tst.cloud.cesnet.cz/hub/oauth_login',
                     'service_name': 'Notebooks GUI Redirection',
                     'site_name': 'CESNET',
@@ -1240,11 +1267,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test File Sync and Share',
-                'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl_cd201cab-7792-3024-b1ed-96c48fec1e43',
+                'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl_d4d5586e-539f-3b78-a92a-e28e751cce12',
                 'service': 'eu.eosc.storage.gui',
                 'tags': {
                     'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl',
-                    'info_ID': 'cd201cab-7792-3024-b1ed-96c48fec1e43',
+                    'info_ID': 'd4d5586e-539f-3b78-a92a-e28e751cce12',
                     'info_URL': 'https://ocis-testing.apps.bst2-test.paas.psnc.pl/',
                     'service_name': 'OwnCloud GUI',
                     'site_name': 'PSNC',
@@ -1254,11 +1281,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test File Sync and Share',
-                'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl_26d1d2a9-0e55-31c1-b83d-1678db3ebeaa',
+                'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl_0a473cf3-3926-3966-a9b9-ec7c0a310d4a',
                 'service': 'eu.eosc.storage.gui',
                 'tags': {
                     'hostname': 'ocis-testing.apps.bst2-test.paas.psnc.pl',
-                    'info_ID': '26d1d2a9-0e55-31c1-b83d-1678db3ebeaa',
+                    'info_ID': '0a473cf3-3926-3966-a9b9-ec7c0a310d4a',
                     'info_URL': 'https://ocis-testing.apps.bst2-test.paas.psnc.pl/',
                     'service_name': 'OwnCloud GUI Redirect',
                     'site_name': 'PSNC',
@@ -1268,11 +1295,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test-HPC',
-                'hostname': 'www.hpc.grnet.gr_45b9f71a-742d-3176-86c8-523e258bbc7c',
+                'hostname': 'www.hpc.grnet.gr_13bd3ace-8091-3056-9ce4-63b59c515f8d',
                 'service': 'eu.eosc.hpc.access',
                 'tags': {
                     'hostname': 'www.hpc.grnet.gr',
-                    'info_ID': '45b9f71a-742d-3176-86c8-523e258bbc7c',
+                    'info_ID': '13bd3ace-8091-3056-9ce4-63b59c515f8d',
                     'info_URL': 'https://www.hpc.grnet.gr/en/',
                     'service_name': 'HPC API',
                     'site_name': 'GRNET',
@@ -1282,11 +1309,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'console.apps.dcw1-test.paas.psnc.pl_ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                'hostname': 'console.apps.dcw1-test.paas.psnc.pl_f0c438f9-5777-350f-aca3-15aa47c56381',
                 'service': 'eu.eosc.container_platform.gui',
                 'tags': {
                     'hostname': 'console.apps.dcw1-test.paas.psnc.pl',
-                    'info_ID': 'ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                    'info_ID': 'f0c438f9-5777-350f-aca3-15aa47c56381',
                     'info_URL': 'https://console.apps.dcw1-test.paas.psnc.pl/',
                     'service_name': 'OKD Console',
                     'site_name': 'PSNC',
@@ -1296,11 +1323,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'api.dcw1-test.paas.psnc.pl_cdca6940-8a67-3015-97c8-da262b9b3d15',
+                'hostname': 'api.dcw1-test.paas.psnc.pl_1f92844e-e8c5-3432-b176-c1a494223f80',
                 'service': 'eu.eosc.container_platform.api',
                 'tags': {
                     'hostname': 'api.dcw1-test.paas.psnc.pl',
-                    'info_ID': 'cdca6940-8a67-3015-97c8-da262b9b3d15',
+                    'info_ID': '1f92844e-e8c5-3432-b176-c1a494223f80',
                     'info_URL': 'https://api.dcw1-test.paas.psnc.pl:6443',
                     'service_name': 'OKD API',
                     'site_name': 'PSNC',
@@ -1310,11 +1337,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'dcw1-test.paas.psnc.pl_931f9020-0ff6-3640-bc7c-2be26af5e917',
+                'hostname': 'dcw1-test.paas.psnc.pl_f5d951af-0c3b-3abb-a768-3add7fbe77d3',
                 'service': 'eu.eosc.container_platform.gui',
                 'tags': {
                     'hostname': 'dcw1-test.paas.psnc.pl',
-                    'info_ID': '931f9020-0ff6-3640-bc7c-2be26af5e917',
+                    'info_ID': 'f5d951af-0c3b-3abb-a768-3add7fbe77d3',
                     'info_URL': 'https://dcw1-test.paas.psnc.pl/',
                     'service_name': 'OKD Console GUI Redirection',
                     'site_name': 'PSNC',
@@ -1324,11 +1351,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'oauth-openshift.apps.dcw1-test.paas.psnc.pl_26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                'hostname': 'oauth-openshift.apps.dcw1-test.paas.psnc.pl_f0bd5e1f-a353-33b5-bb82-4d47260c9054',
                 'service': 'eu.eosc.container_platform.api',
                 'tags': {
                     'hostname': 'oauth-openshift.apps.dcw1-test.paas.psnc.pl',
-                    'info_ID': '26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                    'info_ID': 'f0bd5e1f-a353-33b5-bb82-4d47260c9054',
                     'info_URL': 'https://oauth-openshift.apps.dcw1-test.paas.psnc.pl/',
                     'service_name': 'OKD OIDC Server',
                     'site_name': 'PSNC',
@@ -1338,11 +1365,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'console-openshift-console.apps.okd01.saft.in_ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                'hostname': 'console-openshift-console.apps.okd01.saft.in_fe59f0a8-4bcb-3653-b220-4f6b77fdf5bd',
                 'service': 'eu.eosc.container_platform.gui',
                 'tags': {
                     'hostname': 'console-openshift-console.apps.okd01.saft.in',
-                    'info_ID': 'ff7d6732-d073-34c1-9d4d-7d76e7b7b134',
+                    'info_ID': 'fe59f0a8-4bcb-3653-b220-4f6b77fdf5bd',
                     'info_URL': 'https://console-openshift-console.apps.okd01.saft.in/',
                     'service_name': 'OKD Console',
                     'site_name': 'Safespring',
@@ -1352,11 +1379,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'api.okd01.saft.in_cdca6940-8a67-3015-97c8-da262b9b3d15',
+                'hostname': 'api.okd01.saft.in_e654fc5a-c74a-3079-8298-20514ea6044a',
                 'service': 'eu.eosc.container_platform.api',
                 'tags': {
                     'hostname': 'api.okd01.saft.in',
-                    'info_ID': 'cdca6940-8a67-3015-97c8-da262b9b3d15',
+                    'info_ID': 'e654fc5a-c74a-3079-8298-20514ea6044a',
                     'info_URL': 'https://api.okd01.saft.in:6443',
                     'service_name': 'OKD API',
                     'site_name': 'Safespring',
@@ -1366,11 +1393,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'console-openshift-console.apps.eosc-test.safedc.services_931f9020-0ff6-3640-bc7c-2be26af5e917',
+                'hostname': 'console-openshift-console.apps.eosc-test.safedc.services_2ac593b5-b8ca-3e4a-9a4c-fc3226660841',
                 'service': 'eu.eosc.container_platform.gui',
                 'tags': {
                     'hostname': 'console-openshift-console.apps.eosc-test.safedc.services',
-                    'info_ID': '931f9020-0ff6-3640-bc7c-2be26af5e917',
+                    'info_ID': '2ac593b5-b8ca-3e4a-9a4c-fc3226660841',
                     'info_URL': 'https://console-openshift-console.apps.eosc-test.safedc.services/',
                     'service_name': 'OKD Console GUI Redirection',
                     'site_name': 'Safespring',
@@ -1380,11 +1407,11 @@ class ParseLot1ServiceCatalogueTopology(unittest.TestCase):
             },
             {
                 'group': 'Test Cloud Container Platform',
-                'hostname': 'oauth-openshift.apps.eosc-test.safedc.services_26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                'hostname': 'oauth-openshift.apps.eosc-test.safedc.services_c1fad905-85ad-31cc-ad97-03596fdf9825',
                 'service': 'eu.eosc.container_platform.api',
                 'tags': {
                     'hostname': 'oauth-openshift.apps.eosc-test.safedc.services',
-                    'info_ID': '26f6dd63-e34d-37e9-8f96-256621c6ae9a',
+                    'info_ID': 'c1fad905-85ad-31cc-ad97-03596fdf9825',
                     'info_URL': 'https://oauth-openshift.apps.eosc-test.safedc.services/',
                     'service_name': 'OKD OIDC Server',
                     'site_name': 'Safespring',
